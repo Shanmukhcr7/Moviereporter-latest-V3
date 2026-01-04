@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { collection, getDocs, query, orderBy, limit, startAfter, deleteDoc, doc, where, QueryDocumentSnapshot } from "firebase/firestore"
+import { collection, getDocs, query, orderBy, limit, startAfter, deleteDoc, doc, QueryDocumentSnapshot } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { MovieForm } from "@/components/admin/movie-form"
+import { CelebrityForm } from "@/components/admin/celebrity-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -20,41 +20,41 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, Search, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
-import { format } from "date-fns"
 
 const ITEMS_PER_PAGE = 20
 
-export default function MoviesPage() {
-  const [movies, setMovies] = useState<any[]>([])
+export default function CelebritiesPage() {
+  const [celebrities, setCelebrities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [selectedMovie, setSelectedMovie] = useState<any | null>(null)
+  const [selectedCeleb, setSelectedCeleb] = useState<any | null>(null)
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot | null>(null)
   const [hasMore, setHasMore] = useState(true)
 
-  const fetchMovies = async (isInitial = false) => {
+  const fetchCelebrities = async (isInitial = false) => {
     try {
       if (isInitial) {
         setLoading(true)
-        setHasMore(true) // Reset hasMore on fresh load
+        setHasMore(true)
       } else {
         setLoadingMore(true)
       }
 
       let q = query(
-        collection(db, "artifacts/default-app-id/movies"),
-        orderBy("createdAt", "desc"),
+        collection(db, "artifacts/default-app-id/celebrities"),
+        orderBy("name", "asc"),
         limit(ITEMS_PER_PAGE)
       )
 
       if (!isInitial && lastVisible) {
         q = query(
-          collection(db, "artifacts/default-app-id/movies"),
-          orderBy("createdAt", "desc"),
+          collection(db, "artifacts/default-app-id/celebrities"),
+          orderBy("name", "asc"),
           startAfter(lastVisible),
           limit(ITEMS_PER_PAGE)
         )
@@ -62,27 +62,26 @@ export default function MoviesPage() {
 
       const snapshot = await getDocs(q)
 
-      const newMovies = snapshot.docs.map(doc => ({
+      const newCelebrities = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }))
 
       if (isInitial) {
-        setMovies(newMovies)
+        setCelebrities(newCelebrities)
       } else {
-        setMovies(prev => [...prev, ...newMovies])
+        setCelebrities(prev => [...prev, ...newCelebrities])
       }
 
       setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null)
 
-      // If we got fewer items than requested, we've reached the end
       if (snapshot.docs.length < ITEMS_PER_PAGE) {
         setHasMore(false)
       }
 
     } catch (error) {
-      console.error("Error fetching movies:", error)
-      toast.error("Failed to load movies")
+      console.error("Error fetching celebrities:", error)
+      toast.error("Failed to load celebrities")
     } finally {
       setLoading(false)
       setLoadingMore(false)
@@ -90,24 +89,20 @@ export default function MoviesPage() {
   }
 
   useEffect(() => {
-    fetchMovies(true)
+    fetchCelebrities(true)
   }, [])
 
-  // Client-side search (filtering loaded items) for now to save complex queries
-  // A robust solution would be a separate "Search" button hitting a separate index/query, 
-  // but this usually suffices for Admin usage unless dataset is massive.
-  const filteredMovies = movies.filter(m =>
-    m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.industry.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCelebrities = celebrities.filter(c =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.role.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const handleDelete = async (id: string, title: string) => {
-    if (confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
+  const handleDelete = async (id: string, name: string) => {
+    if (confirm(`Are you sure you want to delete "${name}"?`)) {
       try {
-        await deleteDoc(doc(db, "artifacts/default-app-id/movies", id))
-        toast.success("Movie deleted")
-        // Remove from local state
-        setMovies(prev => prev.filter(m => m.id !== id))
+        await deleteDoc(doc(db, "artifacts/default-app-id/celebrities", id))
+        toast.success("Celebrity deleted")
+        setCelebrities(prev => prev.filter(c => c.id !== id))
       } catch (error) {
         console.error("Error deleting:", error)
         toast.error("Failed to delete")
@@ -115,56 +110,58 @@ export default function MoviesPage() {
     }
   }
 
-  const handleEdit = (movie: any) => {
-    setSelectedMovie(movie)
+  const handleEdit = (celeb: any) => {
+    setSelectedCeleb(celeb)
     setIsDialogOpen(true)
   }
 
   const handleAddNew = () => {
-    setSelectedMovie(null)
+    setSelectedCeleb(null)
     setIsDialogOpen(true)
   }
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false)
-    fetchMovies(true) // Refresh list to show new/updated item and ensure correct order
+    fetchCelebrities(true)
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Movies Management</h1>
-          <p className="text-muted-foreground">Add new releases, update box office, and manage content.</p>
+          <h1 className="text-3xl font-bold">Celebrities Management</h1>
+          <p className="text-muted-foreground">Manage actors, directors, and crew members.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => fetchMovies(true)} title="Refresh">
+          <Button variant="outline" size="icon" onClick={() => fetchCelebrities(true)} title="Refresh">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           <Button onClick={handleAddNew}>
-            <Plus className="h-4 w-4 mr-2" /> Add Movie
+            <Plus className="h-4 w-4 mr-2" /> Add Celebrity
           </Button>
         </div>
       </div>
 
+      {/* Search Bar */}
       <div className="flex items-center gap-4 bg-background p-4 rounded-lg border">
         <Search className="h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search loaded movies..."
+          placeholder="Search loaded celebrities..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-md border-0 focus-visible:ring-0 bg-transparent pl-0"
         />
       </div>
 
+      {/* Table */}
       <div className="border rounded-md bg-background">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Poster</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Industry</TableHead>
-              <TableHead>Release Date</TableHead>
+              <TableHead>Image</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -175,38 +172,36 @@ export default function MoviesPage() {
                   <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
                 </TableCell>
               </TableRow>
-            ) : filteredMovies.length === 0 ? (
+            ) : filteredCelebrities.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-48 text-center text-muted-foreground">
-                  No movies found.
+                  No celebrities found.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredMovies.map((movie) => (
-                <TableRow key={movie.id}>
+              filteredCelebrities.map((celeb) => (
+                <TableRow key={celeb.id}>
                   <TableCell>
-                    <div className="relative h-12 w-8 overflow-hidden rounded bg-muted">
-                      <img src={movie.posterUrl} alt={movie.title} className="object-cover h-full w-full" />
-                    </div>
+                    <Avatar>
+                      <AvatarImage src={celeb.imageUrl} className="object-cover" />
+                      <AvatarFallback className="bg-primary/10">{celeb.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
                   </TableCell>
-                  <TableCell className="font-medium">
-                    {movie.title}
-                    <div className="text-xs text-muted-foreground">{movie.genre}</div>
-                  </TableCell>
+                  <TableCell className="font-medium">{celeb.name}</TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-secondary text-secondary-foreground">
-                      {movie.industry}
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                      {celeb.role}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    {movie.releaseDate?.toDate ? format(movie.releaseDate.toDate(), "MMM d, yyyy") : "-"}
+                  <TableCell className="max-w-[300px] truncate text-muted-foreground text-sm">
+                    {celeb.description || "-"}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(movie)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(celeb)} title="Edit">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(movie.id, movie.title)} className="text-destructive hover:text-destructive">
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(celeb.id, celeb.name)} className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Delete">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -220,7 +215,7 @@ export default function MoviesPage() {
 
       {!loading && hasMore && (
         <div className="flex justify-center pt-4">
-          <Button variant="outline" onClick={() => fetchMovies(false)} disabled={loadingMore}>
+          <Button variant="outline" onClick={() => fetchCelebrities(false)} disabled={loadingMore}>
             {loadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Load More
           </Button>
@@ -228,16 +223,16 @@ export default function MoviesPage() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedMovie ? "Edit Movie" : "Add New Movie"}</DialogTitle>
+            <DialogTitle>{selectedCeleb ? "Edit Celebrity" : "Add New Celebrity"}</DialogTitle>
           </DialogHeader>
-          <MovieForm
-            initialData={selectedMovie}
+          <CelebrityForm
+            initialData={selectedCeleb}
             onSuccess={handleFormSuccess}
           />
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   )
 }

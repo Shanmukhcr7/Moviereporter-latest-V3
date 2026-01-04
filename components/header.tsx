@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Menu, X, Search, User, Film, Sun, Moon } from "lucide-react"
+import { Menu, X, Search, User, Film, Sun, Moon, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 import { useTheme } from "@/components/theme-provider"
@@ -146,6 +146,16 @@ export function Header() {
                 <Search className="h-5 w-5" />
               </Button>
 
+              {/* Admin Dashboard */}
+              {userData?.role === "admin" && (
+                <Link href="/admin">
+                  <Button variant="ghost" size="icon" title="Admin Dashboard">
+                    <Shield className="h-5 w-5" />
+                    <span className="sr-only">Admin Dashboard</span>
+                  </Button>
+                </Link>
+              )}
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -161,13 +171,6 @@ export function Header() {
 
               {user ? (
                 <>
-                  {userData?.role === "admin" && (
-                    <Link href="/dashboard">
-                      <Button variant="outline" size="sm">
-                        Admin Dashboard
-                      </Button>
-                    </Link>
-                  )}
                   <Link href="/profile" className="hidden lg:flex">
                     <Button variant="ghost" size="icon">
                       <User className="h-5 w-5" />

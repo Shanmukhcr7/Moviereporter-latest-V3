@@ -1,6 +1,6 @@
 "use client"
 
-import { Film, Menu, Search, User, X, Home, Globe, Star, Newspaper, BookOpen, BarChart2, CheckSquare, Trophy, Book, Info, HelpCircle, Megaphone, Copyright } from "lucide-react"
+import { Film, Menu, Search, User, X, Home, Globe, Star, Newspaper, BookOpen, BarChart2, CheckSquare, Trophy, Book, Info, HelpCircle, Megaphone, Copyright, Shield } from "lucide-react"
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ import { PushNotificationsToggle } from "@/components/push-notifications-toggle"
 
 export function MobileNav() {
     const { theme, toggleTheme } = useTheme()
-    const { user, signOut } = useAuth()
+    const { user, userData, signOut } = useAuth()
 
     const iconClass = "h-4 w-4 mr-3"
 
@@ -44,6 +44,16 @@ export function MobileNav() {
                             <Home className={iconClass} />
                             Home
                         </Link>
+
+                        {userData?.role === "admin" && (
+                            <Link
+                                href="/admin"
+                                className="px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors flex items-center text-primary"
+                            >
+                                <Shield className={iconClass} />
+                                Admin Dashboard
+                            </Link>
+                        )}
 
                         <Accordion type="single" collapsible className="w-full">
                             <AccordionItem value="movies-world" className="border-b-0">

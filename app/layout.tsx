@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   description: "Your ultimate source for movie news and reviews",
   generator: "Next.js",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.ico",
+    shortcut: "/icon.ico",
+    apple: "/icon.ico",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

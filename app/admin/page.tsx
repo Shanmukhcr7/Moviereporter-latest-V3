@@ -1,149 +1,87 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-context"
-import { db } from "@/lib/firebase"
-import { collection, getDocs } from "firebase/firestore"
-import { Card } from "@/components/ui/card"
-import { Film, Users, Newspaper, PenTool, BarChart3, Trophy, Megaphone, MessageSquare } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import dynamic from "next/dynamic"
 
-export default function AdminPage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
-  const [stats, setStats] = useState({
-    movies: 0,
-    celebrities: 0,
-    news: 0,
-    blogs: 0,
-    polls: 0,
-    awards: 0,
-    users: 0,
-    comments: 0,
-  })
+// Dynamic import for Chart component to avoid SSR issues
+const TimeInsights = dynamic(() => import("@/components/admin/dashboard/time-insights").then(mod => mod.TimeInsights), {
+  ssr: false,
+  loading: () => <div className="h-[300px] w-full bg-muted/20 animate-pulse rounded-lg" />
+})
 
-  useEffect(() => {
-    if (!loading && (!user || user.role !== "admin")) {
-      router.push("/")
-    }
-  }, [user, loading, router])
+import { SystemHealth } from "@/components/admin/dashboard/system-health"
+import { KeyMetrics } from "@/components/admin/dashboard/key-metrics"
+import { ActivityPulse } from "@/components/admin/dashboard/activity-pulse"
+import { ContentPerformance } from "@/components/admin/dashboard/content-performance"
+import { AdminAlerts } from "@/components/admin/dashboard/admin-alerts"
+import { SecuritySnapshot } from "@/components/admin/dashboard/security-snapshot"
+import { QuickActions } from "@/components/admin/dashboard/quick-actions"
+import { SmartInsights } from "@/components/admin/dashboard/smart-insights"
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const moviesSnap = await getDocs(collection(db, "movies"))
-        const celebsSnap = await getDocs(collection(db, "celebrities"))
-        const newsSnap = await getDocs(collection(db, "news"))
-        const blogsSnap = await getDocs(collection(db, "blogs"))
-        const pollsSnap = await getDocs(collection(db, "polls"))
-        const awardsSnap = await getDocs(collection(db, "awards"))
-        const usersSnap = await getDocs(collection(db, "users"))
-        const commentsSnap = await getDocs(collection(db, "comments"))
-
-        setStats({
-          movies: moviesSnap.size,
-          celebrities: celebsSnap.size,
-          news: newsSnap.size,
-          blogs: blogsSnap.size,
-          polls: pollsSnap.size,
-          awards: awardsSnap.size,
-          users: usersSnap.size,
-          comments: commentsSnap.size,
-        })
-      } catch (error) {
-        console.error("Error fetching stats:", error)
-      }
-    }
-
-    if (user?.role === "admin") {
-      fetchStats()
-    }
-  }, [user])
-
-  if (loading || !user || user.role !== "admin") {
-    return null
-  }
-
-  const adminSections = [
-    { title: "Movies Management", icon: Film, count: stats.movies, href: "/admin/movies", color: "bg-blue-500" },
-    {
-      title: "Celebrities Management",
-      icon: Users,
-      count: stats.celebrities,
-      href: "/admin/celebrities",
-      color: "bg-purple-500",
-    },
-    { title: "News Management", icon: Newspaper, count: stats.news, href: "/admin/news", color: "bg-green-500" },
-    { title: "Blogs Management", icon: PenTool, count: stats.blogs, href: "/admin/blogs", color: "bg-orange-500" },
-    { title: "Polls Management", icon: BarChart3, count: stats.polls, href: "/admin/polls", color: "bg-cyan-500" },
-    { title: "Awards Management", icon: Trophy, count: stats.awards, href: "/admin/awards", color: "bg-yellow-500" },
-    { title: "Promotions Management", icon: Megaphone, count: 0, href: "/admin/promotions", color: "bg-pink-500" },
-    {
-      title: "Comments Management",
-      icon: MessageSquare,
-      count: stats.comments,
-      href: "/admin/comments",
-      color: "bg-red-500",
-    },
-  ]
+export default function AdminDashboard() {
+  const [metricPeriod, setMetricPeriod] = useState<"24h" | "7d">("24h")
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage all content and settings for Movie Reporter</p>
-        </div>
+    <div className="space-y-6 pb-10">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {adminSections.map((section) => (
-            <Link key={section.href} href={section.href}>
-              <Card className="p-6 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer border-2 hover:border-primary">
-                <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-lg ${section.color}`}>
-                    <section.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{section.title}</p>
-                    <p className="text-2xl font-bold">{section.count}</p>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+      {/* SECTION 1: System Health (Top Priority) */}
+      <SystemHealth />
 
-        <Card className="mt-8 p-6">
-          <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link
-              href="/admin/movies/new"
-              className="px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity text-center font-medium"
-            >
-              Add New Movie
-            </Link>
-            <Link
-              href="/admin/news/new"
-              className="px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity text-center font-medium"
-            >
-              Add New News
-            </Link>
-            <Link
-              href="/admin/blogs/new"
-              className="px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity text-center font-medium"
-            >
-              Add New Blog
-            </Link>
-            <Link
-              href="/admin/polls/new"
-              className="px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity text-center font-medium"
-            >
-              Add New Poll
-            </Link>
-          </div>
-        </Card>
+      {/* Header & Metric Toggle */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">Mission Control</h1>
+        <Tabs value={metricPeriod} onValueChange={(v) => setMetricPeriod(v as "24h" | "7d")}>
+          <TabsList>
+            <TabsTrigger value="24h">Last 24h</TabsTrigger>
+            <TabsTrigger value="7d">Last 7 Days</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
+
+      {/* SECTION 2: Key Platform Metrics */}
+      <KeyMetrics period={metricPeriod} />
+
+      {/* SECTION 9: Smart Insights (Insert here for visibility) */}
+      <SmartInsights />
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        {/* Left Column (pulse and alerts) */}
+        <div className="xl:col-span-2 space-y-6">
+
+          {/* SECTION 5: Admin To-Do / Alerts */}
+          <AdminAlerts />
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* SECTION 3: Activity Pulse */}
+            <ActivityPulse />
+            {/* SECTION 4: Content Performance */}
+            <ContentPerformance />
+          </div>
+
+          {/* SECTION 6: Time-based Insights */}
+          <div className="h-[300px]">
+            <TimeInsights />
+          </div>
+        </div>
+
+        {/* Right Column (Actions and Security) */}
+        <div className="space-y-6">
+          {/* SECTION 8: Quick Actions */}
+          <QuickActions />
+
+          {/* SECTION 7: Security Snapshot */}
+          <SecuritySnapshot />
+
+          {/* Extra spacing or future widgets */}
+          <div className="bg-muted/20 rounded-lg p-6 border-2 border-dashed border-muted text-center text-muted-foreground text-sm">
+            Placeholder for future widgets (Logs, Backup Status)
+          </div>
+        </div>
+
+      </div>
+
     </div>
   )
 }
