@@ -187,12 +187,18 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
     const snapshot = await getDocs(reviewsQuery)
 
     const ratings = snapshot.docs.map((doc) => doc.data().rating)
-    const avgRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0
+    const reviewCount = ratings.length
+    console.log("Calculated Stats:", { id: movie.id, count: reviewCount, avg: avgRating })
 
-    await updateDoc(doc(db, "artifacts/default-app-id/movies", movie.id), {
-      avgRating,
-      reviewCount: ratings.length
-    })
+    try {
+      await updateDoc(doc(db, "artifacts/default-app-id/movies", movie.id), {
+        avgRating,
+        reviewCount
+      })
+      console.log("DB Update Success")
+    } catch (e) {
+      console.error("DB Update Failed", e)
+    }
 
     setLocalMetrics({ avgRating, reviewCount: ratings.length })
   }
