@@ -722,21 +722,22 @@ function CountdownTimer({ targetDate }: { targetDate: any }) {
     return () => clearInterval(interval)
   }, [targetDate])
 
+  if (!timeLeft) {
+    return (
+      <Badge
+        variant="outline"
+        className="h-8 px-3 border-red-500/50 text-red-600 bg-red-500/10 cursor-help"
+        title={`Target: ${targetDate ? JSON.stringify(targetDate) : 'Missing'}`}
+      >
+        Voting Ended
+      </Badge>
+    )
+  }
+
   return (
-    <Badge
-      variant="outline"
-      className="h-8 px-3 border-red-500/50 text-red-600 bg-red-500/10 cursor-help"
-      title={`Target: ${targetDate ? JSON.stringify(targetDate) : 'Missing'}`}
-    >
-      Voting Ended
+    <Badge variant="outline" className="h-8 px-3 border-orange-500/50 text-orange-600 dark:text-orange-400 tabular-nums">
+      <Clock className="h-3.5 w-3.5 mr-1.5" />
+      {timeLeft.d}d {timeLeft.h}h {timeLeft.m}m {timeLeft.s}s
     </Badge>
   )
-}
-
-return (
-  <Badge variant="outline" className="h-8 px-3 border-orange-500/50 text-orange-600 dark:text-orange-400 tabular-nums">
-    <Clock className="h-3.5 w-3.5 mr-1.5" />
-    {timeLeft.d}d {timeLeft.h}h {timeLeft.m}m {timeLeft.s}s
-  </Badge>
-)
 }
