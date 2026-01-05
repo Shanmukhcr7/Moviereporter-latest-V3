@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { ImagePlus, X, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
+import { cn, getImageUrl } from "@/lib/utils"
 
 interface ImageUploadProps {
     value?: string
@@ -102,7 +102,7 @@ export function ImageUpload({
                     <div className="relative w-full h-full">
                         <Image
                             fill
-                            src={value}
+                            src={getImageUrl(value)}
                             alt="Upload"
                             className="object-contain"
                         />

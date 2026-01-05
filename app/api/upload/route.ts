@@ -31,8 +31,17 @@ export async function POST(req: NextRequest) {
 
         // Construct Public URL
         // If UPLOAD_URL_PREFIX is set (e.g., https://movielovers.in/uploads), use it.
-        // Otherwise assume standard local path.
-        const urlPrefix = process.env.UPLOAD_URL_PREFIX || "/uploads";
+        // Otherwise try to assume origin or relative.
+        // Better: Return Full URL so Next.js Image Optimization can fetch it as remote image key.
+        let urlPrefix = process.env.UPLOAD_URL_PREFIX || "/uploads";
+
+        // If it refers to local file system serving (VPS nginx), we want full absolute URL
+        // to ensure frontend components treat it as remote.
+        if (urlPrefix.startsWith("/")) {
+            const origin = req.headers.get("origin") || "https://movielovers.in";
+            urlPrefix = `${origin}${urlPrefix}`;
+        }
+
         const fileUrl = `${urlPrefix}/${uniqueFilename}`;
 
         return NextResponse.json({

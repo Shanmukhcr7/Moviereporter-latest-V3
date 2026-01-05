@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { doc, getDoc, collection, query, where, getDocs, updateDoc, increment, runTransaction, Timestamp, setDoc, deleteDoc, orderBy } from "firebase/firestore"
+import { cn, getImageUrl } from "@/lib/utils"
 import { db } from "@/lib/firebase"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -303,7 +304,7 @@ export default function MovieDetailsPage() {
       <div className="relative h-[30vh] md:h-[400px] w-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
         <Image
-          src={movie.poster || movie.posterUrl || "/placeholder.svg"}
+          src={getImageUrl(movie.poster || movie.posterUrl)}
           alt={movie.title}
           fill
           sizes="100vw"
@@ -320,7 +321,7 @@ export default function MovieDetailsPage() {
             <FadeIn>
               <div className="relative w-[200px] md:w-full mx-auto aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border-4 border-background/20 bg-muted">
                 <Image
-                  src={movie.poster || movie.posterUrl || "/placeholder.svg"}
+                  src={getImageUrl(movie.poster || movie.posterUrl)}
                   alt={movie.title}
                   fill
                   sizes="(max-width: 768px) 200px, 300px"

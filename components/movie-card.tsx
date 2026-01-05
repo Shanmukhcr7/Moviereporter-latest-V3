@@ -10,6 +10,7 @@ import { doc, setDoc, deleteDoc, getDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { toast } from "sonner"
 import { useState, useEffect } from "react"
+import { getImageUrl } from "@/lib/utils"
 // Motion imports removed
 // import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion"
 
@@ -113,7 +114,7 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
         <Card className="group h-full overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-card/50 backdrop-blur relative">
           <div className="relative aspect-[2/3] overflow-hidden">
             <Image
-              src={poster || "/placeholder.svg"}
+              src={getImageUrl(poster || "/placeholder.svg")}
               alt={title}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
