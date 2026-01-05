@@ -12,25 +12,45 @@ export function NewsTicker() {
     async function fetchLatestUpdates() {
       try {
         console.log("Fetching ticker updates...")
-        // Fetch latest news
+
+        // Fetch latest news (fetch more to sort client side if needed)
         const newsQuery = query(
           collection(db, "artifacts/default-app-id/news"),
-          orderBy("publishedAt", "desc"),
-          limit(5),
+          limit(10),
         )
         const newsSnapshot = await getDocs(newsQuery)
-        console.log("News found:", newsSnapshot.size)
-        const newsItems = newsSnapshot.docs.map((doc) => ({ type: 'news' as const, title: doc.data().title }))
+        console.log("News found raw:", newsSnapshot.size)
+
+        const newsItems = newsSnapshot.docs.map(doc => {
+          const data = doc.data()
+          // Robust date check
+          const dateVal = data.publishedAt || data.scheduledAt || data.createdAt
+          let millis = 0
+          if (dateVal?.toMillis) millis = dateVal.toMillis()
+          else if (dateVal?.seconds) millis = dateVal.seconds * 1000
+          else if (dateVal) millis = new Date(dateVal).getTime()
+
+          return { type: 'news' as const, title: data.title, date: millis }
+        }).sort((a, b) => b.date - a.date).slice(0, 5)
 
         // Fetch latest blogs
         const blogsQuery = query(
           collection(db, "artifacts/default-app-id/blogs"),
-          orderBy("publishedAt", "desc"),
-          limit(5),
+          limit(10),
         )
         const blogsSnapshot = await getDocs(blogsQuery)
-        console.log("Blogs found:", blogsSnapshot.size)
-        const blogItems = blogsSnapshot.docs.map((doc) => ({ type: 'blog' as const, title: doc.data().title }))
+        console.log("Blogs found raw:", blogsSnapshot.size)
+
+        const blogItems = blogsSnapshot.docs.map(doc => {
+          const data = doc.data()
+          const dateVal = data.publishedAt || data.scheduledAt || data.createdAt
+          let millis = 0
+          if (dateVal?.toMillis) millis = dateVal.toMillis()
+          else if (dateVal?.seconds) millis = dateVal.seconds * 1000
+          else if (dateVal) millis = new Date(dateVal).getTime()
+
+          return { type: 'blog' as const, title: data.title, date: millis }
+        }).sort((a, b) => b.date - a.date).slice(0, 5)
 
         // Fetch latest movies
         const moviesQuery = query(
@@ -47,9 +67,9 @@ export function NewsTicker() {
         const combined: typeof updates = []
 
         for (let i = 0; i < maxLength; i++) {
-          if (movieItems[i]) combined.push(movieItems[i])
-          if (newsItems[i]) combined.push(newsItems[i])
-          if (blogItems[i]) combined.push(blogItems[i])
+          if (movieItems[i]) combined.push({ type: 'movie', title: movieItems[i].title })
+          if (newsItems[i]) combined.push({ type: 'news', title: newsItems[i].title })
+          if (blogItems[i]) combined.push({ type: 'blog', title: blogItems[i].title })
         }
 
         setUpdates(combined)
