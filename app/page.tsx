@@ -118,16 +118,17 @@ export default function HomePage() {
         setRemainingLatestMovies(latestData.remaining)
 
         // Featured Articles Logic
-        const newsQuery = query(collection(db, "artifacts/default-app-id/news"), limit(20))
-        const blogsQuery = query(collection(db, "artifacts/default-app-id/blogs"), limit(20))
+        // Fetch by createdAt to ensure we get the latest even if scheduledAt is missing
+        const newsQuery = query(collection(db, "artifacts/default-app-id/news"), orderBy("createdAt", "desc"), limit(20))
+        const blogsQuery = query(collection(db, "artifacts/default-app-id/blogs"), orderBy("createdAt", "desc"), limit(20))
 
         const [newsSnapshot, blogsSnapshot] = await Promise.all([getDocs(newsQuery), getDocs(blogsQuery)])
 
         const processArticles = (docs: any[], type: "news" | "blog") => {
           return docs.map(doc => {
             const d = doc.data()
-            // Fix: Check scheduledAt if publishedAt is missing
-            const dateVal = d.publishedAt || d.scheduledAt
+            // Fix: Check scheduledAt if publishedAt is missing, then fallback to createdAt
+            const dateVal = d.publishedAt || d.scheduledAt || d.createdAt
             let millis = 0
             if (dateVal?.toMillis) millis = dateVal.toMillis()
             else if (dateVal?.seconds) millis = dateVal.seconds * 1000
@@ -141,7 +142,7 @@ export default function HomePage() {
               publishedAt: new Date(millis).toISOString(), // Pass as string
             }
           })
-            .sort((a, b) => b.publishedAt - a.publishedAt)
+            .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
         }
 
         const sortedNews = processArticles(newsSnapshot.docs, "news")
@@ -155,7 +156,7 @@ export default function HomePage() {
 
         const leftoverNews = sortedNews.slice(2)
         const leftoverBlogs = sortedBlogs.slice(2)
-        const pool = [...leftoverNews, ...leftoverBlogs].sort((a, b) => b.publishedAt - a.publishedAt)
+        const pool = [...leftoverNews, ...leftoverBlogs].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
 
         const featuredData = createSectionData(initialArticles, pool, "news", "View All Articles", "/news")
         setFeaturedArticles(featuredData.displayed)
