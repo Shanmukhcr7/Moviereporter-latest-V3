@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, addDoc, increment } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -131,7 +132,17 @@ export default function VoteEnrollPage() {
 
   // Fetch Categories
   const fetchCategories = async () => {
-    setLoading(true)
+    // SWR Cache Check
+    const cacheKey = `vote_categories_${industryFilter}`
+    if (loading) { // Only check cache on initial load or filter change
+      const cached = getFromCache<Category[]>(cacheKey)
+      if (cached) {
+        setCategories(cached)
+        setLoading(false)
+        // Continue fetching in background
+      }
+    }
+
     try {
       const now = new Date().toISOString()
       const categoriesQuery = query(
@@ -140,22 +151,14 @@ export default function VoteEnrollPage() {
       )
 
       const snapshot = await getDocs(categoriesQuery)
+
+      // Fetch nominees in parallel
       const categoriesData = await Promise.all(
         snapshot.docs
           .map(d => ({ id: d.id, ...d.data() } as Category))
-          .filter((cat) => {
-            const getMillis = (dateVal: any) => {
-              if (!dateVal) return 0
-              if (dateVal.seconds) return dateVal.seconds * 1000
-              if (typeof dateVal === 'string') return new Date(dateVal).getTime()
-              if (dateVal.toDate) return dateVal.toDate().getTime()
-              return 0
-            }
-            const start = getMillis(cat.startTime)
-            const end = getMillis(cat.endTime)
-            const nowMillis = new Date().getTime()
-            return start <= nowMillis && end >= nowMillis
-          })
+          // Removed strict date filter to ensure visibility. 
+          // We can visually indicate status (Active/Ended) instead of hiding.
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
           .map(async (categoryData) => {
             const nomineesQuery = query(
               collection(db, "artifacts/default-app-id/nominees"),
@@ -166,12 +169,12 @@ export default function VoteEnrollPage() {
             const nominees = await Promise.all(
               nomineesSnapshot.docs.map(async (nomineeDoc) => {
                 const nomineeData = nomineeDoc.data()
-                // Fetch celebrity/movie only if not 'Other' or if IDs present
                 let celebData = {}
                 let movieData = {}
 
-                if (nomineeData.celebrityId) {
-                  const celebDoc = await getDoc(doc(db, "artifacts/default-app-id/celebrities", nomineeData.celebrityId))
+                if (nomineeData.celebId || nomineeData.celebrityId) {
+                  const cId = nomineeData.celebId || nomineeData.celebrityId
+                  const celebDoc = await getDoc(doc(db, "artifacts/default-app-id/celebrities", cId))
                   if (celebDoc.exists()) celebData = celebDoc.data()
                 }
 
@@ -201,26 +204,24 @@ export default function VoteEnrollPage() {
       )
 
       setCategories(categoriesData)
+      saveToCache(cacheKey, categoriesData)
 
       if (user) {
         // Legacy path: subcollection under user
-        // We can't query a subcollection across all docs easily without collectionGroup, 
-        // but here we know the path: artifacts/appId/users/uid/userVotes
         const userVotesRef = collection(db, "artifacts/default-app-id/users", user.uid, "userVotes")
         const votesSnapshot = await getDocs(userVotesRef)
         const votes: Record<string, any> = {}
         votesSnapshot.docs.forEach((doc) => {
           const data = doc.data()
-          // doc.id is usually categoryId in the legacy schema
           votes[doc.id] = {
             ...data,
-            voteId: doc.id // use categoryId as voteId
+            voteId: doc.id
           }
         })
         setUserVotes(votes)
       }
     } catch (error) {
-      console.error("[v0] Error fetching categories:", error)
+      console.error("Error fetching categories:", error)
     } finally {
       setLoading(false)
     }
