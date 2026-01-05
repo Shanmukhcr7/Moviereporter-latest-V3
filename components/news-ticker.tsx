@@ -38,8 +38,16 @@ export function NewsTicker() {
         const moviesSnapshot = await getDocs(moviesQuery)
         const movieItems = moviesSnapshot.docs.map((doc) => ({ type: 'movie' as const, title: doc.data().title }))
 
-        // Interleave or just combine
-        const combined = [...newsItems, ...blogItems, ...movieItems].sort(() => Math.random() - 0.5) // Random shuffle for variety
+        // Interleave items: Movie -> News -> Blog -> Movie ...
+        const maxLength = Math.max(newsItems.length, blogItems.length, movieItems.length)
+        const combined: typeof updates = []
+
+        for (let i = 0; i < maxLength; i++) {
+          if (movieItems[i]) combined.push(movieItems[i])
+          if (newsItems[i]) combined.push(newsItems[i])
+          if (blogItems[i]) combined.push(blogItems[i])
+        }
+
         setUpdates(combined)
       } catch (error) {
         console.error("[v0] Error fetching updates:", error)
@@ -52,20 +60,20 @@ export function NewsTicker() {
   if (updates.length === 0) return null
 
   return (
-    <div className="bg-primary text-primary-foreground py-2 overflow-hidden border-b border-white/10">
+    <div className="bg-primary text-primary-foreground py-2 overflow-hidden border-b border-white/10 relative z-30">
       <div className="container mx-auto px-4 flex items-center gap-4">
-        <div className="flex items-center gap-2 shrink-0 bg-primary/20 px-3 py-1 rounded-full border border-white/20">
-          <AlertCircle className="h-4 w-4 animate-pulse" />
+        <div className="flex items-center gap-2 shrink-0 bg-primary/20 px-3 py-1 rounded-full border border-white/20 backdrop-blur-sm relative z-10">
+          <AlertCircle className="h-4 w-4 text-yellow-400 animate-pulse" />
           <span className="font-bold text-xs uppercase tracking-wider">Latest Updates</span>
         </div>
         <div className="flex-1 overflow-hidden relative mask-linear-fade">
           <div className="animate-marquee whitespace-nowrap flex items-center min-w-full w-max">
-            {/* Repeat content 4 times to ensure it fills screen and scrolls smoothly even if content is short */}
-            {[...updates, ...updates, ...updates, ...updates].map((update, index) => (
-              <span key={index} className="inline-flex items-center mx-3 text-sm font-medium opacity-90 hover:opacity-100 transition-opacity">
-                {update.type === 'movie' && <Film className="w-3 h-3 mr-2 text-white/70" />}
-                {update.type === 'news' && <Newspaper className="w-3 h-3 mr-2 text-white/70" />}
-                {update.type === 'blog' && <FileText className="w-3 h-3 mr-2 text-white/70" />}
+            {/* Repeat content to fill screen */}
+            {[...updates, ...updates, ...updates].map((update, index) => (
+              <span key={index} className="inline-flex items-center mx-6 text-sm font-medium opacity-90 hover:opacity-100 transition-opacity">
+                {update.type === 'movie' && <Film className="w-4 h-4 mr-2 text-yellow-500" />}
+                {update.type === 'news' && <Newspaper className="w-4 h-4 mr-2 text-blue-400" />}
+                {update.type === 'blog' && <FileText className="w-4 h-4 mr-2 text-orange-400" />}
                 {update.title}
               </span>
             ))}
