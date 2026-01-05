@@ -87,6 +87,7 @@ export default function HomePage() {
           return {
             id: doc.id,
             ...d,
+            rating: d.avgRating || 0,
             poster: d.poster || d.posterUrl || d.image || d.bannerImageUrl || "",
             releaseDate: d.releaseDate?.toMillis ? new Date(d.releaseDate.toMillis()).toISOString() : d.releaseDate,
           }
