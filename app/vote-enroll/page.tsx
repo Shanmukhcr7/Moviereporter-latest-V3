@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDistanceToNow } from "date-fns"
 import { Button } from "@/components/ui/button" // Assuming Button is available
 import { SectionCarousel } from "@/components/ui/section-carousel"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
 interface Nominee {
   id: string
@@ -35,8 +36,8 @@ interface Category {
   id: string
   name: string
   industry: string
-  startTime: any
-  endTime: any
+  startDate: any
+  endDate: any
   nominees: Nominee[]
   [key: string]: any
 }
@@ -49,8 +50,6 @@ interface OtherChoice {
   userId: string
   createdAt?: any // Timestamp
 }
-
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
 
 export default function VoteEnrollPage() {
   const searchParams = useSearchParams()
@@ -124,8 +123,6 @@ export default function VoteEnrollPage() {
     }
   }
 
-
-
   useEffect(() => {
     fetchCategories()
   }, [industryFilter, user])
@@ -144,8 +141,6 @@ export default function VoteEnrollPage() {
     }
 
     try {
-      const now = new Date().toISOString()
-
       // Normalize industry for DB Query (DB uses lowercase, hyphenated)
       // e.g. "Tollywood" -> "tollywood", "Pan India" -> "pan-india"
       const dbIndustry = industryFilter.toLowerCase().replace(" ", "-")
@@ -304,7 +299,6 @@ export default function VoteEnrollPage() {
       }
 
       // Firestore Updates
-      // Reference: artifacts/default-app-id/users/{uid}/userVotes/{categoryId}
       const userVoteRef = doc(db, "artifacts/default-app-id/users", user.uid, "userVotes", categoryId)
 
       if (isOther) {
@@ -317,9 +311,7 @@ export default function VoteEnrollPage() {
           customName: customText,
           isOther: true
         }
-        // We use setDoc (merge: true or overwrite? Legacy seems to overwrite or set)
-        // Since docId is categoryId, setDoc is appropriate.
-        const { setDoc } = await import("firebase/firestore") // dynamic import to ensure we have it if not top-level
+        const { setDoc } = await import("firebase/firestore")
         await setDoc(userVoteRef, voteData)
 
         // 2. Add to otherChoices
@@ -338,12 +330,6 @@ export default function VoteEnrollPage() {
         const nomineeRef = doc(db, "artifacts/default-app-id/nominees", nomineeId)
 
         await runTransaction(db, async (transaction) => {
-          // Check if already voted (double safety, though we checked local state)
-          // We'll trust the overwrite logic here or read first if strict. 
-          // Legacy uses transaction. We'll simplify to just update nominee and set vote for now to match UI speed
-          // or do proper transaction if we want consistency.
-
-          // Let's do a simple atomic update pattern:
           // 1. Decrement old nominee if exists
           if (existingVote && !existingVote.isOther) {
             const oldNomineeRef = doc(db, "artifacts/default-app-id/nominees", existingVote.nomineeId)
@@ -422,13 +408,6 @@ export default function VoteEnrollPage() {
     }
   }
 
-  const canChangeVote = (votedAt: string) => {
-    const voted = new Date(votedAt)
-    const oneDayAgo = new Date()
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1)
-    return voted <= oneDayAgo
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -470,39 +449,8 @@ export default function VoteEnrollPage() {
             {categories.map((category) => {
               const userVote = userVotes[category.id]
 
-              // Helper to safely parse date/timestamp
-              const getDate = (val: any) => {
-                if (!val) return new Date();
-                if (val.toDate) return val.toDate(); // Firestore Timestamp
-                if (val.seconds) return new Date(val.seconds * 1000); // Serialized Timestamp
-                return new Date(val); // String or Date
-              }
-
-              const endTime = getDate(category.endTime)
-              const timeRemaining = endTime.getTime() - new Date().getTime()
-              const daysRemaining = Math.max(0, Math.floor(timeRemaining / (1000 * 60 * 60 * 24)))
-
-              // Default to collapsed if voted, expanded if not
+              // Helper for current cat logic
               const isExpanded = expandedCategories[category.id] !== undefined ? expandedCategories[category.id] : !userVote
-
-              // Check if vote is locked (more than 24h ago is WRONG - usually you can change WITHIN 24h or AFTER 24h? 
-              // Legacy code said: "You can only change your vote after 24 hours." implies it is locked FOR 24h.
-              // So if (now - votedAt) < 24h, it is LOCKED.
-              // wait, the previous code said: "if (votedAt > oneDayAgo) toast.error..." 
-              // oneDayAgo is "Now - 24h". 
-              // If votedAt (e.g. 10AM) > oneDayAgo (e.g. 9AM yesterday), it means it was recent.
-              // So YES, it is locked if voted RECENTLY (within 24h).
-
-              const isVoteLocked = (votedAtVal: any) => {
-                if (!votedAtVal) return false;
-                const votedAt = getDate(votedAtVal);
-                const oneDayAgo = new Date();
-                oneDayAgo.setHours(oneDayAgo.getHours() - 24);
-                // Locked if voted AFTER oneDayAgo (i.e., less than 24h has passed)
-                return votedAt > oneDayAgo;
-              }
-
-              const locked = userVote ? isVoteLocked(userVote.votedAt) : false
 
               return (
                 <div key={category.id} className="scroll-mt-24 awards-category-block" id={category.id}>
@@ -521,7 +469,7 @@ export default function VoteEnrollPage() {
                           {userVote.customName ? `Voted: ${userVote.customName}` : "Voted"}
                         </Badge>
                       )}
-                      <CountdownTimer targetDate={category.endTime} />
+                      <CountdownTimer targetDate={category.endDate} />
                     </div>
                   </div>
 
@@ -698,8 +646,13 @@ function CountdownTimer({ targetDate }: { targetDate: any }) {
     if (!target) return
 
     const targetTime = target.getTime()
-    // Debug log to ensure we are getting the right date
-    // console.log("Timer Target:", targetTime, "Now:", Date.now())
+
+    // Initial check
+    const now = new Date().getTime()
+    if (targetTime - now < 0) {
+      setTimeLeft(null)
+      return
+    }
 
     const updateTimer = () => {
       const now = new Date().getTime()
@@ -724,17 +677,9 @@ function CountdownTimer({ targetDate }: { targetDate: any }) {
 
   if (!timeLeft) {
     return (
-      <div className="flex flex-col items-end">
-        <Badge
-          variant="outline"
-          className="h-8 px-3 border-red-500/50 text-red-600 bg-red-500/10"
-        >
-          Voting Ended
-        </Badge>
-        <span className="text-[10px] text-muted-foreground mt-1 font-mono">
-          Debug: {targetDate ? (typeof targetDate === 'object' && 'seconds' in targetDate ? new Date(targetDate.seconds * 1000).toLocaleString() : JSON.stringify(targetDate)) : "Empty"}
-        </span>
-      </div>
+      <Badge variant="outline" className="h-8 px-3 border-red-500/50 text-red-600 bg-red-500/10 cursor-help" title="Voting has ended for this category">
+        Voting Ended
+      </Badge>
     )
   }
 
