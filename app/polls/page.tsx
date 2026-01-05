@@ -39,7 +39,17 @@ export default function PollsPage() {
         limit(20)
       )
       const snap = await getDocs(q)
-      const pollsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Poll))
+      const pollsData = snap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Poll))
+        .filter(poll => {
+          // Client-side filter: Hide if endTime is in the past
+          if (poll.endTime) {
+            const end = poll.endTime.seconds ? poll.endTime.seconds * 1000 : 0
+            if (end > 0 && end < Date.now()) return false
+          }
+          return true
+        })
+
       setPolls(pollsData)
       saveToCache(cacheKey, pollsData)
     } catch (error) {

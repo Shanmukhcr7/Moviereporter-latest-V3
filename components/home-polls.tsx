@@ -61,7 +61,20 @@ export function HomePolls() {
                 }
                 loadedPolls.push(poll)
             }
-            setPolls(loadedPolls)
+            setPolls(loadedPolls.filter(poll => {
+                // Client-side filter: Hide if endTime is in the past
+                if (poll.endTime) {
+                    // Check if Timestamp or similar object
+                    let endMillis = 0
+                    if (typeof poll.endTime.toMillis === 'function') {
+                        endMillis = poll.endTime.toMillis()
+                    } else if (poll.endTime.seconds) {
+                        endMillis = poll.endTime.seconds * 1000
+                    }
+                    if (endMillis > 0 && endMillis < Date.now()) return false
+                }
+                return true
+            }))
             saveToCache("home_polls_latest", loadedPolls)
         } catch (error) {
             console.error("Error loading polls:", error)
