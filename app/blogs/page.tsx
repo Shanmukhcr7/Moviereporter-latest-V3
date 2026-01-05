@@ -43,8 +43,7 @@ export default function BlogsPage() {
       const now = Timestamp.now()
 
       let constraints: any[] = [
-        where("scheduledAt", "<=", now),
-        orderBy("scheduledAt", "desc"),
+        orderBy("createdAt", "desc"),
         limit(BLOGS_LOAD_LIMIT)
       ]
 
@@ -68,7 +67,7 @@ export default function BlogsPage() {
             type: "blog" as const, // Consistently use "blog" type
             ...data,
             image: data.imageUrl || data.image, // Handle legacy imageUrl
-            publishedAt: data.scheduledAt ? data.scheduledAt.toDate().toISOString() : new Date().toISOString()
+            publishedAt: data.scheduledAt ? data.scheduledAt.toDate().toISOString() : (data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString())
           }
         })
 
@@ -77,7 +76,7 @@ export default function BlogsPage() {
         // Save to cache (Initial only)
         if (isInitial && !searchTerm && newBlogs.length > 0) {
           const lastDoc = snapshot.docs[snapshot.docs.length - 1]
-          const lastDate = lastDoc.data().scheduledAt ? lastDoc.data().scheduledAt.toDate().toISOString() : new Date().toISOString()
+          const lastDate = lastDoc.data().createdAt ? lastDoc.data().createdAt.toDate().toISOString() : new Date().toISOString()
           saveToCache(cacheKey, {
             data: newBlogs,
             lastDate: lastDate
