@@ -55,7 +55,10 @@ export default function HomePage() {
           setCelebrities(cached.celebrities)
           setRemainingCelebrities(cached.remainingCelebrities)
           setLoading(false)
-          return
+          // SWR: Do NOT return here. Continue to fetch fresh data.
+        } else {
+          // Only show loading if no cache
+          setLoading(true)
         }
 
         // Helper to prepare section data for cache and state

@@ -78,7 +78,9 @@ export default function UpcomingReleasesPage() {
       if (cached) {
         setAllMovies(cached)
         setLoading(false)
-        return
+        // SWR: Do NOT return. Fetch fresh data.
+      } else {
+        setLoading(true)
       }
 
       const now = Timestamp.now()

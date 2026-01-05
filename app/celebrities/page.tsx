@@ -76,7 +76,7 @@ export default function CelebritiesPage() {
         setLastDoc(cached.lastName) // Use name as cursor
         setLoading(false)
         setHasMore(true) // Start optimistically
-        return
+        // SWR: Do NOT return here. Continue to fetch fresh data.
       }
     }
 

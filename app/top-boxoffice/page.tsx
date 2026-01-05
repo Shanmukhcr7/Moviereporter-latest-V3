@@ -38,7 +38,9 @@ export default function TopBoxOfficePage() {
       if (cached) {
         setAllMovies(cached)
         setLoading(false)
-        return
+        // SWR: Do NOT return here. Continue to fetch fresh data.
+      } else {
+        setLoading(true)
       }
 
       // Legacy Logic: Fetch scheduled movies, then filter for (isPopular || isTopBoxOffice)

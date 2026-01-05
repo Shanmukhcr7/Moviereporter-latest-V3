@@ -64,7 +64,9 @@ export default function MoviesInfoPage() {
       if (cached) {
         setAllMovies(cached)
         setLoading(false)
-        return
+        // SWR: Do NOT return. Fetch fresh data.
+      } else {
+        setLoading(true)
       }
 
       const moviesRef = collection(db, "artifacts/default-app-id/movies")

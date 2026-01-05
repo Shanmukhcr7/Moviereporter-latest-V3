@@ -51,7 +51,9 @@ export default function OTTReleasesPage() {
       if (cached) {
         setAllMovies(cached)
         setLoading(false)
-        return
+        // SWR: Do NOT return here. Continue to fetch fresh data.
+      } else {
+        setLoading(true)
       }
 
       const now = Timestamp.now()

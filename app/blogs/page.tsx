@@ -31,11 +31,13 @@ export default function BlogsPage() {
         setBlogs(cached.data)
         setLastVisible(cached.lastDate)
         setLoading(false)
-        return
+        // SWR: Do NOT return here. Continue to fetch fresh data.
+      } else {
+        setLoading(true)
       }
+    } else {
+      setLoading(true)
     }
-
-    setLoading(true)
     try {
       const blogsRef = collection(db, "artifacts/default-app-id/blogs")
       const now = Timestamp.now()
