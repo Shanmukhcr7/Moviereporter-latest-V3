@@ -39,8 +39,8 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchHomeData() {
       try {
-        // Updated cache key to force refresh after date fix
-        const cacheKey = "home_data_cache_v2"
+        // Updated cache key to force refresh after rating fix
+        const cacheKey = "home_data_cache_v3"
         const cached = getFromCache<any>(cacheKey)
 
         if (cached) {
