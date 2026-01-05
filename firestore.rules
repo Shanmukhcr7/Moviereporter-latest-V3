@@ -215,6 +215,10 @@ service cloud.firestore {
     match /favoritesCelebrities/{celebrityId} {
       allow read, write: if isCurrentUser(userId);
     }
+
+    match /userReviews/{reviewId} {
+      allow read, write: if isCurrentUser(userId);
+    }
   }
 
   // --- Celebrities ---

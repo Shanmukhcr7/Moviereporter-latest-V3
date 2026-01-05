@@ -340,6 +340,33 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
                         <span className="font-semibold">{reviewItem.rating}</span>
                       </div>
                     </div>
+
+                    {/* Actions for own review */}
+                    {user && reviewItem.userId === user.uid && (
+                      <div className="flex gap-2 justify-end -mt-2 mb-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-primary"
+                          onClick={() => {
+                            setIsEditing(true)
+                            // Scroll to top to see form
+                            document.querySelector('.radix-dialog-content')?.scrollTo({ top: 0, behavior: 'smooth' })
+                          }}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          onClick={handleDeleteReview}
+                        >
+                          <Trash className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+
                     {/* Support both 'review' and legacy 'reviewText' */}
                     {(reviewItem.review || reviewItem.reviewText) && (
                       <p className="text-sm text-foreground/80 mt-1 whitespace-pre-wrap">
