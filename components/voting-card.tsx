@@ -62,21 +62,23 @@ export function VotingCard({ nominee, isVoted, onVote, onShare, onCustomVote, on
                             </Link>
                         )}
                     </h3>
-                    <p className="text-white/80 text-sm line-clamp-1">
-                        {isOther ? (
-                            "Your Opinion"
-                        ) : nominee.movieId ? (
-                            <Link href={`/movie/${nominee.movieId}`} className="hover:text-primary transition-colors hover:underline">
-                                {nominee.movie?.title || "Unknown Movie"}
-                            </Link>
-                        ) : (
-                            nominee.movie?.title
-                        )}
-                    </p>
                 </div>
             </div>
 
             <CardContent className="p-4 space-y-4">
+                {/* Movie Name Rendering */}
+                {!isOther && (
+                    <div className="mb-2">
+                        {nominee.movieId ? (
+                            <Link href={`/movie/${nominee.movieId}`} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors hover:underline block line-clamp-1">
+                                {nominee.movie?.title || "Unknown Movie"}
+                            </Link>
+                        ) : (
+                            <span className="text-sm text-muted-foreground block line-clamp-1">{nominee.movie?.title}</span>
+                        )}
+                    </div>
+                )}
+
                 <div className="flex gap-2">
                     {!isOther ? (
                         <>
