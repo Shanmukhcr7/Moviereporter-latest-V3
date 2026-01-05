@@ -19,7 +19,7 @@ export function AdminSearch({ items, onSelect, placeholder = "Search...", classN
 
     // Filter items based on query
     React.useEffect(() => {
-        if (query.trim().length > 0) {
+        if (query.trim().length >= 3) {
             const lowerQuery = query.toLowerCase()
             const filtered = items
                 .filter((item) => item.label.toLowerCase().includes(lowerQuery))

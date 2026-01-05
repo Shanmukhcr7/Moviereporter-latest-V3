@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { collection, getDocs, query, orderBy, limit, startAfter, deleteDoc, doc, QueryDocumentSnapshot } from "firebase/firestore"
+import { collection, getDocs, query, orderBy, limit, startAfter, deleteDoc, doc, QueryDocumentSnapshot, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import {
     Table,

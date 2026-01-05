@@ -5,7 +5,6 @@ import { collection, getDocs, query, orderBy, limit, startAfter, deleteDoc, doc,
 import { db } from "@/lib/firebase"
 import { NewsForm } from "@/components/admin/news-form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
     Table,
     TableBody,
@@ -21,30 +20,35 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, Search, Edit, Trash2, Loader2, Newspaper, BookOpen, RefreshCw } from "lucide-react"
+import { Plus, Edit, Trash2, Loader2, Newspaper, BookOpen, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
+import { AdminSearch } from "@/components/admin/admin-search"
 
-const ITEMS_PER_PAGE = 20
+const ITEMS_PER_PAGE = 5
 
 export default function NewsAndBlogsPage() {
     const [activeTab, setActiveTab] = useState<"news" | "blog">("news")
     const [items, setItems] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [loadingMore, setLoadingMore] = useState(false)
-    const [searchQuery, setSearchQuery] = useState("")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [selectedItem, setSelectedItem] = useState<any | null>(null)
     const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot | null>(null)
     const [hasMore, setHasMore] = useState(true)
+
+    // Search
+    const [searchIndex, setSearchIndex] = useState<{ id: string, label: string, value: string }[]>([])
+    const [filteredItems, setFilteredItems] = useState<any[]>([])
+    const [isSearching, setIsSearching] = useState(false)
 
     const fetchItems = async (isInitial = false) => {
         try {
             if (isInitial) {
                 setLoading(true)
                 setHasMore(true)
+                setIsSearching(false) // Reset search on fresh fetch
             } else {
                 setLoadingMore(true)
             }
@@ -59,7 +63,7 @@ export default function NewsAndBlogsPage() {
                 limit(ITEMS_PER_PAGE)
             )
 
-            if (!isInitial && lastVisible) {
+            if (!isInitial && lastVisible && !isSearching) {
                 q = query(
                     collection(db, collectionName),
                     orderBy("createdAt", "desc"),
@@ -77,8 +81,10 @@ export default function NewsAndBlogsPage() {
 
             if (isInitial) {
                 setItems(newItems)
+                setFilteredItems(newItems)
             } else {
                 setItems(prev => [...prev, ...newItems])
+                setFilteredItems(prev => [...prev, ...newItems])
             }
 
             setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null)
@@ -99,15 +105,61 @@ export default function NewsAndBlogsPage() {
     // Reset and fetch when tab changes
     useEffect(() => {
         setItems([])
+        setFilteredItems([])
         setLastVisible(null)
-        setSearchQuery("")
+        setSearchIndex([])
         fetchItems(true)
+        fetchSearchIndex()
     }, [activeTab])
 
-    const filteredItems = items.filter(item =>
-        item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.author?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    const fetchSearchIndex = async () => {
+        // Fetch title/id list for search suggestions
+        const collectionName = activeTab === "news"
+            ? "artifacts/default-app-id/news"
+            : "artifacts/default-app-id/blogs"
+
+        // We might want to limit this index or use Algolia in prod, 
+        // but for now fetch all ids/titles is standard for small/medium apps
+        const q = query(collection(db, collectionName), orderBy("createdAt", "desc"), limit(500))
+        const snapshot = await getDocs(q)
+        const index = snapshot.docs.map(d => ({
+            id: d.id,
+            label: d.data().title || "Untitled",
+            value: d.id
+        }))
+        setSearchIndex(index)
+    }
+
+    const handleSearchSelect = async (id: string) => {
+        setLoading(true)
+        setIsSearching(true)
+        try {
+            const local = items.find(i => i.id === id)
+            if (local) {
+                setFilteredItems([local])
+                setLoading(false)
+                return
+            }
+
+            const { getDoc } = await import("firebase/firestore")
+            const collectionName = activeTab === "news" ? "artifacts/default-app-id/news" : "artifacts/default-app-id/blogs"
+            const docRef = doc(db, collectionName, id)
+            const docSnap = await getDoc(docRef)
+
+            if (docSnap.exists()) {
+                setFilteredItems([{ id: docSnap.id, ...docSnap.data() }])
+            }
+        } catch (e) {
+            toast.error("Error finding item")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleClearSearch = () => {
+        setIsSearching(false)
+        setFilteredItems(items)
+    }
 
     const handleDelete = async (id: string, title: string) => {
         if (confirm(`Delete "${title}"?`)) {
@@ -118,6 +170,7 @@ export default function NewsAndBlogsPage() {
                 await deleteDoc(doc(db, collectionName, id))
                 toast.success("Deleted successfully")
                 setItems(prev => prev.filter(item => item.id !== id))
+                setFilteredItems(prev => prev.filter(item => item.id !== id))
             } catch (error) {
                 console.error("Error deleting:", error)
                 toast.error("Failed to delete")
@@ -162,13 +215,16 @@ export default function NewsAndBlogsPage() {
                 </div>
 
                 <div className="flex items-center gap-4 bg-background p-4 rounded-lg border mb-4">
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder={`Search loaded ${activeTab}...`}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="max-w-md border-0 focus-visible:ring-0 bg-transparent pl-0"
-                    />
+                    <div className="flex-1 max-w-sm">
+                        <AdminSearch
+                            items={searchIndex}
+                            onSelect={handleSearchSelect}
+                            placeholder={`Search ${activeTab}...`}
+                        />
+                    </div>
+                    {isSearching && (
+                        <Button variant="ghost" onClick={handleClearSearch}>Clear Search</Button>
+                    )}
                 </div>
 
                 <TabsContent value="news" className="border rounded-md bg-background mt-0">
@@ -190,7 +246,7 @@ export default function NewsAndBlogsPage() {
                     />
                 </TabsContent>
 
-                {!loading && hasMore && (
+                {!loading && hasMore && !isSearching && (
                     <div className="flex justify-center pt-4">
                         <Button variant="outline" onClick={() => fetchItems(false)} disabled={loadingMore}>
                             {loadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
