@@ -160,7 +160,7 @@ export function NewsStories() {
         <>
             {/* Story Bar */}
             <div className="w-full overflow-x-auto pb-4 scrollbar-hide">
-                <div className="flex gap-4 px-4 min-w-max">
+                <div className="flex gap-4 min-w-max">
                     {stories.map((story, index) => (
                         <div
                             key={story.id}
