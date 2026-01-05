@@ -187,6 +187,7 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
     const snapshot = await getDocs(reviewsQuery)
 
     const ratings = snapshot.docs.map((doc) => doc.data().rating)
+    const avgRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0
     const reviewCount = ratings.length
     console.log("Calculated Stats:", { id: movie.id, count: reviewCount, avg: avgRating })
 
