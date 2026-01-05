@@ -5,7 +5,6 @@ import { collection, getDocs, query, orderBy, limit, startAfter, deleteDoc, doc,
 import { db } from "@/lib/firebase"
 import { CelebrityForm } from "@/components/admin/celebrity-form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -21,26 +20,32 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, Search, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
+import { Plus, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
+import { AdminSearch } from "@/components/admin/admin-search"
 
-const ITEMS_PER_PAGE = 20
+const ITEMS_PER_PAGE = 5
 
 export default function CelebritiesPage() {
   const [celebrities, setCelebrities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedCeleb, setSelectedCeleb] = useState<any | null>(null)
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot | null>(null)
   const [hasMore, setHasMore] = useState(true)
+
+  // Search
+  const [searchIndex, setSearchIndex] = useState<{ id: string, label: string, value: string }[]>([])
+  const [filteredCelebrities, setFilteredCelebrities] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
 
   const fetchCelebrities = async (isInitial = false) => {
     try {
       if (isInitial) {
         setLoading(true)
         setHasMore(true)
+        setIsSearching(false)
       } else {
         setLoadingMore(true)
       }
@@ -51,7 +56,7 @@ export default function CelebritiesPage() {
         limit(ITEMS_PER_PAGE)
       )
 
-      if (!isInitial && lastVisible) {
+      if (!isInitial && lastVisible && !isSearching) {
         q = query(
           collection(db, "artifacts/default-app-id/celebrities"),
           orderBy("name", "asc"),
@@ -69,8 +74,10 @@ export default function CelebritiesPage() {
 
       if (isInitial) {
         setCelebrities(newCelebrities)
+        setFilteredCelebrities(newCelebrities)
       } else {
         setCelebrities(prev => [...prev, ...newCelebrities])
+        setFilteredCelebrities(prev => [...prev, ...newCelebrities])
       }
 
       setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null)
@@ -89,13 +96,51 @@ export default function CelebritiesPage() {
   }
 
   useEffect(() => {
+    const fetchSearchIndex = async () => {
+      const q = query(collection(db, "artifacts/default-app-id/celebrities"), orderBy("name"))
+      const snapshot = await getDocs(q)
+      const index = snapshot.docs.map(d => ({
+        id: d.id,
+        label: d.data().name,
+        value: d.id
+      }))
+      setSearchIndex(index)
+    }
+    fetchSearchIndex()
+  }, [])
+
+  useEffect(() => {
     fetchCelebrities(true)
   }, [])
 
-  const filteredCelebrities = celebrities.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.role.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const handleSearchSelect = async (id: string) => {
+    setLoading(true)
+    setIsSearching(true)
+    try {
+      const local = celebrities.find(c => c.id === id)
+      if (local) {
+        setFilteredCelebrities([local])
+        setLoading(false)
+        return
+      }
+
+      const { getDoc } = await import("firebase/firestore")
+      const docRef = doc(db, "artifacts/default-app-id/celebrities", id)
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        setFilteredCelebrities([{ id: docSnap.id, ...docSnap.data() }])
+      }
+    } catch (e) {
+      toast.error("Error finding celebrity")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClearSearch = () => {
+    setIsSearching(false)
+    setFilteredCelebrities(celebrities)
+  }
 
   const handleDelete = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to delete "${name}"?`)) {
@@ -103,6 +148,7 @@ export default function CelebritiesPage() {
         await deleteDoc(doc(db, "artifacts/default-app-id/celebrities", id))
         toast.success("Celebrity deleted")
         setCelebrities(prev => prev.filter(c => c.id !== id))
+        setFilteredCelebrities(prev => prev.filter(c => c.id !== id))
       } catch (error) {
         console.error("Error deleting:", error)
         toast.error("Failed to delete")
@@ -144,13 +190,16 @@ export default function CelebritiesPage() {
 
       {/* Search Bar */}
       <div className="flex items-center gap-4 bg-background p-4 rounded-lg border">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search loaded celebrities..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-md border-0 focus-visible:ring-0 bg-transparent pl-0"
-        />
+        <div className="flex-1 max-w-sm">
+          <AdminSearch
+            items={searchIndex}
+            onSelect={handleSearchSelect}
+            placeholder="Search celebrities..."
+          />
+        </div>
+        {isSearching && (
+          <Button variant="ghost" onClick={handleClearSearch}>Clear Search</Button>
+        )}
       </div>
 
       {/* Table */}
@@ -213,7 +262,7 @@ export default function CelebritiesPage() {
         </Table>
       </div>
 
-      {!loading && hasMore && (
+      {!loading && hasMore && !isSearching && (
         <div className="flex justify-center pt-4">
           <Button variant="outline" onClick={() => fetchCelebrities(false)} disabled={loadingMore}>
             {loadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

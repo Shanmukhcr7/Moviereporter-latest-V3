@@ -5,7 +5,6 @@ import { collection, getDocs, query, orderBy, limit, startAfter, deleteDoc, doc,
 import { db } from "@/lib/firebase"
 import { MovieForm } from "@/components/admin/movie-form"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -20,27 +19,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Search, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
+import { Plus, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { format } from "date-fns"
+import { AdminSearch } from "@/components/admin/admin-search"
 
-const ITEMS_PER_PAGE = 20
+const ITEMS_PER_PAGE = 5
 
 export default function MoviesPage() {
   const [movies, setMovies] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedMovie, setSelectedMovie] = useState<any | null>(null)
   const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot | null>(null)
   const [hasMore, setHasMore] = useState(true)
+
+  // Search Index
+  const [searchIndex, setSearchIndex] = useState<{ id: string, label: string, value: string }[]>([])
+  const [filteredMovies, setFilteredMovies] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
 
   const fetchMovies = async (isInitial = false) => {
     try {
       if (isInitial) {
         setLoading(true)
         setHasMore(true) // Reset hasMore on fresh load
+        setIsSearching(false) // Reset search mode
       } else {
         setLoadingMore(true)
       }
@@ -51,7 +56,7 @@ export default function MoviesPage() {
         limit(ITEMS_PER_PAGE)
       )
 
-      if (!isInitial && lastVisible) {
+      if (!isInitial && lastVisible && !isSearching) {
         q = query(
           collection(db, "artifacts/default-app-id/movies"),
           orderBy("createdAt", "desc"),
@@ -61,7 +66,6 @@ export default function MoviesPage() {
       }
 
       const snapshot = await getDocs(q)
-
       const newMovies = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -69,13 +73,14 @@ export default function MoviesPage() {
 
       if (isInitial) {
         setMovies(newMovies)
+        setFilteredMovies(newMovies)
       } else {
         setMovies(prev => [...prev, ...newMovies])
+        setFilteredMovies(prev => [...prev, ...newMovies])
       }
 
       setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null)
 
-      // If we got fewer items than requested, we've reached the end
       if (snapshot.docs.length < ITEMS_PER_PAGE) {
         setHasMore(false)
       }
@@ -89,25 +94,64 @@ export default function MoviesPage() {
     }
   }
 
+  // Fetch Search Index (All items lightweight)
+  useEffect(() => {
+    const fetchSearchIndex = async () => {
+      const q = query(collection(db, "artifacts/default-app-id/movies"), orderBy("title"))
+      const snapshot = await getDocs(q)
+      const index = snapshot.docs.map(d => ({
+        id: d.id,
+        label: d.data().title,
+        value: d.id // Value can be ID or slug
+      }))
+      setSearchIndex(index)
+    }
+    fetchSearchIndex()
+  }, [])
+
   useEffect(() => {
     fetchMovies(true)
   }, [])
 
-  // Client-side search (filtering loaded items) for now to save complex queries
-  // A robust solution would be a separate "Search" button hitting a separate index/query, 
-  // but this usually suffices for Admin usage unless dataset is massive.
-  const filteredMovies = movies.filter(m =>
-    m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.industry.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const handleSearchSelect = async (movieId: string) => {
+    setLoading(true)
+    setIsSearching(true)
+    try {
+      // If selected existing loaded, filter locally
+      const local = movies.find(m => m.id === movieId)
+      if (local) {
+        setFilteredMovies([local])
+        setLoading(false)
+        return
+      }
+
+      // Else fetch specific
+      const { getDoc } = await import("firebase/firestore") // dynamic import
+      const docRef = doc(db, "artifacts/default-app-id/movies", movieId)
+      const docSnap = await getDoc(docRef)
+
+      if (docSnap.exists()) {
+        setFilteredMovies([{ id: docSnap.id, ...docSnap.data() }])
+      }
+    } catch (error) {
+      toast.error("Error finding movie")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClearSearch = () => {
+    setIsSearching(false)
+    setFilteredMovies(movies)
+  }
 
   const handleDelete = async (id: string, title: string) => {
     if (confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
       try {
         await deleteDoc(doc(db, "artifacts/default-app-id/movies", id))
         toast.success("Movie deleted")
-        // Remove from local state
         setMovies(prev => prev.filter(m => m.id !== id))
+        setFilteredMovies(prev => prev.filter(m => m.id !== id))
       } catch (error) {
         console.error("Error deleting:", error)
         toast.error("Failed to delete")
@@ -127,7 +171,7 @@ export default function MoviesPage() {
 
   const handleFormSuccess = () => {
     setIsDialogOpen(false)
-    fetchMovies(true) // Refresh list to show new/updated item and ensure correct order
+    fetchMovies(true)
   }
 
   return (
@@ -148,13 +192,16 @@ export default function MoviesPage() {
       </div>
 
       <div className="flex items-center gap-4 bg-background p-4 rounded-lg border">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search loaded movies..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-md border-0 focus-visible:ring-0 bg-transparent pl-0"
-        />
+        <div className="flex-1 max-w-sm">
+          <AdminSearch
+            items={searchIndex}
+            onSelect={handleSearchSelect}
+            placeholder="Search movies..."
+          />
+        </div>
+        {isSearching && (
+          <Button variant="ghost" onClick={handleClearSearch}>Clear Search</Button>
+        )}
       </div>
 
       <div className="border rounded-md bg-background">
@@ -218,7 +265,7 @@ export default function MoviesPage() {
         </Table>
       </div>
 
-      {!loading && hasMore && (
+      {!loading && hasMore && !isSearching && (
         <div className="flex justify-center pt-4">
           <Button variant="outline" onClick={() => fetchMovies(false)} disabled={loadingMore}>
             {loadingMore ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
