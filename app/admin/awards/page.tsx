@@ -269,27 +269,45 @@ function NomineesManager({ categoryId, categoryName }: any) {
         return () => unsub()
     }, [categoryId])
 
-    // Search Celebs
-    useEffect(() => {
-        if (celebSearch.length < 2) { setCelebResults([]); return }
-        const timer = setTimeout(async () => {
-            const q = query(collection(db, "artifacts/default-app-id/celebrities"), where("name", ">=", celebSearch), where("name", "<=", celebSearch + "\uf8ff"), limit(5))
-            const snap = await getDocs(q)
-            setCelebResults(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-        }, 300)
-        return () => clearTimeout(timer)
-    }, [celebSearch])
+    // Data State
+    const [allCelebs, setAllCelebs] = useState<any[]>([])
+    const [allMovies, setAllMovies] = useState<any[]>([])
 
-    // Search Movies
+    // Fetch All Data on Mount
     useEffect(() => {
-        if (movieSearch.length < 2) { setMovieResults([]); return }
-        const timer = setTimeout(async () => {
-            const q = query(collection(db, "artifacts/default-app-id/movies"), where("title", ">=", movieSearch), where("title", "<=", movieSearch + "\uf8ff"), limit(5))
-            const snap = await getDocs(q)
-            setMovieResults(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-        }, 300)
-        return () => clearTimeout(timer)
-    }, [movieSearch])
+        const fetchData = async () => {
+            // Celebs
+            const cQ = query(collection(db, "artifacts/default-app-id/celebrities"), limit(500))
+            const cSnap = await getDocs(cQ)
+            setAllCelebs(cSnap.docs.map(d => ({ id: d.id, ...d.data() })))
+
+            // Movies
+            const mQ = query(collection(db, "artifacts/default-app-id/movies"), limit(500))
+            const mSnap = await getDocs(mQ)
+            setAllMovies(mSnap.docs.map(d => ({ id: d.id, ...d.data() })))
+        }
+        fetchData()
+    }, [])
+
+    // Search Celebs (Client Side)
+    useEffect(() => {
+        if (celebSearch.length < 1) { setCelebResults([]); return }
+        const lower = celebSearch.toLowerCase()
+        const results = allCelebs
+            .filter(c => (c.name || "").toLowerCase().includes(lower))
+            .slice(0, 5)
+        setCelebResults(results)
+    }, [celebSearch, allCelebs])
+
+    // Search Movies (Client Side)
+    useEffect(() => {
+        if (movieSearch.length < 1) { setMovieResults([]); return }
+        const lower = movieSearch.toLowerCase()
+        const results = allMovies
+            .filter(m => (m.title || "").toLowerCase().includes(lower))
+            .slice(0, 5)
+        setMovieResults(results)
+    }, [movieSearch, allMovies])
 
     const addNominee = async () => {
         if (!selectedCeleb) return toast.error("Select a celebrity")
@@ -330,7 +348,7 @@ function NomineesManager({ categoryId, categoryName }: any) {
                             </div>
                         )}
                         {celebResults.length > 0 && !selectedCeleb && (
-                            <div className="absolute z-10 w-full bg-popover border rounded shadow mt-1">
+                            <div className="absolute z-[9999] w-full bg-popover border rounded shadow mt-1 max-h-[200px] overflow-y-auto">
                                 {celebResults.map(c => (
                                     <div key={c.id} onClick={() => { setSelectedCeleb(c); setCelebResults([]); setCelebSearch("") }} className="p-2 hover:bg-accent cursor-pointer flex items-center gap-2">
                                         <Avatar className="h-6 w-6"><AvatarImage src={c.image || c.imageUrl || c.profileImage} /></Avatar> {c.name}
@@ -351,7 +369,7 @@ function NomineesManager({ categoryId, categoryName }: any) {
                             </div>
                         )}
                         {movieResults.length > 0 && !selectedMovie && (
-                            <div className="absolute z-10 w-full bg-popover border rounded shadow mt-1">
+                            <div className="absolute z-[9999] w-full bg-popover border rounded shadow mt-1 max-h-[200px] overflow-y-auto">
                                 {movieResults.map(m => (
                                     <div key={m.id} onClick={() => { setSelectedMovie(m); setMovieResults([]); setMovieSearch("") }} className="p-2 hover:bg-accent cursor-pointer flex items-center gap-2">
                                         <AwardWinnersDropdownIcon category="movie" /> {m.title}

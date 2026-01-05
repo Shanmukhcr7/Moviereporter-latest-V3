@@ -24,58 +24,48 @@ interface CastSelectorProps {
 
 export function CastSelector({ value = [], onChange, disabled }: CastSelectorProps) {
     const [searchQuery, setSearchQuery] = useState("")
+    const [allCelebrities, setAllCelebrities] = useState<CastMember[]>([])
     const [suggestions, setSuggestions] = useState<CastMember[]>([])
     const [loading, setLoading] = useState(false)
 
-    // Debounce search
+    // Fetch all celebrities once on mount
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if (searchQuery.trim().length > 1) {
-                searchCelebrities()
-            } else {
-                setSuggestions([])
-            }
-        }, 500)
-        return () => clearTimeout(timer)
-    }, [searchQuery])
-
-    const searchCelebrities = async () => {
-        setLoading(true)
-        try {
-            // In a real app with many records, Algolia or a specialized search index is better.
-            // Firestore simplistic search (case-sensitive) or just fetching logic.
-            // For this demo, we'll fetch all and filter client side if list is small, 
-            // OR use >= and <= for prefix search. Trie prefix search:
-
-            const q = query(
-                collection(db, "artifacts/default-app-id/celebrities"),
-                // Simple prefix search trick for Firestore
-                where("name", ">=", searchQuery),
-                where("name", "<=", searchQuery + "\uf8ff"),
-                limit(5)
-            )
-
+        const fetchCelebs = async () => {
+            const q = query(collection(db, "artifacts/default-app-id/celebrities"), limit(500)) // Fetch reasonable limit
             const snapshot = await getDocs(q)
             const results: CastMember[] = []
             snapshot.forEach(doc => {
                 const data = doc.data()
-                // Avoid adding already selected cast
-                if (!value.find(c => c.id === doc.id)) {
-                    results.push({
-                        id: doc.id,
-                        name: data.name,
-                        role: data.role,
-                        imageUrl: data.imageUrl
-                    })
-                }
+                results.push({
+                    id: doc.id,
+                    name: data.name || "Unknown",
+                    role: data.role || "Actor",
+                    imageUrl: data.image || data.imageUrl || data.profileImage || ""
+                })
             })
-            setSuggestions(results)
-        } catch (error) {
-            console.error("Search error:", error)
-        } finally {
-            setLoading(false)
+            setAllCelebrities(results)
         }
-    }
+        fetchCelebs()
+    }, [])
+
+    // Filter locally
+    useEffect(() => {
+        if (searchQuery.trim().length > 1) {
+            const lowerQuery = searchQuery.toLowerCase()
+            const filtered = allCelebrities
+                .filter(c =>
+                    c.name.toLowerCase().includes(lowerQuery) &&
+                    !value.find(selected => selected.id === c.id) // Exclude selected
+                )
+                .slice(0, 10) // Limit suggestions
+            setSuggestions(filtered)
+        } else {
+            setSuggestions([])
+        }
+    }, [searchQuery, allCelebrities, value])
+
+    // Remove old server-side search logic
+    // const searchCelebrities = async () => { ... }
 
     const addCast = (celeb: CastMember) => {
         onChange([...value, celeb])
@@ -105,7 +95,7 @@ export function CastSelector({ value = [], onChange, disabled }: CastSelectorPro
 
                 {/* Suggestions Dropdown */}
                 {suggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-popover border rounded-md shadow-lg overflow-hidden">
+                    <div className="absolute top-full left-0 right-0 mt-1 z-[9999] bg-popover border rounded-md shadow-lg overflow-hidden max-h-[300px] overflow-y-auto">
                         {suggestions.map(celeb => (
                             <button
                                 key={celeb.id}
