@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { ImageUpload } from "@/components/admin/image-upload"
 
 export default function NewMoviePage() {
   const { user } = useAuth()
@@ -197,24 +198,20 @@ export default function NewMoviePage() {
             </div>
 
             <div>
-              <Label htmlFor="poster">Poster URL *</Label>
-              <Input
-                id="poster"
-                type="url"
+              <Label>Poster Image *</Label>
+              <ImageUpload
                 value={formData.poster}
-                onChange={(e) => setFormData({ ...formData, poster: e.target.value })}
-                required
+                onChange={(url) => setFormData(prev => ({ ...prev, poster: url }))}
+                onRemove={() => setFormData(prev => ({ ...prev, poster: "" }))}
               />
             </div>
 
             <div>
-              <Label htmlFor="banner">Banner URL *</Label>
-              <Input
-                id="banner"
-                type="url"
+              <Label>Banner Image *</Label>
+              <ImageUpload
                 value={formData.banner}
-                onChange={(e) => setFormData({ ...formData, banner: e.target.value })}
-                required
+                onChange={(url) => setFormData(prev => ({ ...prev, banner: url }))}
+                onRemove={() => setFormData(prev => ({ ...prev, banner: "" }))}
               />
             </div>
 

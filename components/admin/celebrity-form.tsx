@@ -7,7 +7,7 @@ import * as z from "zod"
 // Fixed imports
 import { addDoc, collection, doc, updateDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { PHPImageUpload } from "@/components/admin/php-image-upload"
+import { ImageUpload } from "@/components/admin/image-upload"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -86,12 +86,10 @@ export function CelebrityForm({ initialData, onSuccess }: CelebrityFormProps) {
                         <FormItem>
                             <FormLabel>Profile Image</FormLabel>
                             <FormControl>
-                                <PHPImageUpload
+                                <ImageUpload
                                     value={field.value}
                                     onChange={field.onChange}
-                                    disabled={loading}
-                                    // IMPORTANT: The user must replace this with their actual Hostinger URL
-                                    uploadUrl="https://your-hostinger-domain.com/upload.php"
+                                    onRemove={() => field.onChange("")}
                                 />
                             </FormControl>
                             <FormMessage />
