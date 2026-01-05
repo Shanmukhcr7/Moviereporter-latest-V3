@@ -21,6 +21,10 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'movielovers.in',
+      },
+      {
+        protocol: 'https',
         hostname: 'www.moviereporter.in',
       },
       {

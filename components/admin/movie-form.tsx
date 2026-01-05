@@ -78,6 +78,11 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
         try {
             const movieData = {
                 ...values,
+                // Sanitize undefined values
+                scheduledPublish: values.scheduledPublish || null,
+                boxOffice: values.boxOffice || "",
+                trailerUrl: values.trailerUrl || "",
+                description: values.description || "",
                 // Convert JS dates to Firestore Timestamps
                 updatedAt: Timestamp.now(),
             }

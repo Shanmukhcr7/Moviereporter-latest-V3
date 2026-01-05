@@ -80,6 +80,8 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
 
             const docData = {
                 ...values,
+                scheduledPublish: values.scheduledPublish || null,
+                category: values.category || null,
                 type, // Explicitly store type
                 updatedAt: Timestamp.now(),
             }
