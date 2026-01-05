@@ -54,60 +54,26 @@ export default function NewsPage() {
     // We'll only cache the first page (initial load).
     const cacheKey = `news_initial_${categoryFilter}`
 
+    // Check cache FIRST
     if (isInitial && !searchTerm) {
       const cached = getFromCache<any>(cacheKey)
       if (cached) {
-        setNews(cached.docs)
-        setLastVisible(null) // Pagination link broken for cached data unless we serialize it? 
-        // Firestore QueryDocumentSnapshot cannot be easily serialized/deserialized for pagination use.
-        // If we use cache, we lose pagination capability for the "next" page unless we fetch it.
-        // But the user asked to remove reads.
-        // If we show cached data, we can't easily "Load More" from where we left off without a real snapshot.
-        // Strategy: Use cache for display. If user scrolls to bottom, we might need to reset/refetch or use a timestamp cursor?
-        // Actually, we can use `startAfter` with a serialized date if we sort by date. 
-        // The current code uses `startAfter(lastVisible)` which is a doc snapshot.
-        // We can switch to `startAfter(timestamp)` for easier restoration.
-        // Modification: Switch query to use timestamp cursor if possible?
-        // Existing query: orderBy("scheduledAt", "desc")
-        // So we can use the last item's `scheduledAt` for cursor.
-
-        // Let's proceed with caching the list data. If user hits bottom, we can't easily continue from cache without a real doc.
-        // We'll set hasMore=false for cached data to be safe, OR we assume cache is only for "fresh visit" and force refresh on load more?
-        // Better: If cached, show it. If they want more, we might need to re-fetch the first batch + next batch or just fail over.
-        // Let's keep it simple: Cache initial view. If they scroll, we might re-fetch from scratch or handle it gracefully.
-        // The simplest approach that meets the "reduce reads" requirement:
-        // Cache the initial 12 items.
-        // If cached data is used, `lastVisible` is null.
-        // If user scrolls, `fetchNews(false)` is called.
-        // logic: `if (!isInitial && lastVisible)`. If lastVisible is null, it won't add startAfter, so it fetches page 1 again? 
-        // That would duplicate. 
-        // We need to be careful.
-
-        // Alternative: Don't cache pagination state. Just cache the content for "quick view". 
-        // If they interact, maybe we trigger a real fetch?
-        // Or we store the last item's timestamp and use it for `startAfter`.
-
-        // Let's refine:
-        // 1. Cache the `newNews` array.
-        // 2. On mount, load from cache.
-        // 3. For pagination to work, we need a valid cursor. Since we can't cache the Firestore object, we might have to disable "Load More" until they refresh?
-        // OR: We store the serialized data. When "Load More" triggers, we fetch using the `publishedAt` of the last item as the cursor (using startAfter(date)).
-
         setNews(cached.data)
-        const lastItem = cached.data[cached.data.length - 1]
-        // We need to re-construct a "fake" cursor or use field-based cursor
-        // Firestore allows `startAfter(fieldValue)`.
-        // Our sort is `orderBy("scheduledAt", "desc")`.
-        // So we can use the string timestamp or date object.
-        // cached.lastScheduledAt would be useful.
-        setLastVisible(cached.lastScheduledAt)
+        // Set lastVisible using the serialized string for now, but the fetch below will overwrite it with a real snapshot if successful
+        const cursor = cached.lastScheduledAt
+        setLastVisible(cursor)
         setHasMore(true)
+        // We do NOT return here. We let the fetch continue (Stale-While-Revalidate).
+        // If we have cached data, we don't need to show the loading skeleton.
         setLoading(false)
-        return
+      } else {
+        // Only show loading if no cache
+        setLoading(true)
       }
+    } else {
+      setLoading(true)
     }
 
-    setLoading(true)
     try {
       const newsRef = collection(db, "artifacts/default-app-id/news")
       const now = Timestamp.now()
