@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "sonner"
@@ -18,18 +19,29 @@ export default function PollsPage() {
   }, [])
 
   const fetchActivePolls = async () => {
-    setLoading(true)
+    // Cache Check
+    const cacheKey = "polls_page_all"
+    const cached = getFromCache<Poll[]>(cacheKey)
+    if (cached) {
+      setPolls(cached)
+      setLoading(false)
+      // SWR: Continue fetch
+    } else {
+      setLoading(true)
+    }
+
     try {
       const now = Timestamp.now()
+      // Use createdAt to ensure visibility of new polls
       const q = query(
         collection(db, "artifacts/default-app-id/polls"),
-        where("startTime", "<=", now),
-        where("endTime", ">=", now),
-        orderBy("startTime", "desc")
+        orderBy("createdAt", "desc"),
+        limit(20)
       )
       const snap = await getDocs(q)
       const pollsData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Poll))
       setPolls(pollsData)
+      saveToCache(cacheKey, pollsData)
     } catch (error) {
       console.error("Error fetching polls:", error)
       toast.error("Failed to load polls")

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { collection, query, orderBy, limit, getDocs, Timestamp, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { useAuth } from "@/lib/auth-context"
 import { SectionCarousel } from "@/components/ui/section-carousel"
 import { Loader2 } from "lucide-react"
@@ -15,13 +16,21 @@ export function HomePolls() {
 
     const fetchPolls = async () => {
         try {
+            const cacheKey = "home_polls_latest"
+            const cached = getFromCache<Poll[]>(cacheKey)
+            if (cached) {
+                setPolls(cached)
+                setLoading(false)
+                // SWR: Continue fetch
+            }
+
             const now = Timestamp.now()
+            // Fetch by createdAt to ensure visibility of new items
+            // We can filter active client side if needed, or assume newly created are relevant
             const q = query(
                 collection(db, "artifacts/default-app-id/polls"),
-                where("startTime", "<=", now),
-                where("endTime", ">=", now),
-                orderBy("startTime", "desc"),
-                limit(5)
+                orderBy("createdAt", "desc"),
+                limit(10)
             )
             const snap = await getDocs(q)
 
@@ -53,6 +62,7 @@ export function HomePolls() {
                 loadedPolls.push(poll)
             }
             setPolls(loadedPolls)
+            saveToCache("home_polls_latest", loadedPolls)
         } catch (error) {
             console.error("Error loading polls:", error)
         } finally {
