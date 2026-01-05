@@ -206,16 +206,26 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {(() => {
-                      if (!movie.releaseDate) return "N/A"
-                      // Handle Firestore Timestamp
-                      if (typeof movie.releaseDate.toDate === 'function') {
-                        return movie.releaseDate.toDate().toLocaleDateString()
-                      }
-                      // Handle Date object or valid date string
-                      const d = new Date(movie.releaseDate)
-                      return !isNaN(d.getTime()) ? d.toLocaleDateString() : "Invalid Date"
-                    })()}
+                    <span>
+                      {(() => {
+                        if (!movie.releaseDate) return "N/A"
+                        try {
+                          // Handle Firestore Timestamp
+                          if (typeof movie.releaseDate.toDate === 'function') {
+                            return movie.releaseDate.toDate().toLocaleDateString()
+                          }
+                          // Handle serialized Timestamp (seconds)
+                          if (movie.releaseDate.seconds) {
+                            return new Date(movie.releaseDate.seconds * 1000).toLocaleDateString()
+                          }
+                          // Handle Date object or valid date string
+                          const d = new Date(movie.releaseDate)
+                          return !isNaN(d.getTime()) ? d.toLocaleDateString() : "Invalid Date"
+                        } catch (e) {
+                          return "N/A"
+                        }
+                      })()}
+                    </span>
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -339,13 +349,18 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
                     <p className="text-xs text-muted-foreground">
                       {(() => {
                         if (!reviewItem.createdAt) return "Unknown Date"
-                        // Handle Timestamp
-                        if (typeof reviewItem.createdAt.toDate === 'function') {
-                          return reviewItem.createdAt.toDate().toLocaleDateString()
+                        try {
+                          if (typeof reviewItem.createdAt.toDate === 'function') {
+                            return reviewItem.createdAt.toDate().toLocaleDateString()
+                          }
+                          if (reviewItem.createdAt.seconds) {
+                            return new Date(reviewItem.createdAt.seconds * 1000).toLocaleDateString()
+                          }
+                          const d = new Date(reviewItem.createdAt)
+                          return !isNaN(d.getTime()) ? d.toLocaleDateString() : "Invalid Date"
+                        } catch (e) {
+                          return "Unknown Date"
                         }
-                        // Handle string/Date
-                        const d = new Date(reviewItem.createdAt)
-                        return !isNaN(d.getTime()) ? d.toLocaleDateString() : "Invalid Date"
                       })()}
                     </p>
                   </div>

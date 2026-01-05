@@ -87,7 +87,22 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
         movieId: id,
         title,
         posterUrl: poster || "",
-        releaseDate: releaseDate ? Timestamp.fromDate(new Date(releaseDate)) : null,
+        releaseDate: (() => {
+          if (!releaseDate) return null;
+          try {
+            // If it's already a Timestamp-like object (has seconds), use it
+            if ((releaseDate as any).seconds) return new Date((releaseDate as any).seconds * 1000);
+
+            // If it handles toDate (actual Firestore Timestamp), use it
+            if (typeof (releaseDate as any).toDate === 'function') return (releaseDate as any).toDate();
+
+            // Try standard date parsing
+            const d = new Date(releaseDate);
+            return !isNaN(d.getTime()) ? d : null;
+          } catch {
+            return null;
+          }
+        })(),
         addedAt: Timestamp.now()
       })
       setIsInterested(true)
@@ -167,7 +182,27 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
             <div className="flex items-center justify-between text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
-                <span>{releaseDate ? new Date(releaseDate).toLocaleDateString() : 'TBD'}</span>
+                <span>
+                  {(() => {
+                    try {
+                      if (!releaseDate) return 'TBD'
+                      // Handle Firestore Timestamp
+                      if (typeof (releaseDate as any).toDate === 'function') {
+                        return (releaseDate as any).toDate().toLocaleDateString()
+                      }
+                      // Handle serialized Timestamp (seconds)
+                      if ((releaseDate as any).seconds) {
+                        return new Date((releaseDate as any).seconds * 1000).toLocaleDateString()
+                      }
+                      // Handle Date string/object
+                      const d = new Date(releaseDate)
+                      if (isNaN(d.getTime())) return 'TBD'
+                      return d.toLocaleDateString()
+                    } catch {
+                      return 'TBD'
+                    }
+                  })()}
+                </span>
               </div>
               {rating && (
                 <div className="flex items-center gap-1 text-yellow-500">
