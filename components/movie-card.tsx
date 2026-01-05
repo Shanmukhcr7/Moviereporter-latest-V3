@@ -119,8 +119,16 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
               className="object-cover group-hover:scale-110 transition-transform duration-500 pointer-events-none"
             />
-            {isTopBoxOffice && <Badge className="absolute top-2 right-2 bg-yellow-500 text-black">Top Box Office</Badge>}
-            {industry && <Badge className="absolute top-2 left-2 bg-primary/90 backdrop-blur">{industry}</Badge>}
+            <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
+              {isTopBoxOffice && <Badge className="bg-yellow-500 text-black shadow-sm order-2">Top Box Office</Badge>}
+              {typeof rating === 'number' && (
+                <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-yellow-500 border border-white/10 shadow-sm order-1">
+                  <Star className="h-3.5 w-3.5 fill-current" />
+                  <span className="font-bold text-xs">{rating.toFixed(1)}</span>
+                </div>
+              )}
+            </div>
+            {industry && <Badge className="absolute top-2 left-2 bg-primary/90 backdrop-blur z-10">{industry}</Badge>}
           </div>
           <CardContent className="p-4 space-y-2">
             <div className="flex justify-between items-start">
@@ -160,12 +168,6 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
                   })()}
                 </span>
               </div>
-              {rating && (
-                <div className="flex items-center gap-1 text-yellow-500">
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <span className="font-semibold">{rating.toFixed(1)}</span>
-                </div>
-              )}
             </div>
             {genre && (
               <p className="text-xs text-muted-foreground line-clamp-1">
