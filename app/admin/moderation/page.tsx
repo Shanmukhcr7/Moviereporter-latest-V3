@@ -59,7 +59,33 @@ export default function ModerationPage() {
             }
 
             const snapshot = await getDocs(q)
-            const newItems = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+            let newItems = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[]
+
+            // Resolve User Profiles
+            const userIds = Array.from(new Set(newItems.map(i => i.userId || i.uid).filter(Boolean)))
+
+            if (userIds.length > 0) {
+                const userDocs = await Promise.all(
+                    userIds.map(uid => getDoc(doc(db, "artifacts/default-app-id/users", uid)))
+                )
+                const userMap = new Map()
+                userDocs.forEach(d => {
+                    if (d.exists()) userMap.set(d.id, d.data())
+                })
+
+                newItems = newItems.map(item => {
+                    const uid = item.userId || item.uid
+                    const user = userMap.get(uid)
+                    if (user) {
+                        return {
+                            ...item,
+                            userName: user.displayName || user.name || item.userName || "Anonymous",
+                            userImage: user.photoURL || user.image || null
+                        }
+                    }
+                    return item
+                })
+            }
 
             if (isInitial) {
                 setItems(newItems)
