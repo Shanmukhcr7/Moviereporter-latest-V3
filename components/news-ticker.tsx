@@ -111,12 +111,12 @@ export function NewsTicker() {
           100% { transform: translateX(-50%); } 
         }
         .animate-marquee {
-          animation: marquee 60s linear infinite; /* Slower loop for readability */
+          animation: marquee 120s linear infinite; /* Very slow loop */
           width: max-content;
         }
         @media (max-width: 768px) {
            .animate-marquee {
-             animation-duration: 50s; /* Slightly faster on mobile due to smaller screen */
+             animation-duration: 90s; /* Slower on mobile */
            }
         }
         .animate-marquee:hover {
