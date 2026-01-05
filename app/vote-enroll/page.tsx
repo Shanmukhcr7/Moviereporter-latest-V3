@@ -133,7 +133,7 @@ export default function VoteEnrollPage() {
   // Fetch Categories
   const fetchCategories = async () => {
     // SWR Cache Check
-    const cacheKey = `vote_categories_v2_${industryFilter}`
+    const cacheKey = `vote_categories_v3_${industryFilter}`
     if (loading) { // Only check cache on initial load or filter change
       const cached = getFromCache<Category[]>(cacheKey)
       if (cached) {
@@ -724,13 +724,17 @@ function CountdownTimer({ targetDate }: { targetDate: any }) {
 
   if (!timeLeft) {
     return (
-      <Badge
-        variant="outline"
-        className="h-8 px-3 border-red-500/50 text-red-600 bg-red-500/10 cursor-help"
-        title={`Target: ${targetDate ? JSON.stringify(targetDate) : 'Missing'}`}
-      >
-        Voting Ended
-      </Badge>
+      <div className="flex flex-col items-end">
+        <Badge
+          variant="outline"
+          className="h-8 px-3 border-red-500/50 text-red-600 bg-red-500/10"
+        >
+          Voting Ended
+        </Badge>
+        <span className="text-[10px] text-muted-foreground mt-1 font-mono">
+          Debug: {targetDate ? (typeof targetDate === 'object' && 'seconds' in targetDate ? new Date(targetDate.seconds * 1000).toLocaleString() : JSON.stringify(targetDate)) : "Empty"}
+        </span>
+      </div>
     )
   }
 
