@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { ThumbsUp, ThumbsDown, Share2, Calendar, Star as StarIcon, Info, MessageSquare, Play } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Share2, Calendar, Star as StarIcon, Info, MessageSquare, Play, Edit, Trash } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
@@ -219,6 +219,36 @@ export default function MovieDetailsPage() {
     } else {
       navigator.clipboard.writeText(window.location.href)
       toast.success("Link copied to clipboard!")
+    }
+  }
+
+  const handleDeleteReview = async (reviewItem: any) => {
+    if (!confirm("Are you sure you want to delete your review?")) return
+
+    try {
+      await deleteDoc(doc(db, "artifacts/default-app-id/reviews", reviewItem.id))
+
+      if (user) {
+        // Try deleting by exact ID, or search if deterministic logic was mixed
+        // New logic uses deterministic ID same as global
+        try {
+          await deleteDoc(doc(db, `artifacts/default-app-id/users/${user.uid}/userReviews`, reviewItem.id))
+        } catch (e) { console.warn("Could not delete user copy", e) }
+      }
+
+      // Update movie stats
+      await updateDoc(doc(db, "artifacts/default-app-id/movies", movie.id), {
+        reviewCount: increment(-1),
+      })
+
+      toast.success("Review deleted")
+
+      // Update local state
+      setReviews(prev => prev.filter(r => r.id !== reviewItem.id))
+      fetchMovieDetails() // Refresh avg rating
+    } catch (error) {
+      console.error("Error deleting review:", error)
+      toast.error("Failed to delete review")
     }
   }
 
@@ -477,7 +507,7 @@ export default function MovieDetailsPage() {
                 ) : (
                   <div className="grid gap-4">
                     {reviews.slice(0, 10).map(review => (
-                      <Card key={review.id} className="border-border/50">
+                      <Card key={review.id} className="border-border/50 group">
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -491,10 +521,35 @@ export default function MovieDetailsPage() {
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center text-yellow-500 gap-1">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <StarIcon key={i} className={`h-3 w-3 ${i < (review.rating || 0) ? 'fill-current' : 'text-muted/30'}`} />
-                              ))}
+                            <div className="flex items-center gap-3">
+                              {/* Actions for own review */}
+                              {user && review.userId === user.uid && (
+                                <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                    onClick={() => setIsRatingModalOpen(true)}
+                                    title="Edit Review"
+                                  >
+                                    <Edit className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => handleDeleteReview(review)}
+                                    title="Delete Review"
+                                  >
+                                    <Trash className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              )}
+                              <div className="flex items-center text-yellow-500 gap-1">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                  <StarIcon key={i} className={`h-3 w-3 ${i < (review.rating || 0) ? 'fill-current' : 'text-muted/30'}`} />
+                                ))}
+                              </div>
                             </div>
                           </div>
                           <p className="text-sm text-foreground/80">{review.review}</p>
