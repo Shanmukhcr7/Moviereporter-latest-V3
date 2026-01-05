@@ -11,6 +11,7 @@ export function NewsTicker() {
   useEffect(() => {
     async function fetchLatestUpdates() {
       try {
+        console.log("Fetching ticker updates...")
         // Fetch latest news
         const newsQuery = query(
           collection(db, "artifacts/default-app-id/news"),
@@ -18,6 +19,7 @@ export function NewsTicker() {
           limit(5),
         )
         const newsSnapshot = await getDocs(newsQuery)
+        console.log("News found:", newsSnapshot.size)
         const newsItems = newsSnapshot.docs.map((doc) => ({ type: 'news' as const, title: doc.data().title }))
 
         // Fetch latest blogs
@@ -27,6 +29,7 @@ export function NewsTicker() {
           limit(5),
         )
         const blogsSnapshot = await getDocs(blogsQuery)
+        console.log("Blogs found:", blogsSnapshot.size)
         const blogItems = blogsSnapshot.docs.map((doc) => ({ type: 'blog' as const, title: doc.data().title }))
 
         // Fetch latest movies
@@ -36,6 +39,7 @@ export function NewsTicker() {
           limit(5),
         )
         const moviesSnapshot = await getDocs(moviesQuery)
+        console.log("Movies found:", moviesSnapshot.size)
         const movieItems = moviesSnapshot.docs.map((doc) => ({ type: 'movie' as const, title: doc.data().title }))
 
         // Interleave items: Movie -> News -> Blog -> Movie ...
