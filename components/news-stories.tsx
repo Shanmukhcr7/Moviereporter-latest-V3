@@ -53,12 +53,20 @@ export function NewsStories() {
     }, [selectedStoryIndex])
 
     const fetchStories = async () => {
+        // 1. Try Cache
+        const cacheKey = "news_stories_mixed_v1"
+        const cached = getFromCache<Story[]>(cacheKey)
+        if (cached) {
+            setStories(cached)
+            return
+        }
+
         try {
-            // 1. Fetch News
+            // 2. Fetch News
             const newsRef = collection(db, "artifacts/default-app-id/news")
             const newsQuery = query(newsRef, orderBy("scheduledAt", "desc"), limit(6))
 
-            // 2. Fetch Movies
+            // 3. Fetch Movies
             const moviesRef = collection(db, "artifacts/default-app-id/movies")
             const moviesQuery = query(moviesRef, orderBy("releaseDate", "desc"), limit(6))
 
@@ -91,13 +99,16 @@ export function NewsStories() {
                 }
             })
 
-            // 3. Merge and Sort desc
+            // 4. Merge and Sort desc
             const allStories = [...newsItems, ...movieItems].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()).slice(0, 15)
 
-            setStories(allStories.map(s => ({
+            const formattedStories = allStories.map(s => ({
                 ...s,
                 publishedAt: s.publishedAt.toISOString()
-            })))
+            }))
+
+            setStories(formattedStories)
+            saveToCache(cacheKey, formattedStories)
 
         } catch (error) {
             console.error("Error fetching stories:", error)
