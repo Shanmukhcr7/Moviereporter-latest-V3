@@ -94,7 +94,7 @@ export function NewsTicker() {
           <div className="animate-marquee whitespace-nowrap flex items-center min-w-full w-max">
             {/* Repeat content to fill screen */}
             {[...updates, ...updates, ...updates].map((update, index) => (
-              <span key={index} className="inline-flex items-center mx-6 text-sm font-medium opacity-90 hover:opacity-100 transition-opacity">
+              <span key={index} className="inline-flex items-center mx-3 text-sm font-medium opacity-90 hover:opacity-100 transition-opacity">
                 {update.type === 'movie' && <Film className="w-4 h-4 mr-2 text-yellow-500" />}
                 {update.type === 'news' && <Newspaper className="w-4 h-4 mr-2 text-blue-400" />}
                 {update.type === 'blog' && <FileText className="w-4 h-4 mr-2 text-orange-400" />}
