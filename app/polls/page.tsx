@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { collection, query, where, getDocs, Timestamp, orderBy } from "firebase/firestore"
+import { collection, query, where, getDocs, Timestamp, orderBy, limit } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
