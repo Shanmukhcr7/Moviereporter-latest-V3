@@ -683,22 +683,30 @@ function CountdownTimer({ targetDate }: { targetDate: any }) {
 
   useEffect(() => {
     // Helper to safely parse
-    const getDate = (val: any) => {
-      if (!val) return new Date();
-      if (val.toDate) return val.toDate();
-      if (val.seconds) return new Date(val.seconds * 1000);
-      return new Date(val);
+    const getDate = (val: any): Date | null => {
+      if (!val) return null
+      try {
+        if (typeof val === 'object' && val.toDate) return val.toDate() // Firestore Timestamp
+        if (typeof val === 'object' && 'seconds' in val) return new Date(val.seconds * 1000) // Serialized Timestamp
+        return new Date(val) // String or Date
+      } catch (e) {
+        return null
+      }
     }
 
-    const target = getDate(targetDate).getTime()
+    const target = getDate(targetDate)
+    if (!target) return
 
-    const interval = setInterval(() => {
+    const targetTime = target.getTime()
+    // Debug log to ensure we are getting the right date
+    // console.log("Timer Target:", targetTime, "Now:", Date.now())
+
+    const updateTimer = () => {
       const now = new Date().getTime()
-      const distance = target - now
+      const distance = targetTime - now
 
       if (distance < 0) {
         setTimeLeft(null)
-        clearInterval(interval)
       } else {
         setTimeLeft({
           d: Math.floor(distance / (1000 * 60 * 60 * 24)),
@@ -707,8 +715,10 @@ function CountdownTimer({ targetDate }: { targetDate: any }) {
           s: Math.floor((distance % (1000 * 60)) / 1000)
         })
       }
-    }, 1000)
+    }
 
+    updateTimer() // Initial call
+    const interval = setInterval(updateTimer, 1000)
     return () => clearInterval(interval)
   }, [targetDate])
 

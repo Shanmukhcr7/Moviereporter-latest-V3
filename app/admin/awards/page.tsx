@@ -183,8 +183,20 @@ function CategoryCard({ category, onEdit, onManage, onDelete }: any) {
 
 function CategoryForm({ initialData, industry, onSuccess }: any) {
     const [name, setName] = useState(initialData?.name || "")
-    const [start, setStart] = useState(initialData?.startDate?.toDate().toISOString().split('T')[0] || "")
-    const [end, setEnd] = useState(initialData?.endDate?.toDate().toISOString().split('T')[0] || "")
+    // Helper to format Date/Timestamp to "YYYY-MM-DDTHH:mm" for input
+    const formatDateForInput = (val: any) => {
+        if (!val) return ""
+        const d = val.toDate ? val.toDate() : new Date(val)
+        // Adjust for local timezone offset manually or use a library, 
+        // but simplest is toStartISOString and slice, but ISO is UTC.
+        // Identify local timezone offset in ms
+        const tzOffset = d.getTimezoneOffset() * 60000
+        const localISOTime = (new Date(d - tzOffset)).toISOString().slice(0, 16)
+        return localISOTime
+    }
+
+    const [start, setStart] = useState(formatDateForInput(initialData?.startDate))
+    const [end, setEnd] = useState(formatDateForInput(initialData?.endDate))
     const [submitting, setSubmitting] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -232,12 +244,22 @@ function CategoryForm({ initialData, industry, onSuccess }: any) {
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <Label>Start Date</Label>
-                    <Input type="date" value={start} onChange={e => setStart(e.target.value)} required />
+                    <Label>Start Date & Time</Label>
+                    <Input
+                        type="datetime-local"
+                        value={start}
+                        onChange={e => setStart(e.target.value)}
+                        required
+                    />
                 </div>
                 <div>
-                    <Label>End Date</Label>
-                    <Input type="date" value={end} onChange={e => setEnd(e.target.value)} required />
+                    <Label>End Date & Time</Label>
+                    <Input
+                        type="datetime-local"
+                        value={end}
+                        onChange={e => setEnd(e.target.value)}
+                        required
+                    />
                 </div>
             </div>
             <div className="flex justify-end">
