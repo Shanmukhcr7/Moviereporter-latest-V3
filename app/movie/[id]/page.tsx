@@ -283,6 +283,18 @@ export default function MovieDetailsPage() {
     )
   }
 
+  const isUpcoming = (() => {
+    if (!movie?.releaseDate) return false
+    try {
+      const now = new Date()
+      let release: Date
+      if (movie.releaseDate.toDate) release = movie.releaseDate.toDate()
+      else if (movie.releaseDate.seconds) release = new Date(movie.releaseDate.seconds * 1000)
+      else release = new Date(movie.releaseDate)
+      return release > now
+    } catch { return false }
+  })()
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <Header />
@@ -343,10 +355,17 @@ export default function MovieDetailsPage() {
                 </div>
 
                 {/* Rate & Review Button */}
-                <Button className="w-full gap-2" variant="secondary" onClick={() => setIsRatingModalOpen(true)}>
-                  <MessageSquare className="h-4 w-4" />
-                  Rate & Review
-                </Button>
+                {isUpcoming ? (
+                  <Button className="w-full gap-2 cursor-not-allowed opacity-80" variant="secondary" disabled>
+                    <Calendar className="h-4 w-4" />
+                    Coming Soon
+                  </Button>
+                ) : (
+                  <Button className="w-full gap-2" variant="secondary" onClick={() => setIsRatingModalOpen(true)}>
+                    <MessageSquare className="h-4 w-4" />
+                    Rate & Review
+                  </Button>
+                )}
 
               </CardContent>
             </Card>
@@ -498,7 +517,7 @@ export default function MovieDetailsPage() {
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-bold border-l-4 border-primary pl-4">Audience Reviews</h2>
-                  <Button size="sm" variant="outline" onClick={() => setIsRatingModalOpen(true)}>Write Review</Button>
+                  {!isUpcoming && <Button size="sm" variant="outline" onClick={() => setIsRatingModalOpen(true)}>Write Review</Button>}
                 </div>
                 {reviews.length === 0 ? (
                   <div className="text-center py-10 bg-muted/30 rounded-xl">
