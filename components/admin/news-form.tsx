@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { addDoc, collection, doc, updateDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { PHPImageUpload } from "@/components/admin/php-image-upload"
+import { ImageUpload } from "@/components/admin/image-upload"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -114,11 +114,10 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
                         <FormItem>
                             <FormLabel>Cover Image</FormLabel>
                             <FormControl>
-                                <PHPImageUpload
+                                <ImageUpload
                                     value={field.value}
                                     onChange={field.onChange}
-                                    disabled={loading}
-                                    uploadUrl="https://your-hostinger-domain.com/upload.php"
+                                    onRemove={() => field.onChange("")}
                                 />
                             </FormControl>
                             <FormMessage />

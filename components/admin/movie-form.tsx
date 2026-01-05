@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { addDoc, collection, doc, updateDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { PHPImageUpload } from "@/components/admin/php-image-upload"
+import { ImageUpload } from "@/components/admin/image-upload"
 import { CastSelector } from "@/components/admin/cast-selector"
 import { Button } from "@/components/ui/button"
 import {
@@ -208,12 +208,10 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                         <FormItem>
                             <FormLabel>Movie Poster</FormLabel>
                             <FormControl>
-                                <PHPImageUpload
+                                <ImageUpload
                                     value={field.value}
                                     onChange={field.onChange}
-                                    disabled={loading}
-                                    // IMPORTANT: The user must replace this with their actual Hostinger URL
-                                    uploadUrl="https://your-hostinger-domain.com/upload.php"
+                                    onRemove={() => field.onChange("")}
                                 />
                             </FormControl>
                             <FormDescription>Upload vertical poster image.</FormDescription>
