@@ -159,8 +159,7 @@ export default function MoviesInfoPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 pt-8 pb-32">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Movies Info</h1>
           <p className="text-muted-foreground">Explore all released movies</p>
@@ -221,7 +220,7 @@ export default function MoviesInfoPage() {
           </div>
         )}
 
-        {!loading && currentIndex < displayedMovies.length && (
+        {!loading && visibleMovies.length < displayedMovies.length && (
           <div className="flex justify-center mt-8">
             <Button variant="outline" onClick={loadMore}>Load More</Button>
           </div>

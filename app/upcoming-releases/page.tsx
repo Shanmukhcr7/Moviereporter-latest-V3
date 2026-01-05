@@ -122,8 +122,9 @@ export default function UpcomingReleasesPage() {
       // OR we update `getSafeDate` to handle the shape.
       // Better to normalize data to primitives before caching.
 
-      const normalizedMovies = moviesData.map(m => ({
+      const normalizedMovies = moviesData.map((m: any) => ({
         ...m,
+        // Normalize dates for cache
         releaseDate: m.releaseDate?.toDate ? m.releaseDate.toDate().toISOString() : m.releaseDate,
         scheduledAt: m.scheduledAt?.toDate ? m.scheduledAt.toDate().toISOString() : m.scheduledAt
       }))
@@ -251,8 +252,11 @@ export default function UpcomingReleasesPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-8 pb-32">
+        <h1 className="text-3xl font-bold mb-6 text-center text-foreground flex items-center justify-center gap-3">
+          <Calendar className="w-8 h-8 text-primary" />
+          Upcoming Releases
+        </h1>
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

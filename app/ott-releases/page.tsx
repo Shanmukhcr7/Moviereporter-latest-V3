@@ -240,8 +240,11 @@ export default function OTTReleasesPage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-8 pb-32">
+        <h1 className="text-3xl font-bold mb-6 text-center text-foreground flex items-center justify-center gap-3">
+          <Tv className="w-8 h-8 text-primary" />
+          OTT Releases
+        </h1>
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

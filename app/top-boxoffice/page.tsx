@@ -141,8 +141,11 @@ export default function TopBoxOfficePage() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-8 pb-32">
+        <h1 className="text-3xl font-bold mb-6 text-center text-foreground flex items-center justify-center gap-3">
+          <TrendingUp className="w-8 h-8 text-primary" />
+          Top Box Office
+        </h1>
         {/* Controls */}
         <div className="flex flex-col md:flex-row gap-4 mb-10 max-w-4xl mx-auto">
           <div className="relative flex-1">
@@ -216,6 +219,6 @@ export default function TopBoxOfficePage() {
           </>
         )}
       </main>
-    </div>
+    </div >
   )
 }

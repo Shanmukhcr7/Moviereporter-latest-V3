@@ -61,6 +61,10 @@ export default function CelebritiesPage() {
     }
   }
 
+  const [hasMore, setHasMore] = useState(true)
+
+  // ... (useEffect and other code) ...
+
   const fetchCelebrities = async (loadMore = false) => {
     // Cache Check
     const cacheKey = "celebrities_initial_list"
@@ -71,6 +75,7 @@ export default function CelebritiesPage() {
         setCelebrities(cached.data)
         setLastDoc(cached.lastName) // Use name as cursor
         setLoading(false)
+        setHasMore(true) // Start optimistically
         return
       }
     }
@@ -78,6 +83,7 @@ export default function CelebritiesPage() {
     setLoading(true)
     try {
       let celebsQuery;
+      const LIMIT = 16
 
       if (searchTerm) {
         // Search Mode
@@ -92,24 +98,32 @@ export default function CelebritiesPage() {
       } else {
         // Default Pagination Mode
         if (loadMore && lastDoc) {
-          // lastDoc can be Snapshot or String (if restored from cache)
-          // startAfter handles both if orderBy aligns.
           celebsQuery = query(
             collection(db, "artifacts/default-app-id/celebrities"),
             orderBy("name", "asc"),
             startAfter(lastDoc),
-            limit(16)
+            limit(LIMIT)
           )
         } else {
           celebsQuery = query(
             collection(db, "artifacts/default-app-id/celebrities"),
             orderBy("name", "asc"),
-            limit(16)
+            limit(LIMIT)
           )
         }
       }
 
       const snapshot = await getDocs(celebsQuery)
+
+      // Update hasMore based on result count
+      if (searchTerm) {
+        // In search mode, we fetched up to 50. If 50 returned, maybe more? 
+        // But logic currently doesn't paginate search.
+        setHasMore(snapshot.docs.length === 50)
+      } else {
+        setHasMore(snapshot.docs.length === LIMIT)
+      }
+
       const celebsData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -130,7 +144,9 @@ export default function CelebritiesPage() {
         }
       }
 
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1])
+      if (snapshot.docs.length > 0) {
+        setLastDoc(snapshot.docs[snapshot.docs.length - 1])
+      }
     } catch (error) {
       console.error("[v0] Error fetching celebrities:", error)
     } finally {
@@ -210,16 +226,12 @@ export default function CelebritiesPage() {
     }
   }
 
-  // With server-side search, 'celebrities' state already contains the matching results.
-  // Unless we are in default mode, then we don't filter.
-  // Actually, 'celebrities' contains exactly what we want to show.
   const displayList = celebrities
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <main className="container mx-auto px-4 pt-8 pb-32 max-w-6xl">
         <h1 className="text-3xl font-bold mb-6 text-center text-foreground flex items-center justify-center gap-3">
           <Users className="w-8 h-8 text-primary" />
           Celebrity Profiles
@@ -274,7 +286,7 @@ export default function CelebritiesPage() {
           </div>
         )}
 
-        {!loading && displayList.length > 0 && (
+        {!loading && hasMore && displayList.length > 0 && (
           <div className="flex justify-center mt-8">
             <Button variant="outline" onClick={() => fetchCelebrities(true)} disabled={loading}>
               {loading ? "Loading..." : "Load More"}
