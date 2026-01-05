@@ -332,40 +332,43 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
                 <p className="text-muted-foreground text-sm">No reviews yet. Be the first to review!</p>
               ) : (
                 reviews.map((reviewItem) => (
-                  <div key={reviewItem.id} className="border border-border rounded-lg p-4 space-y-2">
+                  <div key={reviewItem.id} className="border border-border rounded-lg p-4 space-y-2 group">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold">{reviewItem.userName}</span>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                        <span className="font-semibold">{reviewItem.rating}</span>
+                      <div className="flex items-center gap-3">
+                        {/* Actions for own review */}
+                        {user && reviewItem.userId === user.uid && (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                              onClick={() => {
+                                setIsEditing(true)
+                                // Scroll to top
+                                document.querySelector('.radix-dialog-content')?.scrollTo({ top: 0, behavior: 'smooth' })
+                              }}
+                              title="Edit Review"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              onClick={handleDeleteReview}
+                              title="Delete Review"
+                            >
+                              <Trash className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                          <span className="font-semibold">{reviewItem.rating}</span>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Actions for own review */}
-                    {user && reviewItem.userId === user.uid && (
-                      <div className="flex gap-2 justify-end -mt-2 mb-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-primary"
-                          onClick={() => {
-                            setIsEditing(true)
-                            // Scroll to top to see form
-                            document.querySelector('.radix-dialog-content')?.scrollTo({ top: 0, behavior: 'smooth' })
-                          }}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                          onClick={handleDeleteReview}
-                        >
-                          <Trash className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
 
                     {/* Support both 'review' and legacy 'reviewText' */}
                     {(reviewItem.review || reviewItem.reviewText) && (
