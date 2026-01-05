@@ -31,13 +31,18 @@ export function BottomNav() {
                         >
                             {isActive && (
                                 <motion.div
-                                    layoutId="active-glow"
-                                    className="absolute bottom-4 w-12 h-12 bg-primary/40 blur-xl rounded-full"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                />
+                                    layoutId="liquid-bubble"
+                                    className="absolute bottom-2 w-14 h-14 bg-primary/20 rounded-full z-0"
+                                    style={{ borderRadius: "30% 70% 70% 30% / 30% 30% 70% 70%" }}
+                                    transition={{
+                                        type: "spring",
+                                        stiffness: 400,
+                                        damping: 30,
+                                        mass: 1
+                                    }}
+                                >
+                                    <div className="absolute inset-0 bg-primary/20 blur-md rounded-full" />
+                                </motion.div>
                             )}
 
                             <div className="relative z-10 flex flex-col items-center justify-center">

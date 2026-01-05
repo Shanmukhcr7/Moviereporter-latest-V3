@@ -1,18 +1,76 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { EditProfileDialog } from "./edit-profile-dialog"
 import { ChangePasswordDialog } from "./change-password-dialog"
-import { User, Mail, Phone, Calendar, Shield } from "lucide-react"
+import { User, Mail, Phone, Calendar, Shield, Trophy } from "lucide-react"
+import { collection, query, where, getCountFromServer } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { Progress } from "@/components/ui/progress"
 
 export function ProfileHeader() {
     const { user, userData } = useAuth()
     const [editOpen, setEditOpen] = useState(false)
     const [pwdOpen, setPwdOpen] = useState(false)
+    const [reviewCount, setReviewCount] = useState(0)
+    const [levelInfo, setLevelInfo] = useState<{ currentLevel: string, nextLevel: string, nextThreshold: number, progress: number } | null>(null)
+
+    useEffect(() => {
+        if (user) {
+            fetchUserStats()
+        }
+    }, [user])
+
+    const fetchUserStats = async () => {
+        try {
+            const coll = collection(db, "artifacts/default-app-id/reviews")
+            const q = query(coll, where("userId", "==", user!.uid), where("approved", "==", true)) // Assuming approved reviews count
+            const snapshot = await getCountFromServer(q)
+            const count = snapshot.data().count
+            setReviewCount(count)
+            calculateLevel(count)
+        } catch (error) {
+            console.error("Error fetching stats:", error)
+        }
+    }
+
+    const calculateLevel = (count: number) => {
+        // Levels: 0-5 (Novice), 5-20 (Film Buff), 20-50 (Critic), 50+ (Master)
+        let currentLevel = "Novice"
+        let nextLevel = "Film Buff"
+        let prevThreshold = 0
+        let nextThreshold = 5
+
+        if (count >= 50) {
+            currentLevel = "Master"
+            nextLevel = "Legend"
+            prevThreshold = 50
+            nextThreshold = 100 // Cap
+        } else if (count >= 20) {
+            currentLevel = "Critic"
+            nextLevel = "Master"
+            prevThreshold = 20
+            nextThreshold = 50
+        } else if (count >= 5) {
+            currentLevel = "Film Buff"
+            nextLevel = "Critic"
+            prevThreshold = 5
+            nextThreshold = 20
+        }
+
+        const progress = Math.min(100, Math.max(0, ((count - prevThreshold) / (nextThreshold - prevThreshold)) * 100))
+
+        setLevelInfo({
+            currentLevel,
+            nextLevel,
+            nextThreshold,
+            progress
+        })
+    }
 
     const formatDate = (dateVal?: any) => {
         if (!dateVal) return "N/A"
@@ -66,9 +124,25 @@ export function ProfileHeader() {
                     </Avatar>
                     <div className="flex flex-col items-center">
                         <span className="font-medium text-lg">{userData?.displayName || "User"}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase font-bold tracking-wider">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase font-bold tracking-wider mb-2">
                             {userData?.role || "Member"}
                         </span>
+
+                        {/* User Level Progress */}
+                        {levelInfo && (
+                            <div className="w-full min-w-[180px] mt-2 bg-muted/40 p-2 rounded-lg border border-border/50">
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs font-bold text-primary flex items-center gap-1">
+                                        <Trophy className="h-3 w-3" /> {levelInfo.currentLevel}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground">{reviewCount} / {levelInfo.nextThreshold} Reviews</span>
+                                </div>
+                                <Progress value={levelInfo.progress} className="h-1.5" />
+                                <p className="text-[10px] text-center mt-1 text-muted-foreground">
+                                    {levelInfo.nextThreshold - reviewCount} more to reach {levelInfo.nextLevel}
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
 

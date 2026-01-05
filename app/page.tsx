@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase"
 import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { NewsTicker } from "@/components/news-ticker"
+import { NewsStories } from "@/components/news-stories"
 import { HeroBanner } from "@/components/hero-banner"
 import { MovieCard } from "@/components/movie-card"
 import { ArticleCard } from "@/components/article-card"
@@ -363,6 +364,9 @@ export default function HomePage() {
       </div>
 
       <main className="container mx-auto px-4 py-4 space-y-4">
+        {/* Stories */}
+        <NewsStories />
+
         {/* Latest Movies */}
         <section>
           <FadeIn>

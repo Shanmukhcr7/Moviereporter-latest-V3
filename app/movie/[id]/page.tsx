@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { ThumbsUp, ThumbsDown, Share2, Calendar, Star as StarIcon, Info, MessageSquare } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Share2, Calendar, Star as StarIcon, Info, MessageSquare, Play } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { FadeIn } from "@/components/animations/fade-in"
 import { MovieRatingModal } from "@/components/movie-rating-modal"
+import { TrailerModal } from "@/components/trailer-modal"
 import { MovieCard } from "@/components/movie-card"
 import { ShareButton } from "@/components/share-button"
 
@@ -30,6 +31,7 @@ export default function MovieDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false)
   const { user } = useAuth()
 
   useEffect(() => {
@@ -510,12 +512,21 @@ export default function MovieDetailsPage() {
 
       {/* Rating Modal */}
       {movie && (
-        <MovieRatingModal
-          movie={movie}
-          isOpen={isRatingModalOpen}
-          onClose={() => setIsRatingModalOpen(false)}
-          user={user}
-        />
+        <>
+          <MovieRatingModal
+            movie={movie}
+            isOpen={isRatingModalOpen}
+            onClose={() => setIsRatingModalOpen(false)}
+            user={user}
+          />
+          <TrailerModal
+            isOpen={isTrailerOpen}
+            onClose={() => setIsTrailerOpen(false)}
+            videoUrl={movie.trailerUrl || movie.trailerLink || ""}
+            posterUrl={movie.poster || movie.posterUrl || ""}
+            title={movie.title}
+          />
+        </>
       )}
     </div>
   )
