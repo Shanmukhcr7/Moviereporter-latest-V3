@@ -18,20 +18,51 @@ interface MovieRatingModalProps {
 }
 
 export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingModalProps) {
-  const [rating, setRating] = useState(0)
-  const [review, setReview] = useState("")
-  const [hoveredRating, setHoveredRating] = useState(0)
-  const [reviews, setReviews] = useState<any[]>([])
-  const [userReview, setUserReview] = useState<any>(null)
-  const [isEditing, setIsEditing] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [isDescExpanded, setIsDescExpanded] = useState(false)
+  const [localMetrics, setLocalMetrics] = useState({
+    avgRating: movie.avgRating || 0,
+    reviewCount: movie.reviewCount || 0
+  })
 
+  // Sync with prop if modal re-opens with fresh data
   useEffect(() => {
     if (isOpen) {
-      fetchReviews()
+      setLocalMetrics({
+        avgRating: movie.avgRating || 0,
+        reviewCount: movie.reviewCount || 0
+      })
     }
-  }, [isOpen, movie.id])
+  }, [isOpen, movie.id, movie.avgRating, movie.reviewCount])
+
+  // ... (existing useEffects)
+
+  // ...
+
+  // In handleSubmitReview and handleDeleteReview, update localMetrics after recalculation
+  // ...
+
+  const recalculateMovieRating = async () => {
+    const reviewsQuery = query(collection(db, "artifacts/default-app-id/reviews"), where("movieId", "==", movie.id))
+    const snapshot = await getDocs(reviewsQuery)
+
+    const ratings = snapshot.docs.map((doc) => doc.data().rating)
+    const avgRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0
+    const reviewCount = ratings.length
+
+    await updateDoc(doc(db, "artifacts/default-app-id/movies", movie.id), {
+      avgRating,
+      reviewCount
+    })
+
+    // Update local display immediately
+    setLocalMetrics({ avgRating, reviewCount })
+  }
+
+  // ... in JSX
+  <div className="flex items-center gap-2">
+    <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+    <span className="font-bold text-xl">{localMetrics.avgRating.toFixed(1)}</span>
+    <span className="text-sm text-muted-foreground">({localMetrics.reviewCount} reviews)</span>
+  </div>
 
   const fetchReviews = async () => {
     try {
@@ -184,6 +215,8 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
       avgRating,
       reviewCount: ratings.length
     })
+
+    setLocalMetrics({ avgRating, reviewCount: ratings.length })
   }
 
   return (
@@ -231,8 +264,8 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
                 </div>
                 <div className="flex items-center gap-2">
                   <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
-                  <span className="font-bold text-xl">{movie.avgRating?.toFixed(1) || "N/A"}</span>
-                  <span className="text-sm text-muted-foreground">({movie.reviewCount || 0} reviews)</span>
+                  <span className="font-bold text-xl">{localMetrics.avgRating?.toFixed(1) || "N/A"}</span>
+                  <span className="text-sm text-muted-foreground">({localMetrics.reviewCount} reviews)</span>
                 </div>
               </div>
             </div>
