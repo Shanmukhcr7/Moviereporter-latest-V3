@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { collection, query, orderBy, getDocs, where, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { MovieCard } from "@/components/movie-card"
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,14 @@ export default function TopBoxOfficePage() {
   const fetchMovies = async () => {
     setLoading(true)
     try {
+      const cacheKey = "top_boxoffice_movies"
+      const cached = getFromCache<any[]>(cacheKey)
+      if (cached) {
+        setAllMovies(cached)
+        setLoading(false)
+        return
+      }
+
       // Legacy Logic: Fetch scheduled movies, then filter for (isPopular || isTopBoxOffice)
       const now = Timestamp.now()
 
@@ -68,8 +77,15 @@ export default function TopBoxOfficePage() {
         // 2. Legacy Filter: isPopular OR isTopBoxOffice
         return movie.isPopular === true || movie.isTopBoxOffice === true
       })
+        .map((movie: any) => ({
+          ...movie,
+          // Normalize dates for cache
+          releaseDate: movie.releaseDate?.toDate ? movie.releaseDate.toDate().toISOString() : movie.releaseDate,
+          scheduledAt: movie.scheduledAt?.toDate ? movie.scheduledAt.toDate().toISOString() : movie.scheduledAt
+        }))
 
       setAllMovies(moviesData)
+      saveToCache(cacheKey, moviesData)
     } catch (error) {
       console.error("Error fetching top movies:", error)
     } finally {

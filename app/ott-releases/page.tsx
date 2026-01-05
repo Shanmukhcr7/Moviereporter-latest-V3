@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { collection, query, orderBy, getDocs, where, limit, startAfter, Timestamp, doc, deleteDoc, setDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,6 +46,14 @@ export default function OTTReleasesPage() {
   const fetchMovies = async () => {
     setLoading(true)
     try {
+      const cacheKey = "ott_releases_all"
+      const cached = getFromCache<any[]>(cacheKey)
+      if (cached) {
+        setAllMovies(cached)
+        setLoading(false)
+        return
+      }
+
       const now = Timestamp.now()
 
       const moviesRef = collection(db, "artifacts/default-app-id/movies")
@@ -63,9 +72,15 @@ export default function OTTReleasesPage() {
       const moviesData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
+      })).map((movie: any) => ({
+        ...movie,
+        // Normalize dates for cache
+        releaseDate: movie.releaseDate?.toDate ? movie.releaseDate.toDate().toISOString() : movie.releaseDate,
+        scheduledAt: movie.scheduledAt?.toDate ? movie.scheduledAt.toDate().toISOString() : movie.scheduledAt
       }))
 
       setAllMovies(moviesData)
+      saveToCache(cacheKey, moviesData)
     } catch (error) {
       console.error("Error fetching OTT movies:", error)
     } finally {

@@ -33,7 +33,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1 container mx-auto py-6 px-4 md:py-10 md:px-6 max-w-6xl space-y-6 md:space-y-8">
+      <main className="flex-1 container mx-auto pt-6 pb-32 px-4 md:py-10 md:px-6 max-w-6xl space-y-6 md:space-y-8">
         <h1 className="text-2xl md:text-3xl font-bold px-1">My Profile</h1>
 
         <ProfileHeader />

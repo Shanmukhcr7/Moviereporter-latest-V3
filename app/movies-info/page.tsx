@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { collection, query, getDocs, orderBy } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { MovieCard } from "@/components/movie-card"
 import { Button } from "@/components/ui/button"
@@ -58,6 +59,14 @@ export default function MoviesInfoPage() {
   const loadMovies = async () => {
     setLoading(true)
     try {
+      const cacheKey = "movies_info_all"
+      const cached = getFromCache<Movie[]>(cacheKey)
+      if (cached) {
+        setAllMovies(cached)
+        setLoading(false)
+        return
+      }
+
       const moviesRef = collection(db, "artifacts/default-app-id/movies")
       // Fetch larger set or all, then filter dates client side to be safe against index issues
       // Legacy used: where('scheduledAt', '<=', now), where('releaseDate', '<=', now), orderBy('releaseDate', 'desc')
@@ -82,8 +91,14 @@ export default function MoviesInfoPage() {
           const release = getMillis(movie.releaseDate)
           return release > 0 && release <= now
         })
+        .map(movie => ({
+          ...movie,
+          // Normalize dates for cache
+          releaseDate: movie.releaseDate?.toDate ? movie.releaseDate.toDate().toISOString() : movie.releaseDate
+        }))
 
       setAllMovies(validMovies)
+      saveToCache(cacheKey, validMovies)
       // Initial filter application will happen via useEffect -> applyFilters
     } catch (error) {
       console.error("Error loading movies:", error)

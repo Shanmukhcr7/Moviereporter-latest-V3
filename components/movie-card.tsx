@@ -10,7 +10,8 @@ import { doc, setDoc, deleteDoc, getDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { toast } from "sonner"
 import { useState, useEffect } from "react"
-import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion"
+// Motion imports removed
+// import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion"
 
 interface MovieCardProps {
   id: string
@@ -28,17 +29,9 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
   const { user } = useAuth()
   const [isInterested, setIsInterested] = useState(false)
 
-  // Motion values for drag
-  const x = useMotionValue(0)
-  const rotate = useTransform(x, [-200, 200], [-10, 10])
-  const opacityLike = useTransform(x, [50, 150], [0, 1])
-  const opacityNope = useTransform(x, [-150, -50], [1, 0])
-
-  // Local state to hide card if swiped (optional, for visual removal from list if desired)
-  // For now we just snap back but perform action, or maybe just snap back.
-  // Tinder style usually removes the card. But this is a grid. 
-  // Let's just snap back and trigger action to be safe for now, as grid layout might break if we remove it.
-  // We'll perform the action and show a big toast.
+  // Motion values removed
+  // const x = useMotionValue(0)
+  // ...
 
   useEffect(() => {
     if (user && enableInterest) {
@@ -55,26 +48,7 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
     }
   }, [user, id, enableInterest])
 
-  const handleDragEnd = async (_: any, info: PanInfo) => {
-    const offset = info.offset.x
-    const velocity = info.velocity.x
-
-    if (offset > 100) {
-      // Swiped Right (Like)
-      if (!isInterested) {
-        await addToInterests()
-      } else {
-        toast.info("Already in your interests!")
-      }
-    } else if (offset < -100) {
-      // Swiped Left (Hide/Pass)
-      if (isInterested) {
-        await removeFromInterests()
-      } else {
-        toast.info("Passed") // Feedback for pass
-      }
-    }
-  }
+  // handleDragEnd removed
 
   const addToInterests = async () => {
     if (!user) {
@@ -124,6 +98,8 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
     }
   }
 
+  // Removed drag logic as requested
+
   const toggleInterest = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -132,27 +108,7 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
   }
 
   return (
-    <motion.div
-      style={{ x, rotate, touchAction: "none" }}
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.7}
-      onDragEnd={handleDragEnd}
-      className="h-full relative select-none"
-      whileTap={{ cursor: "grabbing" }}
-    >
-      {/* Swipe Feedback Icons Overlay */}
-      <motion.div style={{ opacity: opacityLike }} className="absolute top-4 right-4 z-50 pointer-events-none">
-        <div className="border-4 border-green-500 rounded-lg p-2 px-4 bg-black/40 backdrop-blur-sm -rotate-12">
-          <span className="text-green-500 font-bold text-2xl tracking-widest uppercase">LIKE</span>
-        </div>
-      </motion.div>
-      <motion.div style={{ opacity: opacityNope }} className="absolute top-4 left-4 z-50 pointer-events-none">
-        <div className="border-4 border-red-500 rounded-lg p-2 px-4 bg-black/40 backdrop-blur-sm rotate-12">
-          <span className="text-red-500 font-bold text-2xl tracking-widest uppercase">NOPE</span>
-        </div>
-      </motion.div>
-
+    <div className="h-full relative select-none">
       <Link href={`/movie/${id}`} draggable={false} className="h-full block">
         <Card className="group h-full overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-card/50 backdrop-blur relative">
           <div className="relative aspect-[2/3] overflow-hidden">
@@ -173,7 +129,7 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
                 <button
                   onClick={toggleInterest}
                   className={`text-foreground/80 hover:text-red-500 transition-colors z-20 relative ${isInterested ? "text-red-500 fill-current" : ""}`}
-                  onPointerDown={(e) => e.stopPropagation()} // Allow clicking button without dragging card
+                // Removed onPointerDown since drag is gone
                 >
                   <Heart className={`h-5 w-5 ${isInterested ? "fill-current" : ""}`} />
                 </button>
@@ -219,6 +175,6 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
           </CardContent>
         </Card>
       </Link>
-    </motion.div>
+    </div>
   )
 }

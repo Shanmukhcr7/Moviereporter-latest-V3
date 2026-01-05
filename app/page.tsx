@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { NewsTicker } from "@/components/news-ticker"
 import { HeroBanner } from "@/components/hero-banner"
@@ -18,18 +19,62 @@ import { SectionCarousel } from "@/components/ui/section-carousel"
 import { FadeIn } from "@/components/animations/fade-in"
 
 export default function HomePage() {
+  /* State for displayed items */
   const [latestMovies, setLatestMovies] = useState<any[]>([])
   const [featuredArticles, setFeaturedArticles] = useState<any[]>([])
   const [upcomingMovies, setUpcomingMovies] = useState<any[]>([])
   const [weeklyMagazine, setWeeklyMagazine] = useState<any[]>([])
   const [celebrities, setCelebrities] = useState<any[]>([])
+
+  /* State for remaining items (pagination) */
+  const [remainingLatestMovies, setRemainingLatestMovies] = useState<any[]>([])
+  const [remainingArticles, setRemainingArticles] = useState<any[]>([])
+  const [remainingUpcomingMovies, setRemainingUpcomingMovies] = useState<any[]>([])
+  const [remainingMagazine, setRemainingMagazine] = useState<any[]>([])
+  const [remainingCelebrities, setRemainingCelebrities] = useState<any[]>([])
+
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchHomeData() {
       try {
+        const cacheKey = "home_data_cache"
+        const cached = getFromCache<any>(cacheKey)
+
+        if (cached) {
+          setLatestMovies(cached.latestMovies)
+          setRemainingLatestMovies(cached.remainingLatestMovies)
+          setFeaturedArticles(cached.featuredArticles)
+          setRemainingArticles(cached.remainingArticles)
+          setUpcomingMovies(cached.upcomingMovies)
+          setRemainingUpcomingMovies(cached.remainingUpcomingMovies)
+          setWeeklyMagazine(cached.weeklyMagazine)
+          setRemainingMagazine(cached.remainingMagazine)
+          setCelebrities(cached.celebrities)
+          setRemainingCelebrities(cached.remainingCelebrities)
+          setLoading(false)
+          return
+        }
+
+        // Helper to prepare section data for cache and state
+        const createSectionData = (current: any[], remaining: any[], type: string, fallbackTitle: string, fallbackLink: string) => {
+          const itemsWithCard = [...current]
+          itemsWithCard.push({
+            id: "load-more-card-" + type + Date.now(),
+            type: type,
+            isLoadMore: true,
+            hasMoreContent: remaining.length > 0,
+            title: remaining.length > 0 ? "Load More" : fallbackTitle,
+            link: fallbackLink,
+            image: "",
+            author: "",
+            publishedAt: "",
+            excerpt: remaining.length > 0 ? "Load more items" : "View full list"
+          })
+          return { displayed: itemsWithCard, remaining }
+        }
+
         // Fetch latest released movies
-        // Fetch latest released movies (fetch more and filter/sort in memory to handle missing fields)
         const moviesQuery = query(
           collection(db, "artifacts/default-app-id/movies"),
           limit(50),
@@ -40,18 +85,16 @@ export default function HomePage() {
           return {
             id: doc.id,
             ...d,
-            // Normalize fields
             poster: d.poster || d.posterUrl || d.image || d.bannerImageUrl || "",
             releaseDate: d.releaseDate?.toMillis ? new Date(d.releaseDate.toMillis()).toISOString() : d.releaseDate,
           }
         })
 
-        // Filter for released movies and sort by date descending
-        const now = new Date()
         const releasedMovies = allMovies
           .filter((m: any) => {
-            // Show all, just handle sort
-            return true
+            const getMillis = (d: any) => d?.toMillis ? d.toMillis() : new Date(d || 0).getTime()
+            const rDate = getMillis(m.releaseDate)
+            return rDate <= Date.now()
           })
           .sort((a: any, b: any) => {
             const getMillis = (d: any) => d?.toMillis ? d.toMillis() : new Date(d || 0).getTime()
@@ -59,59 +102,64 @@ export default function HomePage() {
             const dateB = getMillis(b.releaseDate)
             return dateB - dateA
           })
-          .slice(0, 8)
 
-        setLatestMovies(releasedMovies)
+        // Split Released Movies
+        const initialLatest = releasedMovies.slice(0, 6)
+        const remainingLatest = releasedMovies.slice(6)
 
-        // Fetch featured articles (news + blogs)
-        // Featured articles - client side sort
+        const latestData = createSectionData(initialLatest, remainingLatest, "movie", "View All Movies", "/movies-info")
+        setLatestMovies(latestData.displayed)
+        setRemainingLatestMovies(latestData.remaining)
+
+        // Featured Articles Logic
         const newsQuery = query(collection(db, "artifacts/default-app-id/news"), limit(20))
         const blogsQuery = query(collection(db, "artifacts/default-app-id/blogs"), limit(20))
 
         const [newsSnapshot, blogsSnapshot] = await Promise.all([getDocs(newsQuery), getDocs(blogsQuery)])
 
-        const allNews = newsSnapshot.docs.map((doc) => {
-          const d = doc.data()
-          return {
-            id: doc.id,
-            type: "news" as const,
-            ...d,
-            image: d.image || d.imageUrl || d.bannerImage || d.bannerImageUrl || "",
-            publishedAt: d.publishedAt?.toMillis ? new Date(d.publishedAt.toMillis()).toISOString() : d.publishedAt,
-          }
-        })
-        const allBlogs = blogsSnapshot.docs.map((doc) => {
-          const d = doc.data()
-          return {
-            id: doc.id,
-            type: "blog" as const,
-            ...d,
-            image: d.image || d.imageUrl || d.bannerImage || d.bannerImageUrl || "",
-            publishedAt: d.publishedAt?.toMillis ? new Date(d.publishedAt.toMillis()).toISOString() : d.publishedAt,
-          }
-        })
+        const processArticles = (docs: any[], type: "news" | "blog") => {
+          return docs.map(doc => {
+            const d = doc.data()
+            const dateVal = d.publishedAt
+            let millis = 0
+            if (dateVal?.toMillis) millis = dateVal.toMillis()
+            else if (dateVal?.seconds) millis = dateVal.seconds * 1000
+            else millis = new Date(dateVal || 0).getTime()
 
-        const combinedArticles = [...allNews, ...allBlogs]
-          .sort((a: any, b: any) => {
-            const getMillis = (d: any) => d?.toMillis ? d.toMillis() : new Date(d || 0).getTime()
-            const dateA = getMillis(a.publishedAt)
-            const dateB = getMillis(b.publishedAt)
-            return dateB - dateA
+            return {
+              id: doc.id,
+              type,
+              ...d,
+              image: d.image || d.imageUrl || d.bannerImage || d.bannerImageUrl || "",
+              publishedAt: millis,
+            }
           })
-          .slice(0, 4)
+            .sort((a, b) => b.publishedAt - a.publishedAt)
+        }
 
-        setFeaturedArticles(combinedArticles)
+        const sortedNews = processArticles(newsSnapshot.docs, "news")
+        const sortedBlogs = processArticles(blogsSnapshot.docs, "blog")
 
-        // Fetch upcoming releases
-        // Upcoming releases - client side filter
-        // Reuse allMovies from above if possible, but for clarity fetching again or reusing query results would contain everything if limit was high enough.
-        // Let's reuse 'allMovies' from the first fetch if it includes enough data, but we limited to 50.
-        // It's safer to just filter 'allMovies' for upcoming:
+        // Initial Set: 2 News, 2 Blogs
+        const initialArticles = [
+          ...sortedNews.slice(0, 2),
+          ...sortedBlogs.slice(0, 2)
+        ]
 
+        const leftoverNews = sortedNews.slice(2)
+        const leftoverBlogs = sortedBlogs.slice(2)
+        const pool = [...leftoverNews, ...leftoverBlogs].sort((a, b) => b.publishedAt - a.publishedAt)
+
+        const featuredData = createSectionData(initialArticles, pool, "news", "View All Articles", "/news")
+        setFeaturedArticles(featuredData.displayed)
+        setRemainingArticles(featuredData.remaining)
+
+        // Upcoming 
         const upcoming = allMovies
           .filter((m: any) => {
-            // Show all
-            return true
+            const getMillis = (d: any) => d?.toMillis ? d.toMillis() : new Date(d || 0).getTime()
+            const rDate = getMillis(m.releaseDate)
+            return rDate > Date.now()
           })
           .sort((a: any, b: any) => {
             const getMillis = (d: any) => d?.toMillis ? d.toMillis() : new Date(d || 0).getTime()
@@ -119,38 +167,65 @@ export default function HomePage() {
             const dateB = getMillis(b.releaseDate)
             return dateA - dateB
           })
-          .slice(0, 8)
 
-        setUpcomingMovies(upcoming)
+        // Split Upcoming
+        const initialUpcoming = upcoming.slice(0, 6)
+        const remainingUpcoming = upcoming.slice(6)
 
-        // Fetch weekly magazine
+        const upcomingData = createSectionData(initialUpcoming, remainingUpcoming, "movie", "View All Upcoming", "/upcoming-releases")
+        setUpcomingMovies(upcomingData.displayed)
+        setRemainingUpcomingMovies(upcomingData.remaining)
+
+        // Magazine
         const magazineQuery = query(
           collection(db, "artifacts/default-app-id/news"),
           where("isWeeklyMagazine", "==", true),
-          limit(10), // Increased limit, sort client side if needed
+          limit(20),
         )
         const magazineSnapshot = await getDocs(magazineQuery)
-        setWeeklyMagazine(
-          magazineSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            type: "news",
-            ...doc.data(),
-          })),
-        )
+        const allMagazine = magazineSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          type: "news",
+          ...doc.data(),
+        }))
+        const initialMagazine = allMagazine.slice(0, 6)
+        const remainingMag = allMagazine.slice(6)
 
-        // Fetch celebrities
-        const celebsQuery = query(collection(db, "artifacts/default-app-id/celebrities"), limit(8))
+        const magazineData = createSectionData(initialMagazine, remainingMag, "news", "View Magazine", "/weekly-magazine")
+        setWeeklyMagazine(magazineData.displayed)
+        setRemainingMagazine(magazineData.remaining)
+
+        // Celebs
+        const celebsQuery = query(collection(db, "artifacts/default-app-id/celebrities"), limit(24))
         const celebsSnapshot = await getDocs(celebsQuery)
-        setCelebrities(
-          celebsSnapshot.docs.map((doc) => {
-            const d = doc.data()
-            return {
-              id: doc.id,
-              ...d,
-              image: d.image || d.imageUrl || d.profileImage || "",
-            }
-          }),
-        )
+        const allCelebs = celebsSnapshot.docs.map((doc) => {
+          const d = doc.data()
+          return {
+            id: doc.id,
+            ...d,
+            image: d.image || d.imageUrl || d.profileImage || "",
+          }
+        })
+        const initialCelebs = allCelebs.slice(0, 6)
+        const remainingCel = allCelebs.slice(6)
+
+        const celebsData = createSectionData(initialCelebs, remainingCel, "celebrity", "View All Celebs", "/celebrities")
+        setCelebrities(celebsData.displayed)
+        setRemainingCelebrities(celebsData.remaining)
+
+        // SAVE TO CACHE
+        saveToCache(cacheKey, {
+          latestMovies: latestData.displayed,
+          remainingLatestMovies: latestData.remaining,
+          featuredArticles: featuredData.displayed,
+          remainingArticles: featuredData.remaining,
+          upcomingMovies: upcomingData.displayed,
+          remainingUpcomingMovies: upcomingData.remaining,
+          weeklyMagazine: magazineData.displayed,
+          remainingMagazine: magazineData.remaining,
+          celebrities: celebsData.displayed,
+          remainingCelebrities: celebsData.remaining
+        })
 
         setLoading(false)
       } catch (error) {
@@ -161,6 +236,75 @@ export default function HomePage() {
 
     fetchHomeData()
   }, [])
+
+  /* Scroll logic */
+  const scrollToIdRef = useRef<string | null>(null)
+
+  const scrollRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      node.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" })
+      scrollToIdRef.current = null
+    }
+  }, [])
+
+  // Helper to update state with Load More card
+  const updateSectionState = (
+    current: any[],
+    remaining: any[],
+    type: string,
+    setState: (val: any[]) => void,
+    setRemaining: (val: any[]) => void,
+    fallbackTitle: string,
+    fallbackLink: string
+  ) => {
+    const itemsWithCard = [...current]
+    itemsWithCard.push({
+      id: "load-more-card-" + type + Date.now(), // Unique ID
+      type: type, // dummy type
+      isLoadMore: true,
+      hasMoreContent: remaining.length > 0,
+      title: remaining.length > 0 ? "Load More" : fallbackTitle,
+      link: fallbackLink, // pass link for fallback
+      image: "",
+      author: "",
+      publishedAt: "",
+      excerpt: remaining.length > 0 ? "Load more items" : "View full list"
+    })
+
+    setState(itemsWithCard)
+    setRemaining(remaining)
+  }
+
+  // Generic Handler
+  const handleLoadMoreGeneric = (
+    displayed: any[],
+    remaining: any[],
+    setState: (val: any[]) => void,
+    setRemaining: (val: any[]) => void,
+    type: string,
+    fallbackTitle: string,
+    fallbackLink: string
+  ) => {
+    const batchSize = 4
+    const nextBatch = remaining.slice(0, batchSize)
+    const newRemaining = remaining.slice(batchSize)
+
+    if (nextBatch.length > 0) {
+      scrollToIdRef.current = nextBatch[0].id
+    }
+
+    const currentContent = displayed.filter(a => !a.isLoadMore)
+    const newContent = [...currentContent, ...nextBatch]
+
+    updateSectionState(newContent, newRemaining, type, setState, setRemaining, fallbackTitle, fallbackLink)
+  }
+
+  // Specific Handlers
+  const handleLoadMoreFeatured = () => handleLoadMoreGeneric(featuredArticles, remainingArticles, setFeaturedArticles, setRemainingArticles, "news", "View All Articles", "/news")
+  const handleLoadMoreLatest = () => handleLoadMoreGeneric(latestMovies, remainingLatestMovies, setLatestMovies, setRemainingLatestMovies, "movie", "View All Movies", "/movies-info")
+  const handleLoadMoreUpcoming = () => handleLoadMoreGeneric(upcomingMovies, remainingUpcomingMovies, setUpcomingMovies, setRemainingUpcomingMovies, "movie", "View All Upcoming", "/upcoming-releases")
+  const handleLoadMoreMagazine = () => handleLoadMoreGeneric(weeklyMagazine, remainingMagazine, setWeeklyMagazine, setRemainingMagazine, "news", "View Magazine", "/weekly-magazine")
+  const handleLoadMoreCelebs = () => handleLoadMoreGeneric(celebrities, remainingCelebrities, setCelebrities, setRemainingCelebrities, "celebrity", "View All Celebs", "/celebrities")
 
   return (
     <div className="min-h-screen">
@@ -240,8 +384,16 @@ export default function HomePage() {
                   <div key={i} className="min-w-[160px] md:min-w-[200px] aspect-[2/3] bg-muted animate-pulse rounded-lg snap-start" />
                 ))
                 : latestMovies.map((movie) => (
-                  <div key={movie.id} className="min-w-[160px] md:min-w-[200px] snap-start">
-                    <MovieCard {...movie} />
+                  <div
+                    key={movie.id}
+                    className="min-w-[160px] md:min-w-[200px] snap-start"
+                    ref={movie.id === scrollToIdRef.current ? scrollRef : null}
+                  >
+                    {movie.isLoadMore ? (
+                      <LoadMoreCard item={movie} onClick={handleLoadMoreLatest} />
+                    ) : (
+                      <MovieCard {...movie} />
+                    )}
                   </div>
                 ))}
             </SectionCarousel>
@@ -270,9 +422,17 @@ export default function HomePage() {
                 ? Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="min-w-[280px] md:min-w-[350px] aspect-video bg-muted animate-pulse rounded-lg snap-start" />
                 ))
-                : featuredArticles.map((article) => (
-                  <div key={article.id} className="min-w-[280px] md:min-w-[350px] snap-start">
-                    <ArticleCard {...article} />
+                : featuredArticles.map((article: any) => (
+                  <div
+                    key={article.id}
+                    className="min-w-[280px] md:min-w-[350px] snap-start"
+                    ref={article.id === scrollToIdRef.current ? scrollRef : null}
+                  >
+                    {article.isLoadMore ? (
+                      <LoadMoreCard item={article} onClick={handleLoadMoreFeatured} />
+                    ) : (
+                      <ArticleCard {...article} />
+                    )}
                   </div>
                 ))}
             </SectionCarousel>
@@ -302,8 +462,16 @@ export default function HomePage() {
                   <div key={i} className="min-w-[160px] md:min-w-[200px] aspect-[2/3] bg-muted animate-pulse rounded-lg snap-start" />
                 ))
                 : upcomingMovies.map((movie) => (
-                  <div key={movie.id} className="min-w-[160px] md:min-w-[200px] snap-start">
-                    <MovieCard {...movie} enableInterest={true} />
+                  <div
+                    key={movie.id}
+                    className="min-w-[160px] md:min-w-[200px] snap-start"
+                    ref={movie.id === scrollToIdRef.current ? scrollRef : null}
+                  >
+                    {movie.isLoadMore ? (
+                      <LoadMoreCard item={movie} onClick={handleLoadMoreUpcoming} icon={Calendar} />
+                    ) : (
+                      <MovieCard {...movie} enableInterest={true} />
+                    )}
                   </div>
                 ))}
             </SectionCarousel>
@@ -340,8 +508,16 @@ export default function HomePage() {
                   <div key={i} className="min-w-[280px] md:min-w-[400px] aspect-video bg-muted animate-pulse rounded-lg snap-start" />
                 ))
                 : weeklyMagazine.map((article) => (
-                  <div key={article.id} className="min-w-[280px] md:min-w-[400px] snap-start">
-                    <ArticleCard {...article} />
+                  <div
+                    key={article.id}
+                    className="min-w-[280px] md:min-w-[400px] snap-start"
+                    ref={article.id === scrollToIdRef.current ? scrollRef : null}
+                  >
+                    {article.isLoadMore ? (
+                      <LoadMoreCard item={article} onClick={handleLoadMoreMagazine} icon={BookOpen} />
+                    ) : (
+                      <ArticleCard {...article} />
+                    )}
                   </div>
                 ))}
             </SectionCarousel>
@@ -371,8 +547,16 @@ export default function HomePage() {
                   <div key={i} className="min-w-[140px] md:min-w-[180px] aspect-[3/4] bg-muted animate-pulse rounded-lg snap-start" />
                 ))
                 : celebrities.map((celebrity) => (
-                  <div key={celebrity.id} className="min-w-[140px] md:min-w-[180px] snap-start">
-                    <CelebrityCard {...celebrity} />
+                  <div
+                    key={celebrity.id}
+                    className="min-w-[140px] md:min-w-[180px] snap-start"
+                    ref={celebrity.id === scrollToIdRef.current ? scrollRef : null}
+                  >
+                    {celebrity.isLoadMore ? (
+                      <LoadMoreCard item={celebrity} onClick={handleLoadMoreCelebs} icon={Users} />
+                    ) : (
+                      <CelebrityCard {...celebrity} />
+                    )}
                   </div>
                 ))}
             </SectionCarousel>
@@ -389,5 +573,30 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+function LoadMoreCard({ item, onClick, icon: Icon = Newspaper }: { item: any; onClick: () => void; icon?: any }) {
+  if (item.hasMoreContent) {
+    return (
+      <div onClick={onClick} className="h-full bg-card/50 backdrop-blur border border-border/50 rounded-xl flex flex-col items-center justify-center p-8 text-center group hover:bg-muted/50 transition-colors cursor-pointer select-none">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+          <Icon className="h-6 w-6 text-primary" />
+        </div>
+        <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+        <p className="text-sm text-muted-foreground">{item.excerpt}</p>
+      </div>
+    )
+  }
+  return (
+    <Link href={item.link || "/"} className="block h-full">
+      <div className="h-full bg-card/50 backdrop-blur border border-border/50 rounded-xl flex flex-col items-center justify-center p-8 text-center group hover:bg-muted/50 transition-colors cursor-pointer">
+        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+          <Icon className="h-6 w-6 text-primary" />
+        </div>
+        <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+        <p className="text-sm text-muted-foreground">{item.excerpt}</p>
+      </div>
+    </Link>
   )
 }

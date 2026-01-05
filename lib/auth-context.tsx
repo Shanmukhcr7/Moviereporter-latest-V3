@@ -24,6 +24,7 @@ interface UserData {
   memberSince: string
   phoneNumber?: string
   username?: string
+  createdAt?: string
 }
 
 interface AuthContextType {

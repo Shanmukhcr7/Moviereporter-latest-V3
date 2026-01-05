@@ -43,7 +43,17 @@ export function ArticleCard({ id, title, image, author, publishedAt, category, e
             </div>
             <div className="flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
-              <span>{new Date(publishedAt).toLocaleDateString()}</span>
+              <span>
+                {(() => {
+                  if (!publishedAt) return "N/A"
+                  // Handle Firestore Timestamp or serialized
+                  const dateVal: any = publishedAt
+                  if (dateVal.seconds) return new Date(dateVal.seconds * 1000).toLocaleDateString()
+                  // Handle standard dates
+                  const d = new Date(publishedAt)
+                  return !isNaN(d.getTime()) ? d.toLocaleDateString() : "N/A"
+                })()}
+              </span>
             </div>
           </div>
         </CardContent>

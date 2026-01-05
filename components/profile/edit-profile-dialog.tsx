@@ -67,8 +67,15 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                     setUsernameAvailable(true)
                     setUsernameMsg("Username is available")
                 } else {
-                    setUsernameAvailable(false)
-                    setUsernameMsg("Username is already taken")
+                    // Check if it's the current user
+                    const doc = snapshot.docs[0]
+                    if (doc.id === user?.uid) {
+                        setUsernameAvailable(true)
+                        setUsernameMsg("")
+                    } else {
+                        setUsernameAvailable(false)
+                        setUsernameMsg("Username is already taken")
+                    }
                 }
             } catch (err: any) {
                 console.error("Error checking username", err)

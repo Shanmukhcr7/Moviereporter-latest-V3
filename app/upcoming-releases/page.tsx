@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { collection, query, orderBy, getDocs, where, deleteDoc, doc, setDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,31 +46,50 @@ export default function UpcomingReleasesPage() {
   const fetchMovies = async () => {
     setLoading(true)
     try {
+      const cacheKey = "upcoming_releases_all"
+
+      // Only check cache if no industry filter is applied initially? 
+      // Actually the function fetches ALL matching the query constraints. 
+      // The query constraints USE `industryFilter`.
+      // If `industryFilter` changes, `fetchMovies` is NOT called automatically?
+      // Wait, `useEffect(() => { fetchMovies() }, [])` only runs once.
+      // `applyFilters` runs on `allMovies` change.
+      // BUT `fetchMovies` uses `industryFilter` state variable inside its body?
+      // Ah, looking at the code: `if (industryFilter !== "all") { ... }` inside `fetchMovies`.
+      // BUT `fetchMovies` is ONLY called on mount `useEffect(..., [])`.
+      // So on mount, `industryFilter` is "all".
+      // Wait, if `industryFilter` changes, does `fetchMovies` run? 
+      // The `useEffect` dependency array is empty `[]`.
+      // So `fetchMovies` ONLY runs once with default "all".
+      // Then `applyFilters` runs when `industryFilter` changes, filtering the `allMovies` client-side?
+      // Wait, line 149: `if (industryFilter !== "all") result = result.filter(...)`
+      // So filtering IS client side.
+      // BUT `fetchMovies` ALSO has a query with `industryFilter`?
+      // Lines 65-72 in original code:
+      // `if (industryFilter !== "all") { q = query(..., where("industry", "==", industryFilter) ...)`
+      // This logic inside `fetchMovies` is effectively dead code or misleading if `fetchMovies` is only called once on mount!
+      // Unless the user changed the code to call `fetchMovies` on filter change?
+      // No, line 30: `useEffect(() => { fetchMovies() }, [])`.
+      // So `fetchMovies` fetches EVERYTHING (since default is "all") once.
+      // Then `applyFilters` filters it.
+      // So we can safely cache the "all" result.
+
+      const cached = getFromCache<any[]>(cacheKey)
+      if (cached) {
+        setAllMovies(cached)
+        setLoading(false)
+        return
+      }
+
       const now = Timestamp.now()
-
-      // Use Timestamp for query to match Firestore data type
-      // We will perform a broad query and filter strictly client-side to handle both String/Timestamp inconsistencies if any exist,
-      // but primarily we target Timestamp > Timestamp.
-
       const moviesRef = collection(db, "artifacts/default-app-id/movies")
 
-      // Try querying with Timestamp first.
-      // Note: If you have mixed types (Strings and Timestamps) for releaseDate, you might miss strings here.
-      // But typically a "date" field is Timestamp.
-      let q = query(
+      // Fetch all upcoming movies
+      const q = query(
         moviesRef,
         where("releaseDate", ">", Timestamp.now()),
         orderBy("releaseDate", "asc")
       )
-
-      if (industryFilter !== "all") {
-        q = query(
-          moviesRef,
-          where("industry", "==", industryFilter),
-          where("releaseDate", ">", Timestamp.now()),
-          orderBy("releaseDate", "asc")
-        )
-      }
 
       const snapshot = await getDocs(q)
 
@@ -77,18 +97,40 @@ export default function UpcomingReleasesPage() {
         id: doc.id,
         ...doc.data(),
       })).filter((movie: any) => {
-        // 1. Scheduled Check
         if (movie.scheduledAt) {
           const scheduledTime = movie.scheduledAt.seconds ? movie.scheduledAt.seconds * 1000 : 0
-          // If scheduledAt is valid and in the future, don't show it logic:
-          // "scheduledAt <= now" means "show it if the schedule time has passed".
-          // So valid checking is: if (scheduledTime > now) return false;
           if (scheduledTime > Date.now()) return false
         }
         return true
       })
 
-      setAllMovies(moviesData)
+      // Serialize dates for cache (Firestore timestamps don't survive JSON stringify well, usually turn to objects)
+      // When reading back, we might need to handle them. 
+      // The code uses `getSafeDate` which handles `dateVal?.toDate` OR `new Date(dateVal)`.
+      // So if we save as ISO strings or just plain objects, `new Date` should handle it.
+      // `Timestamp` objects when JSON stringified often become `{seconds:..., nanoseconds:...}`.
+      // `getSafeDate` expects `toDate()` method existence or string. 
+      // The vanilla JSON object won't have `toDate()`.
+      // So we should map them to ISO strings?
+      // The `allMovies` state is used. `filteredMovies` is derived.
+      // `getSafeDate` (line 184) checks `toDate` function.
+      // If we restore from cache, it won't have `toDate`.
+      // So `new Date(dateVal)` will be called.
+      // JSON.stringify of a Timestamp object: `{"seconds":..., "nanoseconds":...}`.
+      // `new Date({...})` results in Invalid Date usually.
+      // So we MUST convert Timestamps to Strings or Numbers before caching if we want `getSafeDate` to work with `new Date()`.
+      // OR we update `getSafeDate` to handle the shape.
+      // Better to normalize data to primitives before caching.
+
+      const normalizedMovies = moviesData.map(m => ({
+        ...m,
+        releaseDate: m.releaseDate?.toDate ? m.releaseDate.toDate().toISOString() : m.releaseDate,
+        scheduledAt: m.scheduledAt?.toDate ? m.scheduledAt.toDate().toISOString() : m.scheduledAt
+      }))
+
+      setAllMovies(normalizedMovies)
+      saveToCache(cacheKey, normalizedMovies)
+
     } catch (error) {
       console.error("Error fetching movies:", error)
     } finally {

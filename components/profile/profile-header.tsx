@@ -14,13 +14,23 @@ export function ProfileHeader() {
     const [editOpen, setEditOpen] = useState(false)
     const [pwdOpen, setPwdOpen] = useState(false)
 
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return "N/A"
-        return new Date(dateString).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        })
+    const formatDate = (dateVal?: any) => {
+        if (!dateVal) return "N/A"
+        try {
+            // Handle Firestore Timestamp
+            if (typeof dateVal.toDate === 'function') {
+                return dateVal.toDate().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+            }
+            // Handle serialized Timestamp
+            if (dateVal.seconds) {
+                return new Date(dateVal.seconds * 1000).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+            }
+            // Handle String/Date
+            const d = new Date(dateVal)
+            return !isNaN(d.getTime()) ? d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "N/A"
+        } catch {
+            return "N/A"
+        }
     }
 
     const initials = userData?.displayName
@@ -90,7 +100,7 @@ export function ProfileHeader() {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-xs text-muted-foreground font-medium uppercase">Mobile</span>
-                            <span className="font-medium">{userData?.phoneNumber || "N/A"}</span>
+                            <span className="font-medium">{userData?.phoneNumber || user?.phoneNumber || "N/A"}</span>
                         </div>
                     </div>
 
@@ -100,7 +110,7 @@ export function ProfileHeader() {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-xs text-muted-foreground font-medium uppercase">Joined</span>
-                            <span className="font-medium">{formatDate(userData?.memberSince)}</span>
+                            <span className="font-medium">{formatDate(userData?.memberSince || userData?.createdAt || user?.metadata?.creationTime)}</span>
                         </div>
                     </div>
                 </div>

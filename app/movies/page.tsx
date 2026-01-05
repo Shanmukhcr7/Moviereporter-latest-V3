@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import { collection, query, orderBy, limit, getDocs, where, Timestamp, startAfter, QueryConstraint } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -59,6 +60,21 @@ export default function MoviesPage() {
     // Prevent double fetching if already loading and not initial (initial handled by effect)
     if (loading && !isInitial) return;
 
+    // Cache Logic
+    const cacheKey = `movies_initial_${industryFilter}`
+    if (isInitial && !searchTerm) {
+      const cached = getFromCache<any>(cacheKey)
+      if (cached) {
+        setMovies(cached.data)
+        // Restore cursor for next page
+        // We stored the releaseDate of the last item
+        setLastVisible(cached.lastReleaseDate)
+        setHasMore(true)
+        setLoading(false)
+        return
+      }
+    }
+
     setLoading(true)
     try {
       const now = Timestamp.now()
@@ -80,7 +96,9 @@ export default function MoviesPage() {
       // Note: `lastVisible` state update is async, so for 'Load More' we use the state.
       // For initial load we ignore it.
       if (!isInitial && lastVisible) {
-        constraints.push(startAfter(lastVisible))
+        // If lastVisible is a string (ISO date from cache), convert to Timestamp
+        const cursor = typeof lastVisible === 'string' ? Timestamp.fromDate(new Date(lastVisible)) : lastVisible
+        constraints.push(startAfter(cursor))
       }
 
       const moviesQuery = query(moviesRef, ...constraints)
@@ -128,6 +146,19 @@ export default function MoviesPage() {
       }))
 
       setMovies(prev => isInitial ? processedMovies : [...prev, ...processedMovies])
+
+      // Save to cache initial load
+      if (isInitial && !searchTerm) {
+        const lastDoc = snapshot.docs[snapshot.docs.length - 1]
+        // Get releaseDate for cursor
+        const lastData = lastDoc.data()
+        const lastDate = lastData.releaseDate ? (lastData.releaseDate.toDate ? lastData.releaseDate.toDate().toISOString() : new Date(lastData.releaseDate).toISOString()) : new Date().toISOString()
+
+        saveToCache(cacheKey, {
+          data: processedMovies,
+          lastReleaseDate: lastDate
+        })
+      }
 
       if (snapshot.docs.length < MOVIES_PER_PAGE) {
         setHasMore(false)

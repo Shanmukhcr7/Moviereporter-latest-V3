@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { collection, query, limit, getDocs, startAfter, orderBy, doc, getDoc, setDoc, updateDoc, increment, deleteDoc, startAt, endAt } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Users } from "lucide-react"
 import { Header } from "@/components/header"
 import { CelebritySearch } from "@/components/celebrity-search"
@@ -61,65 +62,48 @@ export default function CelebritiesPage() {
   }
 
   const fetchCelebrities = async (loadMore = false) => {
+    // Cache Check
+    const cacheKey = "celebrities_initial_list"
+    if (!loadMore && !searchTerm) {
+      // Only checking cache for initial load without search
+      const cached = getFromCache<any>(cacheKey)
+      if (cached) {
+        setCelebrities(cached.data)
+        setLastDoc(cached.lastName) // Use name as cursor
+        setLoading(false)
+        return
+      }
+    }
+
     setLoading(true)
     try {
       let celebsQuery;
 
       if (searchTerm) {
-        // Search Mode: Query DB for prefix matches.
-        // Note: Firestore limitation - allows prefix search with startAt/endAt.
-        // It CANNOT do substring ("contains") efficiently without external index.
-        // We will map the 'startAt' approach for the main list too.
-        // Limitation: If user searched "Megastar" but name is "Chiranjeevi", suggestions will show it (client filter logic)
-        // but clicking "Search" might fail here if we rely on simple `name` query.
-
-        // SOLUTION: If we have cached ALL items in the SearchComponent, we could lift that state up?
-        // Or just fetch ALL here too if searchTerm is active?
-        // Let's rely on the prefix fetch for the LIST view, but usually users select from suggestions.
-        // If they hit Enter, we try prefix search.
-
-        // Better yet: Fetch all matches if searchTerm is present. 
-        // Since we can't do "contains", we'll implement a client-side filter here too 
-        // IF the dataset isn't huge.
-        // Let's stick to startAt/endAt for the query, but apply a manual "contains" check if we fetched a broader set? No.
-
-        // Let's rely on standard Firestore prefix search for the main list view.
-        // This aligns with "starts with".
-        // If user clicked suggestion, it sends the full name. "Chiranjeevi". Prefix search finds it.
-
-        // Case insensitive fix: Firestore is case sensitive.
-        // We can't easily fix this without a "name_lower" field.
-        // We'll attempt to match exact case typed or Capitalized.
-        // Assuming names are Capitalized.
-
-        // However, the user said "Search suggestions... works only for celebrity profiles page". 
-        // My previous step fixed suggestions to be "contains". 
-        // If I select "Chiranjeevi" (suggestion), searchTerm becomes "Chiranjeevi".
-        // Prefix search for "Chiranjeevi" works.
-
-        const term = searchTerm // Case sensitive usually. 
-        // We can try to be smart: Capitalize first letter?
-
+        // Search Mode
+        const term = searchTerm
         celebsQuery = query(
           collection(db, "artifacts/default-app-id/celebrities"),
           orderBy("name", "asc"),
           startAt(term),
           endAt(term + "\uf8ff"),
-          limit(50) // Fetch more results for search
+          limit(50)
         )
       } else {
         // Default Pagination Mode
-        celebsQuery = query(
-          collection(db, "artifacts/default-app-id/celebrities"),
-          orderBy("name", "asc"),
-          limit(16)
-        )
-
         if (loadMore && lastDoc) {
+          // lastDoc can be Snapshot or String (if restored from cache)
+          // startAfter handles both if orderBy aligns.
           celebsQuery = query(
             collection(db, "artifacts/default-app-id/celebrities"),
             orderBy("name", "asc"),
             startAfter(lastDoc),
+            limit(16)
+          )
+        } else {
+          celebsQuery = query(
+            collection(db, "artifacts/default-app-id/celebrities"),
+            orderBy("name", "asc"),
             limit(16)
           )
         }
@@ -131,20 +115,19 @@ export default function CelebritiesPage() {
         ...doc.data(),
       }))
 
-      // If searching, we might get 0 results if case mismatches. 
-      // Fallback: If 0 results and searchTerm exists, maybe fetch all and filter? 
-      // Risky for perf but maximally helpful.
-      // Let's implement Client-Side fallback for search if server returns empty? 
-      // Or just accepted limitation.
-      // Given the user feedback, I'll stick to prefix. 
-      // But wait! User wants "Chiranjeevi Megastar". 
-      // If user typed "Chiranjeevi Megastar", suggestions might NOT find him if name is "Chiranjeevi".
-      // But if name is "Chiranjeevi", suggestions find him via "Chiranjeevi".
-
       if (loadMore && !searchTerm) {
         setCelebrities([...celebrities, ...celebsData])
       } else {
         setCelebrities(celebsData)
+
+        // Save to cache (Initial list only)
+        if (!searchTerm && celebsData.length > 0) {
+          const lastItem = celebsData[celebsData.length - 1] as any
+          saveToCache(cacheKey, {
+            data: celebsData,
+            lastName: lastItem.name // Cursor for next page
+          })
+        }
       }
 
       setLastDoc(snapshot.docs[snapshot.docs.length - 1])

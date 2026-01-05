@@ -427,7 +427,7 @@ export default function VoteEnrollPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="container mx-auto px-4 py-4">
+      <main className="container mx-auto px-4 py-4 pb-32">
         <div className="sticky top-20 z-30 bg-background/95 backdrop-blur py-2 mb-4 -mx-4 px-4 border-b border-border/40">
           <div className="flex justify-center">
             <Select value={industryFilter} onValueChange={handleIndustryChange}>

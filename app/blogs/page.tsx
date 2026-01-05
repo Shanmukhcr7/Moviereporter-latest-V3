@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { collection, query, orderBy, limit, getDocs, Timestamp, where, startAfter } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getFromCache, saveToCache } from "@/lib/cache-utils"
 import { Header } from "@/components/header"
 import { ArticleCard } from "@/components/article-card"
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,18 @@ export default function BlogsPage() {
   }, [])
 
   const fetchBlogs = async (isInitial = false) => {
+    // Cache Check
+    const cacheKey = "blogs_initial_list"
+    if (isInitial && !searchTerm) {
+      const cached = getFromCache<any>(cacheKey)
+      if (cached) {
+        setBlogs(cached.data)
+        setLastVisible(cached.lastDate)
+        setLoading(false)
+        return
+      }
+    }
+
     setLoading(true)
     try {
       const blogsRef = collection(db, "artifacts/default-app-id/blogs")
@@ -34,7 +47,9 @@ export default function BlogsPage() {
       ]
 
       if (!isInitial && lastVisible) {
-        constraints.push(startAfter(lastVisible))
+        // If lastVisible is a string (ISO date set from cache restoration), convert to Timestamp
+        const cursor = typeof lastVisible === 'string' ? Timestamp.fromDate(new Date(lastVisible)) : lastVisible
+        constraints.push(startAfter(cursor))
       }
 
       const blogsQuery = query(blogsRef, ...constraints)
@@ -56,6 +71,16 @@ export default function BlogsPage() {
         })
 
         setBlogs(prev => isInitial ? newBlogs : [...prev, ...newBlogs])
+
+        // Save to cache (Initial only)
+        if (isInitial && !searchTerm && newBlogs.length > 0) {
+          const lastDoc = snapshot.docs[snapshot.docs.length - 1]
+          const lastDate = lastDoc.data().scheduledAt ? lastDoc.data().scheduledAt.toDate().toISOString() : new Date().toISOString()
+          saveToCache(cacheKey, {
+            data: newBlogs,
+            lastDate: lastDate
+          })
+        }
       }
     } catch (error) {
       console.error("[v0] Error fetching blogs:", error)
