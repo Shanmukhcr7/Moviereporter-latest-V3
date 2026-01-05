@@ -145,9 +145,14 @@ export default function VoteEnrollPage() {
 
     try {
       const now = new Date().toISOString()
+
+      // Normalize industry for DB Query (DB uses lowercase, hyphenated)
+      // e.g. "Tollywood" -> "tollywood", "Pan India" -> "pan-india"
+      const dbIndustry = industryFilter.toLowerCase().replace(" ", "-")
+
       const categoriesQuery = query(
         collection(db, "artifacts/default-app-id/categories"),
-        where("industry", "==", industryFilter)
+        where("industry", "==", dbIndustry)
       )
 
       const snapshot = await getDocs(categoriesQuery)
