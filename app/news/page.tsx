@@ -113,28 +113,20 @@ export default function NewsPage() {
       const now = Timestamp.now()
 
       let constraints: QueryConstraint[] = [
-        where("scheduledAt", "<=", now),
-        orderBy("scheduledAt", "desc"),
+        orderBy("createdAt", "desc"),
         limit(NEWS_LOAD_LIMIT)
       ]
 
       if (categoryFilter !== "all") {
-        // Note: Ensure Firestore composite index exists for category + scheduledAt
         constraints = [
-          where("scheduledAt", "<=", now),
           where("category", "==", categoryFilter),
-          orderBy("scheduledAt", "desc"),
+          orderBy("createdAt", "desc"),
           limit(NEWS_LOAD_LIMIT)
         ]
       }
 
       if (!isInitial && lastVisible) {
-        // If lastVisible is a string (timestamp from cache), convert to Date/Timestamp?
-        // Actually startAfter accepts variadic args. 
-        // If it's a doc snapshot, fine. If it's a date, fine.
-        // We need to ensure we pass the right type.
-        // Our sort is by `scheduledAt`.
-        // If lastVisible is a string ISO, we might need to convert to Timestamp or Date.
+        // Use createdAt for cursor
         const cursor = typeof lastVisible === 'string' ? Timestamp.fromDate(new Date(lastVisible)) : lastVisible
         constraints.push(startAfter(cursor))
       }
@@ -148,8 +140,6 @@ export default function NewsPage() {
         return
       }
 
-      // If we used a cursor, we aren't getting a snapshot back that we can cache effectively as a cursor for the NEXT batch if we mix types.
-      // But for the current batch, we have snapshot.docs.
       setLastVisible(snapshot.docs[snapshot.docs.length - 1])
 
       const newNews = snapshot.docs.map((doc) => {
@@ -159,7 +149,7 @@ export default function NewsPage() {
           type: "news" as const,
           ...data,
           image: data.imageUrl || data.image,
-          publishedAt: data.scheduledAt ? data.scheduledAt.toDate().toISOString() : new Date().toISOString()
+          publishedAt: data.scheduledPublish?.toDate?.()?.toISOString() || data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
         }
       })
 
@@ -168,10 +158,10 @@ export default function NewsPage() {
       // Save to cache if initial and no search
       if (isInitial && !searchTerm) {
         const lastDoc = snapshot.docs[snapshot.docs.length - 1]
-        const lastDate = lastDoc.data().scheduledAt ? lastDoc.data().scheduledAt.toDate().toISOString() : new Date().toISOString()
+        const lastDate = lastDoc.data().createdAt ? lastDoc.data().createdAt.toDate().toISOString() : new Date().toISOString()
         saveToCache(cacheKey, {
           data: newNews,
-          lastScheduledAt: lastDate
+          lastScheduledAt: lastDate // keeping key name for compatibility but storing createdAt
         })
       }
 
