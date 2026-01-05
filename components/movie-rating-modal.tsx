@@ -182,6 +182,7 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
 
     await updateDoc(doc(db, "artifacts/default-app-id/movies", movie.id), {
       avgRating,
+      reviewCount: ratings.length
     })
   }
 

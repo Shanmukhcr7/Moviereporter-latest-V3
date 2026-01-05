@@ -65,6 +65,7 @@ service cloud.firestore {
          (request.resource.data.avgRating is number && request.resource.data.avgRating >= 0)
       ) &&
       (
+         // Relaxed rule: Allow any non-negative integer for reviewCount (to enable recalculation)
          !request.resource.data.diff(resource.data).changedKeys().hasAny(['reviewCount']) || 
          (request.resource.data.reviewCount is number && request.resource.data.reviewCount >= 0)
       )
