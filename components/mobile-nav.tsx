@@ -32,7 +32,7 @@ export function MobileNav() {
                 <SheetHeader className="p-4 border-b text-left">
                     <SheetTitle className="flex items-center gap-2">
                         <Film className="h-6 w-6" />
-                        <span>Movie Reporter</span>
+                        <span>Movie Lovers</span>
                     </SheetTitle>
                 </SheetHeader>
                 <ScrollArea className="h-[calc(100vh-65px)]">

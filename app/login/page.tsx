@@ -249,7 +249,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-bold">{isLogin ? "Welcome Back" : "Create Account"}</CardTitle>
           <CardDescription>
-            {isLogin ? "Sign in to your Movie Reporter account" : "Join the Movie Reporter community"}
+            {isLogin ? "Sign in to your Movie Lovers account" : "Join the Movie Lovers community"}
           </CardDescription>
         </CardHeader>
 

@@ -25,7 +25,7 @@ export function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 font-bold text-xl">
               <Film className="h-6 w-6" />
-              <span>Movie Reporter</span>
+              <span>Movie Lovers</span>
             </Link>
 
             {/* Desktop Navigation */}

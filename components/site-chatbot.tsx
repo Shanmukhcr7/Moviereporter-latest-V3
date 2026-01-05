@@ -27,7 +27,7 @@ export function SiteChatbot() {
         {
             id: "welcome",
             role: "bot",
-            content: "Hi! I'm the Movie Reporter Assistant. I can help you find movies, news, celebrities, or latest updates.",
+            content: "Hi! I'm the Movie Lovers Assistant. I can help you find movies, news, celebrities, or latest updates.",
             timestamp: new Date()
         }
     ])

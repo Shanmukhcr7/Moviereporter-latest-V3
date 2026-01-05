@@ -582,7 +582,7 @@ export default function HomePage() {
       <footer className="border-t border-border mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-sm text-muted-foreground">
-            <p>© 2026 Movie Reporter. All rights reserved.</p>
+            <p>© 2026 Movie Lovers. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -14,12 +14,12 @@ export default function HelpPage() {
           <div className="text-center mb-12">
             <HelpCircle className="h-16 w-16 mx-auto mb-4 text-primary" />
             <h1 className="text-4xl font-bold mb-4">Help & Support</h1>
-            <p className="text-xl text-muted-foreground">We're here to help you get the most out of Movie Reporter</p>
+            <p className="text-xl text-muted-foreground">We're here to help you get the most out of Movie Lovers</p>
           </div>
 
           <Card>
             <CardContent className="p-8 prose dark:prose-invert max-w-none">
-              <h2>How to Use Movie Reporter</h2>
+              <h2>How to Use Movie Lovers</h2>
 
               <h3>Creating an Account</h3>
               <p>
@@ -60,7 +60,7 @@ export default function HelpPage() {
               <h2>Need More Help?</h2>
               <p>
                 If you need additional assistance, please use the feedback form on our About page or contact us at
-                support@moviereporter.com
+                support@movielovers.com
               </p>
             </CardContent>
           </Card>

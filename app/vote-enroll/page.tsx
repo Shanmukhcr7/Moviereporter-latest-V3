@@ -399,7 +399,7 @@ export default function VoteEnrollPage() {
     if (navigator.share) {
       navigator.share({
         title: `Vote for ${nominee.celebrity?.name || 'My Choice'}`,
-        text: `Vote for ${nominee.celebrity?.name || 'Nominee'} in the Movie Reporter Awards!`,
+        text: `Vote for ${nominee.celebrity?.name || 'Nominee'} in the Movie Lovers Awards!`,
         url: window.location.href,
       })
     } else {

@@ -74,7 +74,7 @@ export default function PromotionPage() {
               </div>
               <h2 className="text-3xl font-bold mb-4 text-foreground">Inquiry Sent Successfully!</h2>
               <p className="text-xl text-muted-foreground mb-8">
-                Thank you for contacting Movie Reporter. Our team has received your promotion inquiry and will get back to you shortly.
+                Thank you for contacting Movie Lovers. Our team has received your promotion inquiry and will get back to you shortly.
               </p>
               <Button onClick={() => setIsSuccess(false)} variant="outline" className="min-w-[150px]">
                 Send Another
@@ -92,11 +92,11 @@ export default function PromotionPage() {
 
       <main className="container mx-auto px-4 py-8">
         <section className="bg-card rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-6 text-foreground">Promote Your Content with Movie Reporter</h2>
+          <h2 className="text-3xl font-bold mb-6 text-foreground">Promote Your Content with Movie Lovers</h2>
 
           <div className="prose dark:prose-invert max-w-none mb-8">
             <p className="text-lg">
-              Are you an artist, production company, or content creator looking to promote your work? Movie Reporter offers unique opportunities to get your movies, music, or other entertainment content in front of a dedicated audience.
+              Are you an artist, production company, or content creator looking to promote your work? Movie Lovers offers unique opportunities to get your movies, music, or other entertainment content in front of a dedicated audience.
             </p>
             <p className="text-lg">
               Fill out the form below, and our team will get in touch to discuss potential promotion strategies tailored to your needs.
@@ -187,8 +187,8 @@ export default function PromotionPage() {
             <p className="mb-2">If you prefer to reach out directly, feel free to email us at:</p>
             <p>
               <strong>Email: </strong>
-              <a href="mailto:admin@moviereporter.in" className="text-primary hover:underline font-medium">
-                admin@moviereporter.in
+              <a href="mailto:admin@movielovers.in" className="text-primary hover:underline font-medium">
+                admin@movielovers.in
               </a>
             </p>
           </div>

@@ -51,7 +51,7 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <Film className="h-16 w-16 mx-auto mb-4 text-primary" />
-            <h1 className="text-4xl font-bold mb-4">About Movie Reporter</h1>
+            <h1 className="text-4xl font-bold mb-4">About Movie Lovers</h1>
             <p className="text-xl text-muted-foreground">
               Your ultimate destination for entertainment news and reviews
             </p>
@@ -61,7 +61,7 @@ export default function AboutPage() {
             <CardContent className="p-8 prose dark:prose-invert max-w-none">
               <h2>Who We Are</h2>
               <p>
-                Movie Reporter is a comprehensive entertainment platform dedicated to bringing you the latest news,
+                Movie Lovers is a comprehensive entertainment platform dedicated to bringing you the latest news,
                 reviews, and insights from the world of cinema. We cover movies from all major film industries including
                 Tollywood, Bollywood, Kollywood, Hollywood, and more.
               </p>

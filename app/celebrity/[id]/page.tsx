@@ -125,7 +125,7 @@ export default function CelebrityDetailsPage() {
     if (navigator.share) {
       navigator.share({
         title: celebrity.name,
-        text: `Check out ${celebrity.name} on Movie Reporter`,
+        text: `Check out ${celebrity.name} on Movie Lovers`,
         url: window.location.href,
       })
     }

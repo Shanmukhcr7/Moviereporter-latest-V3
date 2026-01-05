@@ -118,7 +118,7 @@ export function NewsStories() {
 
     const setFallbackStories = () => {
         setStories([
-            { id: "1", type: "news", title: "Welcome", image: "/assets/placeholder-story-1.jpg", publishedAt: null, summary: "Welcome to Movie Reporter! Check out the latest updates here." },
+            { id: "1", type: "news", title: "Welcome", image: "/assets/placeholder-story-1.jpg", publishedAt: null, summary: "Welcome to Movie Lovers! Check out the latest updates here." },
             { id: "2", type: "movie", title: "Trending", image: "/assets/placeholder-story-2.jpg", publishedAt: null, summary: "See what's trending in the world of cinema today." },
             { id: "3", type: "news", title: "New Feature", image: "/assets/placeholder-story-3.jpg", publishedAt: null, summary: "Brand new features just for you." },
         ])

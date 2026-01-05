@@ -208,7 +208,7 @@ export default function MovieDetailsPage() {
   const handleShare = async () => {
     const shareData = {
       title: movie.title,
-      text: `Check out "${movie.title}" on Movie Reporter!`,
+      text: `Check out "${movie.title}" on Movie Lovers!`,
       url: window.location.href
     }
     if (navigator.share) {

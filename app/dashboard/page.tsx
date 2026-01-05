@@ -88,7 +88,7 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-12">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your Movie Reporter platform</p>
+          <p className="text-muted-foreground">Manage your Movie Lovers platform</p>
         </div>
 
         {/* Overview Stats */}
@@ -215,7 +215,7 @@ export default function DashboardPage() {
                 <div className="rounded-lg border border-blue-500/50 bg-blue-500/5 p-6">
                   <h3 className="font-semibold mb-2">Admin Access</h3>
                   <p className="text-sm text-muted-foreground">
-                    You have full administrative access to manage all aspects of the Movie Reporter platform. Use the
+                    You have full administrative access to manage all aspects of the Movie Lovers platform. Use the
                     tabs above to manage content, users, and moderation.
                   </p>
                 </div>

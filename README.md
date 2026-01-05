@@ -1,6 +1,6 @@
-# Movie Reporter V3 🎬
-
-Movie Reporter is a next-generation film news, voting, and database platform built with **Next.js 14**, **Tailwind CSS**, and **Firebase**. It features a stunning UI/UX with glassmorphism, smooth animations, and a powerful Admin "Mission Control" Dashboard.
+# Movie Lovers V3 🎬
+ 
+Movie Lovers is a next-generation film news, voting, and database platform built with **Next.js 14**, **Tailwind CSS**, and **Firebase**. It features a stunning UI/UX with glassmorphism, smooth animations, and a powerful Admin "Mission Control" Dashboard.
 
 ## 🚀 Features
 

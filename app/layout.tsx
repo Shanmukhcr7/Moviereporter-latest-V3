@@ -14,7 +14,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Movie Reporter",
+  title: "Movie Lovers",
   description: "Your ultimate source for movie news and reviews",
   generator: "Next.js",
   manifest: "/manifest.json",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Movie Reporter",
+    title: "Movie Lovers",
   },
   formatDetection: {
     telephone: false,
