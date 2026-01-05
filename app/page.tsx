@@ -39,7 +39,8 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchHomeData() {
       try {
-        const cacheKey = "home_data_cache"
+        // Updated cache key to force refresh after date fix
+        const cacheKey = "home_data_cache_v2"
         const cached = getFromCache<any>(cacheKey)
 
         if (cached) {
@@ -121,7 +122,8 @@ export default function HomePage() {
         const processArticles = (docs: any[], type: "news" | "blog") => {
           return docs.map(doc => {
             const d = doc.data()
-            const dateVal = d.publishedAt
+            // Fix: Check scheduledAt if publishedAt is missing
+            const dateVal = d.publishedAt || d.scheduledAt
             let millis = 0
             if (dateVal?.toMillis) millis = dateVal.toMillis()
             else if (dateVal?.seconds) millis = dateVal.seconds * 1000
@@ -132,7 +134,7 @@ export default function HomePage() {
               type,
               ...d,
               image: d.image || d.imageUrl || d.bannerImage || d.bannerImageUrl || "",
-              publishedAt: millis,
+              publishedAt: new Date(millis).toISOString(), // Pass as string
             }
           })
             .sort((a, b) => b.publishedAt - a.publishedAt)
