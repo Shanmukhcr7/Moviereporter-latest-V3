@@ -367,7 +367,10 @@ export default function HomePage() {
 
       <main className="container mx-auto px-4 py-4 space-y-4">
         {/* Stories */}
-        <NewsStories />
+        {/* Stories (Mobile Only) */}
+        <div className="block md:hidden">
+          <NewsStories />
+        </div>
 
         {/* Latest Movies */}
         <section>
