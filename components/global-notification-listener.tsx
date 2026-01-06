@@ -52,7 +52,7 @@ export function GlobalNotificationListener() {
             notification.type === 'success' ? 'text-green-500' : 'text-blue-500'
 
         toast.custom((t) => (
-            <div className="w-[350px] bg-background border border-border rounded-lg shadow-lg p-4 flex gap-3 relative pointer-events-auto">
+            <div className="w-[90vw] md:w-full max-w-[400px] mx-auto bg-background border border-border rounded-lg shadow-lg p-4 flex gap-3 relative pointer-events-auto">
                 <div className={`mt-1 bg-muted/50 p-2 rounded-full h-fit ${colorClass}`}>
                     <Icon className="h-5 w-5" />
                 </div>
