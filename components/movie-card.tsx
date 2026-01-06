@@ -183,11 +183,12 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
           </div>
           <CardContent className="p-2 pt-1 space-y-0.5 flex flex-col flex-1">
             <div className="flex justify-between items-start">
-              <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors leading-tight">{title}</h3>
+              <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors leading-tight">{title}</h3>
               {enableInterest && (
                 <button
                   onClick={toggleInterest}
                   className={`text-foreground/80 hover:text-red-500 transition-colors z-20 relative ${isInterested ? "text-red-500 fill-current" : ""}`}
+                  title={isInterested ? "Remove from interests" : "Mark as interested"}
                 >
                   <Heart className={`h-5 w-5 ${isInterested ? "fill-current" : ""}`} />
                 </button>

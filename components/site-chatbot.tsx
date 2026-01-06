@@ -357,7 +357,7 @@ export function SiteChatbot() {
                     boxShadow: "0 4px 14px 0 rgba(0, 118, 255, 0.39)" // Custom glow
                 }}
             >
-                {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+                {isOpen ? <X className="h-6 w-6" /> : <Bot className="h-6 w-6" />}
             </motion.button>
         </>
     )

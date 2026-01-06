@@ -24,7 +24,7 @@ export function CelebrityCard({ id, name, image, imageUrl, posterUrl, profileIma
             />
           </div>
           <CardContent className="p-2 pt-1 space-y-0.5 text-center">
-            <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors leading-tight">{name}</h3>
+            <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors leading-tight">{name}</h3>
             <Badge variant="secondary" className="text-xs">
               {role}
             </Badge>
