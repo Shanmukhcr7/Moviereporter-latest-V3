@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Terminal, Search, Filter, RefreshCw, Clock, User, Download } from "lucide-react"
+import { Terminal, Search, Filter, RefreshCw, Clock, User, Download, Shield, Trash2 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface LogEntry {
     adminName: string
@@ -29,9 +32,21 @@ export default function AdminLogsPage() {
     const [actionFilter, setActionFilter] = useState("ALL")
     const [resourceFilter, setResourceFilter] = useState("ALL")
 
+    const { userData } = useAuth()
+    const router = useRouter()
+
     useEffect(() => {
-        fetchLogs()
-    }, [])
+        // Redirect if not super admin
+        if (!loading && userData && userData.role !== 'super_admin') {
+            router.push('/admin')
+        }
+    }, [userData, loading, router])
+
+    useEffect(() => {
+        if (userData?.role === 'super_admin') {
+            fetchLogs()
+        }
+    }, [userData])
 
     useEffect(() => {
         // Client-side filtering
@@ -74,6 +89,23 @@ export default function AdminLogsPage() {
         }
     }
 
+    const clearLogs = async () => {
+        if (!confirm("Are you sure you want to DELETE ALL logs? This cannot be undone.")) return
+
+        try {
+            const res = await fetch("/api/admin/logs", { method: "DELETE" })
+            if (res.ok) {
+                toast.success("Logs cleared successfully")
+                setLogs([])
+                setFilteredLogs([])
+            } else {
+                toast.error("Failed to clear logs")
+            }
+        } catch (e) {
+            toast.error("Error clearing logs")
+        }
+    }
+
     const getActionColor = (action: string) => {
         switch (action) {
             case "CREATE": return "bg-green-500/10 text-green-500 border-green-500/20"
@@ -87,6 +119,17 @@ export default function AdminLogsPage() {
     // Extract unique resource types for filter
     const resourceTypes = Array.from(new Set(logs.map(l => l.resourceType))).sort()
 
+    if (userData?.role !== 'super_admin') {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+                <Shield className="h-16 w-16 text-muted-foreground/50" />
+                <h2 className="text-2xl font-bold">Access Denied</h2>
+                <p className="text-muted-foreground">Only Super Admins can view System Logs.</p>
+                <Button variant="outline" onClick={() => router.push('/admin')}>Back to Dashboard</Button>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen bg-background space-y-6">
             <div className="flex items-center justify-between">
@@ -98,10 +141,16 @@ export default function AdminLogsPage() {
                         /var/log/admin-activity.log
                     </p>
                 </div>
-                <Button onClick={fetchLogs} variant="outline" className="gap-2 font-mono text-xs">
-                    <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
-                    REFRESH_DATA
-                </Button>
+                <div className="flex gap-2">
+                    <Button onClick={clearLogs} variant="destructive" size="sm" className="gap-2">
+                        <Trash2 className="h-3 w-3" />
+                        CLEAR_LOGS
+                    </Button>
+                    <Button onClick={fetchLogs} variant="outline" size="sm" className="gap-2 font-mono text-xs">
+                        <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+                        REFRESH
+                    </Button>
+                </div>
             </div>
 
             <Card className="border-border/50 bg-card/50 backdrop-blur">

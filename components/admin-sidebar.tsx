@@ -17,22 +17,27 @@ import {
     MessageSquare,
     LogOut
 } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 
 const sidebarItems = [
     { name: "Overview", href: "/admin", icon: LayoutDashboard },
     { name: "Movies", href: "/admin/movies", icon: Film },
-    { name: "Celebrities", href: "/admin/celebrities", icon: Star }, // Using Star for Celebs or Users? Let's use Star for Fame.
+    { name: "Celebrities", href: "/admin/celebrities", icon: Star },
     { name: "News & Blogs", href: "/admin/news", icon: Newspaper },
     { name: "Polls", href: "/admin/polls", icon: BarChart2 },
     { name: "Awards (Vote Enroll)", href: "/admin/awards", icon: Trophy },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Moderation", href: "/admin/moderation", icon: ShieldAlert },
-    { name: "Activity Logs", href: "/admin/logs", icon: BarChart2 }, // Reusing BarChart or new icon
+    { name: "Activity Logs", href: "/admin/logs", icon: BarChart2, protected: true },
     { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
 ]
 
 export function AdminSidebar() {
     const pathname = usePathname()
+    const { userData } = useAuth()
+    const isSuperAdmin = userData?.role === 'super_admin'
+
+    const filteredItems = sidebarItems.filter(item => !item.protected || isSuperAdmin)
 
     return (
         <div className="py-4 flex flex-col h-full bg-secondary/10 border-r">
@@ -43,7 +48,7 @@ export function AdminSidebar() {
                 </Link>
             </div>
             <div className="flex-1 px-4 space-y-1 overflow-y-auto">
-                {sidebarItems.map((item) => (
+                {filteredItems.map((item) => (
                     <Button
                         key={item.href}
                         variant={pathname === item.href ? "secondary" : "ghost"}
