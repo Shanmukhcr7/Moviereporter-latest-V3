@@ -251,6 +251,8 @@ service cloud.firestore {
   match /databases/{database}/documents/artifacts/{appId}/promotion_inquiries/{inquiryId} {
     allow create: if true;
     allow read, delete, update: if isAdmin();
+  }
+
   // --- Notifications (Global) ---
   match /databases/{database}/documents/notifications/{notificationId} {
     allow read: if true;
