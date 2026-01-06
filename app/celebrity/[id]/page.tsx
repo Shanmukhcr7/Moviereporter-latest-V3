@@ -24,6 +24,7 @@ export default function CelebrityDetailsPage() {
   })
   const [celebrity, setCelebrity] = useState<any>(null)
   const [movies, setMovies] = useState<any[]>([])
+  const [relatedCelebs, setRelatedCelebs] = useState<any[]>([])
   const [showFullBio, setShowFullBio] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -75,6 +76,17 @@ export default function CelebrityDetailsPage() {
             ...doc.data(),
           })),
         )
+
+        // Fetch Related Celebrities (Generic recommendation for now)
+        try {
+          const relatedQ = query(collection(db, "artifacts/default-app-id/celebrities"), limit(10))
+          const relatedSnap = await getDocs(relatedQ)
+          const related = relatedSnap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(c => c.id !== paramsId)
+            .slice(0, 8)
+          setRelatedCelebs(related)
+        } catch (e) { console.error("Error fetching related celebs", e) }
       }
     } catch (error) {
       console.error("[v0] Error fetching celebrity details:", error)
