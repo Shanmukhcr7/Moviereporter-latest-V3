@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { AlertTriangle, CheckCircle, Info, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 
 interface Notification {
     id: string
@@ -19,6 +20,7 @@ interface Notification {
 }
 
 export function GlobalNotificationListener() {
+    const pathname = usePathname()
     // We need state for Banner only, Toasts are handled by Sonner
     const [banner, setBanner] = useState<Notification | null>(null)
 
@@ -109,50 +111,55 @@ export function GlobalNotificationListener() {
     }
 
     // Render Banner Modal
-    if (!banner) return null
+    // HOMEPAGE ONLY CHECK
+    if (!banner || pathname !== '/') return null
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="relative w-full max-w-lg bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                {banner.imageUrl && (
-                    <div className="relative h-48 w-full bg-muted">
-                        <Image
-                            src={banner.imageUrl}
-                            alt={banner.title}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                )}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="relative w-full max-w-2xl bg-card border border-border rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
 
                 <button
                     onClick={handleDismissBanner}
-                    className="absolute top-3 right-3 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors backdrop-blur-md z-10"
+                    className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors backdrop-blur-md z-50 border border-white/20"
                 >
                     <X className="h-5 w-5" />
                 </button>
 
-                <div className="p-6 text-center">
-                    <div className={`mx-auto mb-4 p-3 rounded-full w-fit ${banner.type === 'warning' ? 'bg-yellow-500/10 text-yellow-500' :
-                            banner.type === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
+                {banner.imageUrl && (
+                    <div className="relative w-full flex-1 min-h-[200px] overflow-hidden bg-black/20">
+                        {/* Full Image Display */}
+                        <Image
+                            src={banner.imageUrl}
+                            alt={banner.title}
+                            width={800}
+                            height={600}
+                            className="w-full h-full object-contain max-h-[60vh] bg-black"
+                            priority
+                        />
+                    </div>
+                )}
+
+                <div className="p-6 text-center shrink-0 bg-background/95 backdrop-blur">
+                    <div className={`mx-auto mb-3 p-2 rounded-full w-fit inline-flex items-center justify-center ${banner.type === 'warning' ? 'bg-yellow-500/10 text-yellow-500' :
+                        banner.type === 'success' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
                         }`}>
-                        {banner.type === 'warning' ? <AlertTriangle className="h-8 w-8" /> :
-                            banner.type === 'success' ? <CheckCircle className="h-8 w-8" /> : <Info className="h-8 w-8" />}
+                        {banner.type === 'warning' ? <AlertTriangle className="h-6 w-6" /> :
+                            banner.type === 'success' ? <CheckCircle className="h-6 w-6" /> : <Info className="h-6 w-6" />}
                     </div>
 
                     <h2 className="text-2xl font-bold mb-2">{banner.title}</h2>
-                    <p className="text-muted-foreground mb-6">{banner.message}</p>
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">{banner.message}</p>
 
                     <div className="flex gap-3 justify-center">
                         <Button variant="outline" onClick={handleDismissBanner}>
-                            Dismiss
+                            Close
                         </Button>
                         {banner.link && (
                             <Button onClick={() => {
                                 handleDismissBanner()
                                 window.location.href = banner.link!
                             }}>
-                                Learn More
+                                Check it out
                             </Button>
                         )}
                     </div>
