@@ -77,7 +77,7 @@ export default function AdminNotificationsPage() {
 
             toast.success("Notification created and activated")
             setTitle("")
-            message("")
+            setMessage("")
             setLink("")
             setImageUrl("")
             fetchNotifications()
