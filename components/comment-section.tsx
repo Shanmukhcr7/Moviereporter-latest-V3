@@ -26,7 +26,7 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [activeReactionId, setActiveReactionId] = useState<string | null>(null)
-    const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null)
+    const [longPressTimer, setLongPressTimer] = useState<any>(null)
 
     const handleReaction = async (commentId: string, reaction: string) => {
         if (!user) {
@@ -207,97 +207,98 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
                     </div>
                 ) : (
                     comments.map((comment, i) => (
-                        <div
-                            className="flex gap-4 p-4 rounded-lg hover:bg-muted/30 transition-colors group relative select-none"
-                            onContextMenu={(e) => e.preventDefault()}
-                            onTouchStart={() => {
-                                const timer = setTimeout(() => setActiveReactionId(comment.id), 500)
-                                setLongPressTimer(timer)
-                            }}
-                            onTouchEnd={() => {
-                                if (longPressTimer) clearTimeout(longPressTimer)
-                            }}
-                            onMouseDown={() => {
-                                const timer = setTimeout(() => setActiveReactionId(comment.id), 500)
-                                setLongPressTimer(timer)
-                            }}
-                            onMouseUp={() => {
-                                if (longPressTimer) clearTimeout(longPressTimer)
-                            }}
-                            onMouseLeave={() => {
-                                if (longPressTimer) clearTimeout(longPressTimer)
-                            }}
-                        >
-                            {activeReactionId === comment.id && (
-                                <div className="absolute -top-10 left-10 bg-background border shadow-lg rounded-full p-2 flex gap-2 z-50 animate-in zoom-in slide-in-from-bottom-2">
-                                    {["👍", "❤️", "😂", "😮", "😢", "🔥"].map(emoji => (
-                                        <button
-                                            key={emoji}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleReaction(comment.id, emoji);
-                                                setActiveReactionId(null);
-                                            }}
-                                            className={cn("hover:scale-125 transition-transform text-xl",
-                                                comment.reactions?.[user?.uid || ""]?.includes(emoji) ? "opacity-100" : "opacity-70 hover:opacity-100"
-                                            )}
-                                        >
-                                            {emoji}
+                        <FadeIn key={comment.id} delay={i * 0.05}>
+                            <div
+                                className="flex gap-4 p-4 rounded-lg hover:bg-muted/30 transition-colors group relative select-none"
+                                onContextMenu={(e) => e.preventDefault()}
+                                onTouchStart={() => {
+                                    const timer = setTimeout(() => setActiveReactionId(comment.id), 500)
+                                    setLongPressTimer(timer)
+                                }}
+                                onTouchEnd={() => {
+                                    if (longPressTimer) clearTimeout(longPressTimer)
+                                }}
+                                onMouseDown={() => {
+                                    const timer = setTimeout(() => setActiveReactionId(comment.id), 500)
+                                    setLongPressTimer(timer)
+                                }}
+                                onMouseUp={() => {
+                                    if (longPressTimer) clearTimeout(longPressTimer)
+                                }}
+                                onMouseLeave={() => {
+                                    if (longPressTimer) clearTimeout(longPressTimer)
+                                }}
+                            >
+                                {activeReactionId === comment.id && (
+                                    <div className="absolute -top-10 left-10 bg-background border shadow-lg rounded-full p-2 flex gap-2 z-50 animate-in zoom-in slide-in-from-bottom-2">
+                                        {["👍", "❤️", "😂", "😮", "😢", "🔥"].map(emoji => (
+                                            <button
+                                                key={emoji}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleReaction(comment.id, emoji);
+                                                    setActiveReactionId(null);
+                                                }}
+                                                className={cn("hover:scale-125 transition-transform text-xl",
+                                                    comment.reactions?.[user?.uid || ""]?.includes(emoji) ? "opacity-100" : "opacity-70 hover:opacity-100"
+                                                )}
+                                            >
+                                                {emoji}
+                                            </button>
+                                        ))}
+                                        <button onClick={() => setActiveReactionId(null)} className="ml-2 text-muted-foreground hover:text-foreground">
+                                            <X className="h-4 w-4" />
                                         </button>
-                                    ))}
-                                    <button onClick={() => setActiveReactionId(null)} className="ml-2 text-muted-foreground hover:text-foreground">
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            )}
-                            <Avatar className="h-10 w-10">
-                                <AvatarImage src={comment.userImage} />
-                                <AvatarFallback>{comment.userName?.charAt(0) || "U"}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                                <div className="flex items-center justify-between mb-1">
-                                    <div>
-                                        <span className="font-semibold text-sm mr-2">{comment.userName}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {comment.createdAt?.toDate ? new Date(comment.createdAt.toDate()).toLocaleDateString() : "Just now"}
-                                        </span>
-                                    </div>
-                                    {user && user.uid === comment.userId && (
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => handleDelete(comment.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
-                                <p className="text-sm text-foreground/90 whitespace-pre-wrap">{comment.text}</p>
-
-                                {/* Reactions Display */}
-                                {comment.reactions && Object.values(comment.reactions).some((r: any) => r && r.length > 0) && (
-                                    <div className="flex gap-1 mt-2 flex-wrap">
-                                        {["👍", "❤️", "😂", "😮", "😢", "🔥"].filter(emoji =>
-                                            Object.values(comment.reactions).some((r: any) => r?.includes(emoji))
-                                        ).map(emoji => {
-                                            const count = Object.values(comment.reactions).filter((r: any) => r?.includes(emoji)).length;
-                                            return (
-                                                <Badge key={emoji} variant="secondary" className="text-[10px] px-1 py-0 h-5 gap-1 cursor-pointer" onClick={() => handleReaction(comment.id, emoji)}>
-                                                    <span>{emoji}</span>
-                                                    <span>{count}</span>
-                                                </Badge>
-                                            )
-                                        })}
                                     </div>
                                 )}
+                                <Avatar className="h-10 w-10">
+                                    <AvatarImage src={comment.userImage} />
+                                    <AvatarFallback>{comment.userName?.charAt(0) || "U"}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div>
+                                            <span className="font-semibold text-sm mr-2">{comment.userName}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {comment.createdAt?.toDate ? new Date(comment.createdAt.toDate()).toLocaleDateString() : "Just now"}
+                                            </span>
+                                        </div>
+                                        {user && user.uid === comment.userId && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                                onClick={() => handleDelete(comment.id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <p className="text-sm text-foreground/90 whitespace-pre-wrap">{comment.text}</p>
+
+                                    {/* Reactions Display */}
+                                    {comment.reactions && Object.values(comment.reactions).some((r: any) => r && r.length > 0) && (
+                                        <div className="flex gap-1 mt-2 flex-wrap">
+                                            {["👍", "❤️", "😂", "😮", "😢", "🔥"].filter(emoji =>
+                                                Object.values(comment.reactions).some((r: any) => r?.includes(emoji))
+                                            ).map(emoji => {
+                                                const count = Object.values(comment.reactions).filter((r: any) => r?.includes(emoji)).length;
+                                                return (
+                                                    <Badge key={emoji} variant="secondary" className="text-[10px] px-1 py-0 h-5 gap-1 cursor-pointer" onClick={() => handleReaction(comment.id, emoji)}>
+                                                        <span>{emoji}</span>
+                                                        <span>{count}</span>
+                                                    </Badge>
+                                                )
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                            { i<comments.length - 1 && <div className="h-px bg-border/40 my-2" /> }
+                            {i < comments.length - 1 && <div className="h-px bg-border/40 my-2" />}
                         </FadeIn>
-            ))
+                    ))
                 )}
+            </div>
         </div>
-        </div >
     )
 }
