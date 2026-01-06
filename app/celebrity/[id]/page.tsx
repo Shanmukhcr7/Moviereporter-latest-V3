@@ -186,13 +186,33 @@ export default function CelebrityDetailsPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
       </div>
 
+      {/* Hero Section - REDUCED HEIGHT per user feedback "looks very big" */}
+      <div className="relative h-[25vh] md:h-[250px] overflow-hidden">
+        <Image
+          src={displayImage}
+          alt={celebrity.name}
+          fill
+          sizes="100vw"
+          className="object-cover blur-xl scale-110 opacity-70"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
+      </div>
+
       <main className="container mx-auto px-4 -mt-32 relative z-10 pb-12">
+        {/* Title Section - Moved to top for better mobile hierarchy */}
+        <div className="text-center md:text-left mb-8 md:mb-12 mt-16 md:mt-0">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">{celebrity.name}</h1>
+          <Badge className="text-sm px-3 py-1 shadow-md">{celebrity.role}</Badge>
+        </div>
+
         <div className="grid md:grid-cols-3 gap-8">
           {/* Celebrity Image & Actions */}
           <div className="space-y-4">
             <FadeIn>
-              <div className="relative w-[200px] md:w-full mx-auto aspect-[3/4] overflow-hidden rounded-lg shadow-2xl border-4 border-background">
-                <Image src={displayImage} alt={celebrity.name} fill sizes="(max-width: 768px) 200px, 33vw" className="object-cover" />
+              <div className="flex justify-center md:block">
+                <div className="relative w-[200px] md:w-full aspect-[3/4] overflow-hidden rounded-lg shadow-2xl border-4 border-background">
+                  <Image src={displayImage} alt={celebrity.name} fill sizes="(max-width: 768px) 200px, 33vw" className="object-cover" />
+                </div>
               </div>
             </FadeIn>
 
@@ -218,12 +238,6 @@ export default function CelebrityDetailsPage() {
             {/* Stats */}
             <Card>
               <CardContent className="p-6 space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Role</p>
-                  <Badge variant="secondary" className="text-sm">
-                    {celebrity.role}
-                  </Badge>
-                </div>
                 <Separator />
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Movies</p>
@@ -234,90 +248,88 @@ export default function CelebrityDetailsPage() {
           </div>
 
           {/* Celebrity Details */}
-          <div className="md:col-span-2 space-y-8 pt-12">
+          <div className="md:col-span-2 space-y-8 md:pt-12">
             <FadeIn delay={0.2}>
+              {/* Biography (Title removed here) */}
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">{celebrity.name}</h1>
-                <Badge className="text-sm px-3 py-1">{celebrity.role}</Badge>
-              </div>
 
-              {/* Biography */}
-              <div>
-                <h2 className="text-2xl font-bold mb-4">Biography</h2>
-                <p className="text-muted-foreground leading-relaxed text-lg">
-                  {showFullBio ? celebrity.description : `${celebrity.description?.substring(0, 400) || "No description available."}...`}
-                </p>
-                {(celebrity.description?.length || 0) > 400 && (
-                  <Button variant="link" className="px-0 mt-2 text-primary" onClick={() => setShowFullBio(!showFullBio)}>
-                    {showFullBio ? "Show Less" : "Read More"}
-                  </Button>
-                )}
-              </div>
-
-              <Separator />
-
-              {/* Filmography */}
-              <div>
-                <div className="flex items-center gap-2 mb-6">
-                  <Film className="h-6 w-6" />
-                  <h2 className="text-2xl font-bold">Filmography</h2>
-                  <Badge variant="secondary">{movies.length}</Badge>
+                {/* Biography */}
+                <div>
+                  <h2 className="text-2xl font-bold mb-4">Biography</h2>
+                  <p className="text-muted-foreground leading-relaxed text-lg">
+                    {showFullBio ? celebrity.description : `${celebrity.description?.substring(0, 400) || "No description available."}...`}
+                  </p>
+                  {(celebrity.description?.length || 0) > 400 && (
+                    <Button variant="link" className="px-0 mt-2 text-primary" onClick={() => setShowFullBio(!showFullBio)}>
+                      {showFullBio ? "Show Less" : "Read More"}
+                    </Button>
+                  )}
                 </div>
 
-                {movies.length === 0 ? (
-                  <p className="text-muted-foreground">No movies found</p>
-                ) : (
-                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                    {movies.map((movie) => (
-                      <Link key={movie.id} href={`/movie/${movie.id}`}>
-                        <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border/50 bg-card/50 backdrop-blur h-full p-0 gap-0">
-                          <div className="relative aspect-[2/3] overflow-hidden">
+                <Separator />
+
+                {/* Filmography */}
+                <div>
+                  <div className="flex items-center gap-2 mb-6">
+                    <Film className="h-6 w-6" />
+                    <h2 className="text-2xl font-bold">Filmography</h2>
+                    <Badge variant="secondary">{movies.length}</Badge>
+                  </div>
+
+                  {movies.length === 0 ? (
+                    <p className="text-muted-foreground">No movies found</p>
+                  ) : (
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                      {movies.map((movie) => (
+                        <Link key={movie.id} href={`/movie/${movie.id}`}>
+                          <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border/50 bg-card/50 backdrop-blur h-full p-0 gap-0">
+                            <div className="relative aspect-[2/3] overflow-hidden">
+                              <Image
+                                src={movie.poster || movie.posterUrl || "/placeholder.svg"}
+                                alt={movie.title}
+                                fill
+                                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                            </div>
+                            <CardContent className="p-2 pt-1">
+                              <h3 className="font-semibold text-xs line-clamp-1 group-hover:text-primary transition-colors leading-tight">
+                                {movie.title}
+                              </h3>
+                              <p className="text-[10px] text-muted-foreground mt-0">
+                                {movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : "N/A"}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="my-8" />
+
+                {/* More Celebrities Recommendation */}
+                {relatedCelebs.length > 0 && (
+                  <div>
+                    <h2 className="text-2xl font-bold mb-6">More Celebrities</h2>
+                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                      {relatedCelebs.map((c: any) => (
+                        <Link key={c.id} href={`/celebrity/${c.id}`} className="min-w-[100px] flex flex-col items-center gap-2 group">
+                          <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-border/50 group-hover:border-primary transition-colors relative">
                             <Image
-                              src={movie.poster || movie.posterUrl || "/placeholder.svg"}
-                              alt={movie.title}
+                              src={c.image || c.imageUrl || c.profileImage || "/placeholder.svg"}
+                              alt={c.name}
                               fill
+                              sizes="100px"
                               className="object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                           </div>
-                          <CardContent className="p-2 pt-1">
-                            <h3 className="font-semibold text-xs line-clamp-1 group-hover:text-primary transition-colors leading-tight">
-                              {movie.title}
-                            </h3>
-                            <p className="text-[10px] text-muted-foreground mt-0">
-                              {movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : "N/A"}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    ))}
+                          <p className="text-sm font-medium text-center line-clamp-2 group-hover:text-primary transition-colors leading-tight">{c.name}</p>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </div>
-
-              <Separator className="my-8" />
-
-              {/* More Celebrities Recommendation */}
-              {relatedCelebs.length > 0 && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">More Celebrities</h2>
-                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                    {relatedCelebs.map((c: any) => (
-                      <Link key={c.id} href={`/celebrity/${c.id}`} className="min-w-[100px] flex flex-col items-center gap-2 group">
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-border/50 group-hover:border-primary transition-colors relative">
-                          <Image
-                            src={c.image || c.imageUrl || c.profileImage || "/placeholder.svg"}
-                            alt={c.name}
-                            fill
-                            sizes="100px"
-                            className="object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                        </div>
-                        <p className="text-sm font-medium text-center line-clamp-2 group-hover:text-primary transition-colors leading-tight">{c.name}</p>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
             </FadeIn>
           </div>
         </div>
