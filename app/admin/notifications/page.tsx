@@ -151,7 +151,7 @@ export default function AdminNotificationsPage() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Type</Label>
                                     <Select value={type} onValueChange={(v: any) => setType(v)}>
@@ -165,7 +165,30 @@ export default function AdminNotificationsPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label>Display Style</Label>
+                                    <Select value={displayStyle} onValueChange={(v: any) => setDisplayStyle(v)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="toast">Toast (Top-Right)</SelectItem>
+                                            <SelectItem value="banner">Banner (Center Modal)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
+
+                            {displayStyle === 'banner' && (
+                                <div className="space-y-2">
+                                    <Label>Image URL (Optional)</Label>
+                                    <Input
+                                        placeholder="https://imgur.com/..."
+                                        value={imageUrl}
+                                        onChange={e => setImageUrl(e.target.value)}
+                                    />
+                                </div>
+                            )}
 
                             <div className="space-y-2">
                                 <Label>Link (Optional)</Label>
