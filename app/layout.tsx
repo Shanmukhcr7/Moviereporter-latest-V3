@@ -40,6 +40,8 @@ export const viewport = {
   maximumScale: 1,
 }
 
+import { GlobalNotificationListener } from "@/components/global-notification-listener"
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -49,7 +51,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <GlobalNotificationListener />
+            {children}
+          </AuthProvider>
           <BottomNav />
           <SiteChatbot />
           <Toaster />

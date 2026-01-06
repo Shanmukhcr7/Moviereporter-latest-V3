@@ -15,7 +15,8 @@ import {
     Settings,
     ShieldAlert,
     MessageSquare,
-    LogOut
+    LogOut,
+    Bell
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 
@@ -28,6 +29,7 @@ const sidebarItems = [
     { name: "Awards (Vote Enroll)", href: "/admin/awards", icon: Trophy },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Moderation", href: "/admin/moderation", icon: ShieldAlert },
+    { name: "Notifications", href: "/admin/notifications", icon: Bell },
     { name: "Activity Logs", href: "/admin/logs", icon: BarChart2, protected: true },
     { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
 ]
