@@ -14,7 +14,7 @@ export function CelebrityCard({ id, name, image, imageUrl, posterUrl, profileIma
     <div className="group relative h-full">
       <Link href={`/celebrity/${id}`} className="block h-full">
         <Card className="h-full p-0 gap-0 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-card/50 backdrop-blur">
-          <div className="relative aspect-[3/4] overflow-hidden">
+          <div className="relative h-full w-full overflow-hidden">
             <Image
               src={displayImage}
               alt={name}
@@ -37,19 +37,22 @@ export function CelebrityCard({ id, name, image, imageUrl, posterUrl, profileIma
       </Link>
 
       {/* Like Button - Positioned absolutely over the card */}
-      <Button
-        variant="ghost"
-        size="sm" // Smaller button
-        className={`absolute top-2 right-2 z-10 h-8 px-2 rounded-full bg-background/50 backdrop-blur-md hover:bg-background/80 transition-colors ${isFavorite ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-primary'}`}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          if (onToggleFavorite) onToggleFavorite(id)
-        }}
-      >
-        <Heart className={`h-4 w-4 mr-1 ${isFavorite ? "fill-current" : ""}`} />
-        <span className="text-xs font-medium">{favoritesCount !== undefined ? favoritesCount : ""}</span>
-      </Button>
+      {/* Like Button - Positioned absolutely over the card */}
+      {onToggleFavorite && (
+        <Button
+          variant="ghost"
+          size="sm" // Smaller button
+          className={`absolute top-2 right-2 z-10 h-8 px-2 rounded-full bg-background/50 backdrop-blur-md hover:bg-background/80 transition-colors ${isFavorite ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-primary'}`}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (onToggleFavorite) onToggleFavorite(id)
+          }}
+        >
+          <Heart className={`h-4 w-4 mr-1 ${isFavorite ? "fill-current" : ""}`} />
+          <span className="text-xs font-medium">{favoritesCount !== undefined ? favoritesCount : ""}</span>
+        </Button>
+      )}
     </div>
   )
 }

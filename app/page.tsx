@@ -563,7 +563,7 @@ export default function HomePage() {
                 : celebrities.map((celebrity) => (
                   <div
                     key={celebrity.id}
-                    className="min-w-[140px] md:min-w-[180px] snap-start"
+                    className="min-w-[140px] md:min-w-[180px] snap-start aspect-[3/4]"
                     ref={celebrity.id === scrollToIdRef.current ? scrollRef : null}
                   >
                     {celebrity.isLoadMore ? (

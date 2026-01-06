@@ -1,47 +1,40 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { collection, query, limit, getDocs, startAfter, orderBy, doc, getDoc, setDoc, updateDoc, increment, deleteDoc, startAt, endAt } from "firebase/firestore"
+import { useEffect, useState, useRef, useCallback } from "react"
+import { collection, query, limit, getDocs, startAfter, orderBy, doc, getDoc, setDoc, updateDoc, increment, startAt, endAt } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { getFromCache, saveToCache } from "@/lib/cache-utils"
-import { Users } from "lucide-react"
+import { Users, Search, Sparkles } from "lucide-react"
 import { Header } from "@/components/header"
 import { CelebritySearch } from "@/components/celebrity-search"
 import { CelebrityCard } from "@/components/celebrity-card"
-import { CelebrityListCard } from "@/components/celebrity-list-card"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
-// Removed manual Input/Search/Button imports as they are in CelebritySearch
-// Assuming we have sonner or some toast, usually in ui/sonner or similar. If not I'll just use console for now or check utils. 
-// The user legacy code used 'showToast' from utils. I might not have that. I'll use simple alert or check if there is a toast component.
-// I'll stick to standard console/alert if I don't see a Toast provider usage.
-// Actually, I'll check imports later. For now, I'll ommit toast or use a simple one if I can find it.
-// The task.md doesn't mention a specific toast library.
+import { FadeIn } from "@/components/animations/fade-in"
 
 export default function CelebritiesPage() {
   const [celebrities, setCelebrities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [lastDoc, setLastDoc] = useState<any>(null)
+  const [hasMore, setHasMore] = useState(true)
 
   // Favorites state
   const { user } = useAuth()
   const [userFavorites, setUserFavorites] = useState<Set<string>>(new Set())
   const [favLoading, setFavLoading] = useState<Set<string>>(new Set())
 
+  // Search Debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchCelebrities()
-    }, 500) // Debounce search fetch against DB
+    }, 500)
     return () => clearTimeout(timer)
   }, [searchTerm])
 
   useEffect(() => {
-    if (user) {
-      fetchUserFavorites()
-    } else {
-      setUserFavorites(new Set())
-    }
+    if (user) fetchUserFavorites()
+    else setUserFavorites(new Set())
   }, [user])
 
   const fetchUserFavorites = async () => {
@@ -51,9 +44,7 @@ export default function CelebritiesPage() {
       const snapshot = await getDocs(favsRef)
       const favIds = new Set<string>()
       snapshot.forEach(doc => {
-        if (doc.data().isFavorite) {
-          favIds.add(doc.id)
-        }
+        if (doc.data().isFavorite) favIds.add(doc.id)
       })
       setUserFavorites(favIds)
     } catch (error) {
@@ -61,32 +52,24 @@ export default function CelebritiesPage() {
     }
   }
 
-  const [hasMore, setHasMore] = useState(true)
-
-  // ... (useEffect and other code) ...
-
   const fetchCelebrities = async (loadMore = false) => {
-    // Cache Check
     const cacheKey = "celebrities_initial_list"
     if (!loadMore && !searchTerm) {
-      // Only checking cache for initial load without search
       const cached = getFromCache<any>(cacheKey)
       if (cached) {
         setCelebrities(cached.data)
-        setLastDoc(cached.lastName) // Use name as cursor
+        setLastDoc(cached.lastName)
         setLoading(false)
-        setHasMore(true) // Start optimistically
-        // SWR: Do NOT return here. Continue to fetch fresh data.
+        setHasMore(true)
       }
     }
 
     setLoading(true)
     try {
       let celebsQuery;
-      const LIMIT = 16
+      const LIMIT = 20
 
       if (searchTerm) {
-        // Search Mode
         const term = searchTerm
         celebsQuery = query(
           collection(db, "artifacts/default-app-id/celebrities"),
@@ -96,7 +79,6 @@ export default function CelebritiesPage() {
           limit(50)
         )
       } else {
-        // Default Pagination Mode
         if (loadMore && lastDoc) {
           celebsQuery = query(
             collection(db, "artifacts/default-app-id/celebrities"),
@@ -115,10 +97,7 @@ export default function CelebritiesPage() {
 
       const snapshot = await getDocs(celebsQuery)
 
-      // Update hasMore based on result count
       if (searchTerm) {
-        // In search mode, we fetched up to 50. If 50 returned, maybe more? 
-        // But logic currently doesn't paginate search.
         setHasMore(snapshot.docs.length === 50)
       } else {
         setHasMore(snapshot.docs.length === LIMIT)
@@ -133,13 +112,11 @@ export default function CelebritiesPage() {
         setCelebrities([...celebrities, ...celebsData])
       } else {
         setCelebrities(celebsData)
-
-        // Save to cache (Initial list only)
         if (!searchTerm && celebsData.length > 0) {
           const lastItem = celebsData[celebsData.length - 1] as any
           saveToCache(cacheKey, {
             data: celebsData,
-            lastName: lastItem.name // Cursor for next page
+            lastName: lastItem.name
           })
         }
       }
@@ -148,7 +125,7 @@ export default function CelebritiesPage() {
         setLastDoc(snapshot.docs[snapshot.docs.length - 1])
       }
     } catch (error) {
-      console.error("[v0] Error fetching celebrities:", error)
+      console.error("Error fetching celebrities:", error)
     } finally {
       setLoading(false)
     }
@@ -159,34 +136,21 @@ export default function CelebritiesPage() {
       alert("Please login to add favourites.")
       return
     }
-
     if (favLoading.has(celebId)) return
 
-    // Optimistic update
     const isCurrentlyFav = userFavorites.has(celebId)
     const newFavState = !isCurrentlyFav
 
-    // Update local set
     const newFavorites = new Set(userFavorites)
-    if (newFavState) {
-      newFavorites.add(celebId)
-    } else {
-      newFavorites.delete(celebId)
-    }
+    if (newFavState) newFavorites.add(celebId)
+    else newFavorites.delete(celebId)
     setUserFavorites(newFavorites)
 
-    // Update local count
-    setCelebrities(prev => prev.map(c => {
-      if (c.id === celebId) {
-        return {
-          ...c,
-          favoritesCount: (c.favoritesCount || 0) + (newFavState ? 1 : -1)
-        }
-      }
-      return c
-    }))
+    // Optimistic Count Update
+    setCelebrities(prev => prev.map(c =>
+      c.id === celebId ? { ...c, favoritesCount: (c.favoritesCount || 0) + (newFavState ? 1 : -1) } : c
+    ))
 
-    // Add to loading set
     setFavLoading(prev => new Set(prev).add(celebId))
 
     try {
@@ -205,18 +169,11 @@ export default function CelebritiesPage() {
 
     } catch (error) {
       console.error("Error toggling favorite:", error)
-      // Revert optimistic update
-      setUserFavorites(userFavorites) // Set back to old state
-      setCelebrities(prev => prev.map(c => {
-        if (c.id === celebId) {
-          return {
-            ...c,
-            favoritesCount: (c.favoritesCount || 0) - (newFavState ? 1 : -1)
-          }
-        }
-        return c
-      }))
-      alert("Failed to update favorite. Please try again.")
+      setUserFavorites(userFavorites) // Revert state
+      setCelebrities(prev => prev.map(c =>
+        c.id === celebId ? { ...c, favoritesCount: (c.favoritesCount || 0) - (newFavState ? 1 : -1) } : c
+      ))
+      alert("Failed to update favorite.")
     } finally {
       setFavLoading(prev => {
         const next = new Set(prev)
@@ -226,69 +183,58 @@ export default function CelebritiesPage() {
     }
   }
 
-  const displayList = celebrities
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background font-sans selection:bg-primary/20">
       <Header />
-      <main className="container mx-auto px-4 pt-8 pb-32 max-w-6xl">
-        <h1 className="text-3xl font-bold mb-6 text-center text-foreground flex items-center justify-center gap-3">
-          <Users className="w-8 h-8 text-primary" />
-          Celebrity Profiles
-        </h1>
 
-        <div className="max-w-2xl mx-auto mb-8">
-          <CelebritySearch
-            onSearch={setSearchTerm}
-          />
+      {/* Page Header */}
+      {/* Search Header */}
+      <div className="container mx-auto px-4 pt-8 pb-4 max-w-7xl relative z-20 mt-4 md:mt-8 text-center">
+        <h1 className="text-3xl md:text-5xl font-bold mb-8">Celebrity Profiles</h1>
+        <div className="max-w-xl mx-auto">
+          <CelebritySearch onSearch={setSearchTerm} />
         </div>
+      </div>
 
-        {/* Desktop View - Grid */}
-        <div className="hidden md:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <main className="container mx-auto px-4 pb-24 max-w-7xl relative z-20">
+        {/* Unified Grid Layout for Mobile & Desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8 mt-6">
           {loading && celebrities.length === 0
-            ? Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-lg" />
+            ? Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-xl" />
             ))
-            : displayList.map((celebrity) => (
-              <CelebrityCard
-                key={celebrity.id}
-                {...celebrity}
-                isFavorite={userFavorites.has(celebrity.id)}
-                onToggleFavorite={handleToggleFavorite}
-                favoritesCount={celebrity.favoritesCount || 0}
-              />
+            : celebrities.map((celebrity) => (
+              <FadeIn key={celebrity.id}>
+                <div className="h-full aspect-[3/4]">
+                  <CelebrityCard
+                    {...celebrity}
+                    isFavorite={userFavorites.has(celebrity.id)}
+                    onToggleFavorite={handleToggleFavorite}
+                    favoritesCount={celebrity.favoritesCount || 0}
+                  />
+                </div>
+              </FadeIn>
             ))
           }
         </div>
 
-        {/* Mobile View - List */}
-        <div className="md:hidden space-y-4">
-          {loading && celebrities.length === 0
-            ? Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-40 bg-muted animate-pulse rounded-xl" />
-            ))
-            : displayList.map((celebrity) => (
-              <CelebrityListCard
-                key={celebrity.id}
-                {...celebrity}
-                isFavorite={userFavorites.has(celebrity.id)}
-                favoritesCount={celebrity.favoritesCount || 0}
-                onToggleFavorite={handleToggleFavorite}
-                disabled={favLoading.has(celebrity.id)}
-              />
-            ))
-          }
-        </div>
-
-        {!loading && displayList.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground">No celebrities found</p>
+        {!loading && celebrities.length === 0 && (
+          <div className="text-center py-24 border-2 border-dashed rounded-3xl bg-muted/20 mt-12">
+            <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <h3 className="text-xl font-bold mb-2">No celebrities found</h3>
+            <p className="text-muted-foreground">Try adjusting your search terms</p>
           </div>
         )}
 
-        {!loading && hasMore && displayList.length > 0 && (
-          <div className="flex justify-center mt-8">
-            <Button variant="outline" onClick={() => fetchCelebrities(true)} disabled={loading}>
+        {!loading && hasMore && celebrities.length > 0 && (
+          <div className="flex justify-center mt-16">
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => fetchCelebrities(true)}
+              disabled={loading}
+              className="rounded-full px-8 h-12 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all"
+            >
               {loading ? "Loading..." : "Load More"}
             </Button>
           </div>

@@ -18,8 +18,8 @@ export function BottomNav() {
     ]
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-            <nav className="flex items-center justify-around px-2 h-20 w-full bg-background/80 backdrop-blur-xl rounded-t-[2rem] border-t border-border shadow-[0_-10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.5)] pb-safe relative">
+        <div className="fixed -bottom-[1px] left-0 right-0 z-50 lg:hidden">
+            <nav className="flex items-center justify-around px-2 h-auto min-h-[4.5rem] py-3 w-full bg-background/95 backdrop-blur-xl rounded-t-[2rem] border-t border-border shadow-[0_-10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.5)] relative">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href
 

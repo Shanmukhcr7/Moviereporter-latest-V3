@@ -48,58 +48,55 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
   const { user } = useAuth()
   const [isInterested, setIsInterested] = useState(false)
 
-  // Motion values removed
-  // const x = useMotionValue(0)
-  // ...
+  // Calculate isUpcoming
+  const isUpcoming = (() => {
+    if (!releaseDate) return false
+    try {
+      // Handle Firestore Timestamp
+      if ((releaseDate as any).seconds) {
+        return new Date((releaseDate as any).seconds * 1000) > new Date()
+      }
+      if (typeof (releaseDate as any).toDate === 'function') {
+        return (releaseDate as any).toDate() > new Date()
+      }
+      const d = new Date(releaseDate)
+      return !isNaN(d.getTime()) && d > new Date()
+    } catch { return false }
+  })()
 
   useEffect(() => {
     if (user && enableInterest) {
-      const checkInterest = async () => {
+      const checkStatus = async () => {
         try {
-          const docRef = doc(db, `artifacts/default-app-id/users/${user.uid}/interests/${id}`)
-          const snap = await getDoc(docRef)
-          if (snap.exists()) setIsInterested(true)
+          // Check Interest (Heart)
+          const interestRef = doc(db, `artifacts/default-app-id/users/${user.uid}/interests/${id}`)
+          const interestSnap = await getDoc(interestRef)
+          if (interestSnap.exists()) setIsInterested(true)
         } catch (e) {
-          console.error("Error checking interest", e)
+          console.error("Error checking status", e)
         }
       }
-      checkInterest()
+      checkStatus()
     }
   }, [user, id, enableInterest])
 
-  // handleDragEnd removed
-
   const addToInterests = async () => {
     if (!user) {
-      toast.info("Please login to save interest")
+      toast.info("Please login")
       return
     }
     try {
+      // Use "interests" logic for both Interested (Upcoming) and Love (Released)
       const ref = doc(db, `artifacts/default-app-id/users/${user.uid}/interests/${id}`)
       await setDoc(ref, {
         movieId: id,
         title,
         posterUrl: poster || "",
-        releaseDate: (() => {
-          if (!releaseDate) return null;
-          try {
-            // If it's already a Timestamp-like object (has seconds), use it
-            if ((releaseDate as any).seconds) return new Date((releaseDate as any).seconds * 1000);
-
-            // If it handles toDate (actual Firestore Timestamp), use it
-            if (typeof (releaseDate as any).toDate === 'function') return (releaseDate as any).toDate();
-
-            // Try standard date parsing
-            const d = new Date(releaseDate);
-            return !isNaN(d.getTime()) ? d : null;
-          } catch {
-            return null;
-          }
-        })(),
+        releaseDate: releaseDate || null,
         addedAt: Timestamp.now()
       })
       setIsInterested(true)
-      toast.success("Added to interests")
+      toast.success(isUpcoming ? "Added to interests" : "Added to favorites")
     } catch (e) {
       toast.error("Failed to add")
     }
@@ -111,13 +108,11 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
       const ref = doc(db, `artifacts/default-app-id/users/${user.uid}/interests/${id}`)
       await deleteDoc(ref)
       setIsInterested(false)
-      toast.info("Removed from interests")
+      toast.info(isUpcoming ? "Removed from interests" : "Removed from favorites")
     } catch (e) {
       toast.error("Failed to remove")
     }
   }
-
-  // Removed drag logic as requested
 
   const toggleInterest = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -182,25 +177,13 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
             {industry && <Badge className="absolute top-2 left-2 bg-primary/90 backdrop-blur z-10">{industry}</Badge>}
           </div>
           <CardContent className="p-2 pt-1 space-y-0.5 flex flex-col flex-1">
-            <div className="flex justify-between items-start">
-              <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors leading-tight">{title}</h3>
+            <div className="flex justify-between items-start gap-2">
+              <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors leading-tight flex-1">{title}</h3>
               {enableInterest && (
                 <button
                   onClick={toggleInterest}
                   className={`text-foreground/80 hover:text-red-500 transition-colors z-20 relative ${isInterested ? "text-red-500 fill-current" : ""}`}
-                  title={(() => {
-                    // Parse date to check semantic
-                    let isUpcoming = false;
-                    try {
-                      const d = new Date(releaseDate);
-                      if (!isNaN(d.getTime()) && d > new Date()) isUpcoming = true;
-                    } catch { }
-
-                    if (isUpcoming) {
-                      return isInterested ? "Remove from interests" : "Mark as interested";
-                    }
-                    return isInterested ? "Remove from favourites" : "Add to favourites";
-                  })()}
+                  title={isUpcoming ? (isInterested ? "Remove from interests" : "Mark as interested") : (isInterested ? "Remove from favorites" : "Add to favorites")}
                 >
                   <Heart className={`h-5 w-5 ${isInterested ? "fill-current" : ""}`} />
                 </button>

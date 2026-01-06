@@ -227,6 +227,18 @@ service cloud.firestore {
     match /savedBlogs/{blogId} {
       allow read, write: if isCurrentUser(userId);
     }
+
+    match /saved_articles/{articleId} {
+      allow read, write: if isCurrentUser(userId);
+    }
+
+    match /saved_movies/{movieId} {
+      allow read, write: if isCurrentUser(userId);
+    }
+
+    match /savedNews/{newsId} {
+      allow read, write: if isCurrentUser(userId);
+    }
     
     match /userComments/{commentId} {
       allow read, write: if isCurrentUser(userId);

@@ -7,6 +7,8 @@ import { UserCommentsList } from "./user-comments-list"
 import { UserReviewsList } from "./user-reviews-list"
 import { InterestedMoviesList } from "./interested-movies-list"
 import { SavedBlogsList } from "./saved-blogs-list"
+import { SavedNewsList } from "./saved-news-list"
+
 
 export function UserActivityTabs() {
     return (
@@ -64,6 +66,15 @@ export function UserActivityTabs() {
                         </CardHeader>
                         <CardContent>
                             <SavedBlogsList />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Saved News</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <SavedNewsList />
                         </CardContent>
                     </Card>
                 </div>
