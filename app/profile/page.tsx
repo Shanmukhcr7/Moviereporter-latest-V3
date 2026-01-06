@@ -7,6 +7,7 @@ import { Header } from "@/components/header"
 import { ProfileHeader } from "@/components/profile/profile-header"
 import { UserActivityTabs } from "@/components/profile/user-activity-tabs"
 import { Button } from "@/components/ui/button"
+import { PushNotificationsToggle } from "@/components/push-notifications-toggle"
 
 export default function ProfilePage() {
   const { user, loading } = useAuth()
@@ -41,7 +42,13 @@ export default function ProfilePage() {
 
         <UserActivityTabs />
 
-        <div className="pt-8 border-t mt-8">
+
+        <div className="space-y-4 pt-4 border-t">
+          <h3 className="text-lg font-semibold">Settings</h3>
+          <PushNotificationsToggle />
+        </div>
+
+        <div className="pt-4 border-t">
           <Button
             variant="destructive"
             className="w-full md:w-auto md:min-w-[200px]"

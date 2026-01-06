@@ -31,8 +31,8 @@ export function ArticleCard({ id, title, image, author, publishedAt, category, e
           />
           {category && <Badge className="absolute top-3 left-3 bg-primary/90 backdrop-blur">{category}</Badge>}
         </div>
-        <CardContent className="p-5 space-y-3">
-          <h3 className="font-bold text-xl line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+        <CardContent className="p-3 space-y-1">
+          <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors leading-tight">
             {title}
           </h3>
           {excerpt && <p className="text-sm text-muted-foreground line-clamp-2">{excerpt}</p>}
