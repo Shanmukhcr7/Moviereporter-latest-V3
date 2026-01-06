@@ -37,7 +37,24 @@ export default function MovieDetailsPage() {
 
   useEffect(() => {
     fetchMovieDetails()
-  }, [params.id, user, isRatingModalOpen]) // Re-fetch details (avg rating) when modal closes/updates
+    incrementViewCount()
+  }, [params.id, user, isRatingModalOpen])
+
+  const incrementViewCount = async () => {
+    const movieId = params.id as string
+    const storageKey = `viewed_movie_${movieId}`
+    if (sessionStorage.getItem(storageKey)) return
+
+    try {
+      const movieRef = doc(db, "artifacts/default-app-id/movies", movieId)
+      await updateDoc(movieRef, {
+        views: increment(1)
+      })
+      sessionStorage.setItem(storageKey, "true")
+    } catch (e) {
+      console.error("Error incrementing view:", e)
+    }
+  }
 
   const fetchMovieDetails = async () => {
     try {

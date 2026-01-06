@@ -5,9 +5,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import dynamic from "next/dynamic"
 
 // Dynamic import for Chart component to avoid SSR issues
-const TimeInsights = dynamic(() => import("@/components/admin/dashboard/time-insights").then(mod => mod.TimeInsights), {
+const UserGrowthChart = dynamic(() => import("@/components/admin/dashboard/user-growth-chart").then(mod => mod.UserGrowthChart), {
   ssr: false,
-  loading: () => <div className="h-[300px] w-full bg-muted/20 animate-pulse rounded-lg" />
+  loading: () => <div className="h-[350px] w-full bg-muted/20 animate-pulse rounded-lg" />
 })
 
 import { SystemHealth } from "@/components/admin/dashboard/system-health"
@@ -18,6 +18,7 @@ import { AdminAlerts } from "@/components/admin/dashboard/admin-alerts"
 import { SecuritySnapshot } from "@/components/admin/dashboard/security-snapshot"
 import { QuickActions } from "@/components/admin/dashboard/quick-actions"
 import { SmartInsights } from "@/components/admin/dashboard/smart-insights"
+import { ContentInsights } from "@/components/admin/dashboard/content-insights"
 
 export default function AdminDashboard() {
   const [metricPeriod, setMetricPeriod] = useState<"24h" | "7d">("24h")
@@ -42,7 +43,18 @@ export default function AdminDashboard() {
       {/* SECTION 2: Key Platform Metrics */}
       <KeyMetrics period={metricPeriod} />
 
-      {/* SECTION 9: Smart Insights (Insert here for visibility) */}
+      {/* SECTION 10: New Analytics (User Growth + Most Viewed) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          <UserGrowthChart />
+        </div>
+        <div className="md:col-span-1">
+          <ContentInsights />
+        </div>
+      </div>
+
+
+      {/* SECTION 9: Smart Insights (AI) */}
       <SmartInsights />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -56,14 +68,10 @@ export default function AdminDashboard() {
           <div className="grid md:grid-cols-2 gap-6">
             {/* SECTION 3: Activity Pulse */}
             <ActivityPulse />
-            {/* SECTION 4: Content Performance */}
+            {/* SECTION 4: Content Performance (Legacy) */}
             <ContentPerformance />
           </div>
 
-          {/* SECTION 6: Time-based Insights */}
-          <div className="h-[300px]">
-            <TimeInsights />
-          </div>
         </div>
 
         {/* Right Column (Actions and Security) */}
@@ -73,11 +81,6 @@ export default function AdminDashboard() {
 
           {/* SECTION 7: Security Snapshot */}
           <SecuritySnapshot />
-
-          {/* Extra spacing or future widgets */}
-          <div className="bg-muted/20 rounded-lg p-6 border-2 border-dashed border-muted text-center text-muted-foreground text-sm">
-            Placeholder for future widgets (Logs, Backup Status)
-          </div>
         </div>
 
       </div>

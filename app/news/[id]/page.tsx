@@ -42,7 +42,23 @@ export default function NewsDetailsPage() {
 
   useEffect(() => {
     fetchArticleDetails()
+    incrementViewCount()
   }, [articleId, user])
+
+  const incrementViewCount = async () => {
+    const storageKey = `viewed_news_${articleId}`
+    if (sessionStorage.getItem(storageKey)) return
+
+    try {
+      const newsRef = doc(db, "artifacts/default-app-id/news", articleId)
+      await updateDoc(newsRef, {
+        views: increment(1)
+      })
+      sessionStorage.setItem(storageKey, "true")
+    } catch (e) {
+      console.error("Error incrementing view:", e)
+    }
+  }
 
   const fetchArticleDetails = async () => {
     try {
