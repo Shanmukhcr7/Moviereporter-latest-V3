@@ -186,17 +186,7 @@ export default function CelebrityDetailsPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
       </div>
 
-      {/* Hero Section - REDUCED HEIGHT per user feedback "looks very big" */}
-      <div className="relative h-[25vh] md:h-[250px] overflow-hidden">
-        <Image
-          src={displayImage}
-          alt={celebrity.name}
-          fill
-          sizes="100vw"
-          className="object-cover blur-xl scale-110 opacity-70"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
-      </div>
+
 
       <main className="container mx-auto px-4 -mt-32 relative z-10 pb-12">
         {/* Title Section - Moved to top for better mobile hierarchy */}
@@ -330,6 +320,7 @@ export default function CelebrityDetailsPage() {
                     </div>
                   </div>
                 )}
+              </div>
             </FadeIn>
           </div>
         </div>
