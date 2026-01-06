@@ -22,6 +22,8 @@ interface Notification {
     type: "info" | "warning" | "success"
     active: boolean
     link?: string
+    displayStyle?: "toast" | "banner"
+    imageUrl?: string
     createdAt?: any
 }
 
@@ -36,6 +38,8 @@ export default function AdminNotificationsPage() {
     const [message, setMessage] = useState("")
     const [type, setType] = useState<"info" | "warning" | "success">("info")
     const [link, setLink] = useState("")
+    const [displayStyle, setDisplayStyle] = useState<"toast" | "banner">("toast")
+    const [imageUrl, setImageUrl] = useState("")
 
     useEffect(() => {
         fetchNotifications()
@@ -59,16 +63,13 @@ export default function AdminNotificationsPage() {
         setIsCreating(true)
 
         try {
-            // Deactivate all others if we want only one active? 
-            // For now let's allow multiple, but typically only one global banner makes sense.
-            // Let's implement logic: If activating a new one, ask if we should deactivate others?
-            // actually, let's keep it simple.
-
             await addDoc(collection(db, "notifications"), {
                 title,
                 message,
                 type,
                 link,
+                displayStyle,
+                imageUrl,
                 active: true, // Auto-active on create
                 createdAt: serverTimestamp(),
                 createdBy: userData?.email
@@ -76,8 +77,9 @@ export default function AdminNotificationsPage() {
 
             toast.success("Notification created and activated")
             setTitle("")
-            setMessage("")
+            message("")
             setLink("")
+            setImageUrl("")
             fetchNotifications()
         } catch (error) {
             console.error("Error creating notification:", error)
@@ -199,8 +201,8 @@ export default function AdminNotificationsPage() {
                                 <CardContent className="p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                                     <div className="flex gap-4 items-start">
                                         <div className={`p-2 rounded-full mt-1 shrink-0 ${item.type === 'warning' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                item.type === 'success' ? 'bg-green-500/10 text-green-500' :
-                                                    'bg-blue-500/10 text-blue-500'
+                                            item.type === 'success' ? 'bg-green-500/10 text-green-500' :
+                                                'bg-blue-500/10 text-blue-500'
                                             }`}>
                                             {item.type === 'warning' ? <AlertTriangle className="h-5 w-5" /> :
                                                 item.type === 'success' ? <CheckCircle className="h-5 w-5" /> :

@@ -57,7 +57,7 @@ export default function RootLayout({
           </AuthProvider>
           <BottomNav />
           <SiteChatbot />
-          <Toaster />
+          <Toaster position="top-right" />
         </ThemeProvider>
         <Analytics />
       </body>
