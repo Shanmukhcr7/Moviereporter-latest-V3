@@ -82,7 +82,6 @@ export default function MoviesPage() {
 
       // Basic query constraints
       let constraints: QueryConstraint[] = [
-        where("scheduledAt", "<=", now),
         where("releaseDate", "<=", now),
         orderBy("releaseDate", "desc"),
         limit(MOVIES_PER_PAGE)
@@ -231,6 +230,8 @@ export default function MoviesPage() {
                     rating={movie.avgRating}
                     poster={movie.poster || movie.posterUrl}
                     enableInterest
+                    ottPlatforms={undefined}
+                    isTopBoxOffice={undefined}
                   />
                 </div>
               )
@@ -242,6 +243,8 @@ export default function MoviesPage() {
                     rating={movie.avgRating}
                     poster={movie.poster || movie.posterUrl}
                     enableInterest
+                    ottPlatforms={undefined}
+                    isTopBoxOffice={undefined}
                   />
                 </div>
               )

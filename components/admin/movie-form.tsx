@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { addDoc, collection, doc, updateDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { logAdminAction } from "@/lib/logger"
+import { clearCacheByKey } from "@/lib/cache-utils"
 import { ImageUpload } from "@/components/admin/image-upload"
 import { CastSelector } from "@/components/admin/cast-selector"
 import { Button } from "@/components/ui/button"
@@ -44,6 +46,9 @@ const formSchema = z.object({
     ottPlatforms: z.array(z.string()).default([]),
     cast: z.array(z.any()).default([]),
     scheduledPublish: z.date().optional(),
+    isTopBoxOffice: z.boolean().default(false),
+    isPopular: z.boolean().default(false),
+    ottPublished: z.boolean().default(false),
 })
 
 interface MovieFormProps {
@@ -76,8 +81,14 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setLoading(true)
         try {
+            // Auto-set booleans if related data is present
+            const isTopBoxOffice = values.isTopBoxOffice || (values.boxOffice && values.boxOffice.length > 0)
+            const isOttPublished = values.ottPublished || (values.ottPlatforms && values.ottPlatforms.length > 0)
+
             const movieData = {
                 ...values,
+                isTopBoxOffice,
+                ottPublished: isOttPublished,
                 // Sanitize undefined values
                 scheduledPublish: values.scheduledPublish || null,
                 boxOffice: values.boxOffice || "",
@@ -91,14 +102,35 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                 // Update
                 await updateDoc(doc(db, "artifacts/default-app-id/movies", initialData.id), movieData)
                 toast.success("Movie updated successfully")
+
+                await logAdminAction({
+                    action: "UPDATE",
+                    resourceType: "Movie",
+                    resourceId: initialData.id,
+                    resourceTitle: values.title,
+                    details: "Updated movie details"
+                })
             } else {
                 // Create
-                await addDoc(collection(db, "artifacts/default-app-id/movies"), {
+                const docRef = await addDoc(collection(db, "artifacts/default-app-id/movies"), {
                     ...movieData,
                     createdAt: Timestamp.now(),
                 })
                 toast.success("Movie added successfully")
+
+                await logAdminAction({
+                    action: "CREATE",
+                    resourceType: "Movie",
+                    resourceId: docRef.id,
+                    resourceTitle: values.title,
+                    details: "Created new movie"
+                })
             }
+
+            // Invalidate cache so new/updated movies show up immediately
+            clearCacheByKey("movies_initial_all")
+            // Ideally also clear specific industry cache if possible, but 'all' is most critical for Homepage/Reviews
+
             onSuccess()
         } catch (error) {
             console.error("Error saving movie:", error)
@@ -331,6 +363,78 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                     />
                 </div>
 
+
+
+                {/* Flags / Boolean Options */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border p-4 rounded-lg bg-muted/20">
+                    <FormField
+                        control={form.control}
+                        name="isTopBoxOffice"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-background">
+                                <FormControl>
+                                    <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>
+                                        Top Box Office
+                                    </FormLabel>
+                                    <FormDescription>
+                                        Show in Top Box Office page
+                                    </FormDescription>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="isPopular"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-background">
+                                <FormControl>
+                                    <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>
+                                        Popular / Trending
+                                    </FormLabel>
+                                    <FormDescription>
+                                        Highlight as popular
+                                    </FormDescription>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="ottPublished"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 bg-background">
+                                <FormControl>
+                                    <Checkbox
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>
+                                        OTT Released
+                                    </FormLabel>
+                                    <FormDescription>
+                                        Show in OTT Releases page
+                                    </FormDescription>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                </div>
+
                 {/* Advanced Publishing */}
                 <div className="pt-4 border-t">
                     <h4 className="font-medium mb-3">Publishing Settings</h4>
@@ -384,6 +488,6 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                     </Button>
                 </div>
             </form>
-        </Form>
+        </Form >
     )
 }

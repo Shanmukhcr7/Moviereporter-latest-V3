@@ -31,13 +31,19 @@ export async function POST(req: NextRequest) {
 
         // Construct Public URL
         // If UPLOAD_URL_PREFIX is set (e.g., https://movielovers.in/uploads), use it.
-        // Otherwise try to assume origin or relative.
-        // Better: Return Full URL so Next.js Image Optimization can fetch it as remote image key.
+        // Otherwise default to local serving path.
         let urlPrefix = process.env.UPLOAD_URL_PREFIX || "/uploads";
 
-        // If it refers to local file system serving (VPS nginx), we want full absolute URL
-        // to ensure frontend components treat it as remote.
-        if (urlPrefix.startsWith("/")) {
+        // Logic handled by Next.js Public Folder serving:
+        // Files in ./public/uploads are accessible at /uploads/filename
+        // No need to prepend origin unless we specifically want absolute URLs for SEO/Social/External.
+        // For Admin UI, relative URLs are fine and preferred for portability.
+
+        // However, if we are in PRODUCTION and using NGINX alias, we might want absolute.
+        // For now, simplify to relative path if no prefix is set, which works for both Localhost and default Next.js
+        if (!process.env.UPLOAD_URL_PREFIX) {
+            urlPrefix = "/uploads";
+        } else if (urlPrefix.startsWith("/")) {
             const origin = req.headers.get("origin") || "https://movielovers.in";
             urlPrefix = `${origin}${urlPrefix}`;
         }

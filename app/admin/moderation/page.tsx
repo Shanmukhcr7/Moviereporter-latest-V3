@@ -18,6 +18,7 @@ import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Eye } from "lucide-react"
+import { logAdminAction } from "@/lib/logger"
 
 const ITEMS_PER_PAGE = 20
 
@@ -124,6 +125,13 @@ export default function ModerationPage() {
                 await deleteDoc(doc(db, collectionName, id))
                 toast.success(`${itemType} deleted`)
                 setItems(prev => prev.filter(item => item.id !== id))
+
+                await logAdminAction({
+                    action: "DELETE",
+                    resourceType: activeTab === "comments" ? "Comment" : "Review",
+                    resourceId: id,
+                    details: `Deleted ${itemType} by user`
+                })
             } catch (error) {
                 console.error("Error deleting:", error)
                 toast.error("Failed to delete")

@@ -15,7 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     useEffect(() => {
         if (!loading) {
-            if (!userData || userData.role !== "admin") {
+            if (!userData || (userData.role !== "admin" && userData.role !== "super_admin")) {
                 router.push("/")
             } else {
                 setIsAdmin(true)

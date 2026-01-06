@@ -55,16 +55,11 @@ export default function TopBoxOfficePage() {
       // User legacy code: query(moviesRef, where('scheduledAt', '<=', now), orderBy('releaseDate', 'desc'));
 
       const moviesRef = collection(db, "artifacts/default-app-id/movies")
-      let q = query(moviesRef, where('scheduledAt', '<=', now), orderBy('releaseDate', 'desc'))
+      // Query: releaseDate <= now, orderBy releaseDate desc
+      // We will filter for Top Box Office / Popular client side or we could add indexes later.
+      let q = query(moviesRef, where('releaseDate', '<=', now), orderBy('releaseDate', 'desc'))
 
-      let snapshot
-      try {
-        snapshot = await getDocs(q)
-      } catch (e) {
-        console.warn("Index missing for scheduledAt+releaseDate, fetching all by releaseDate")
-        q = query(moviesRef, orderBy('releaseDate', 'desc'))
-        snapshot = await getDocs(q)
-      }
+      const snapshot = await getDocs(q)
 
       const moviesData = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -76,8 +71,8 @@ export default function TopBoxOfficePage() {
           if (scheduledTime > Date.now()) return false
         }
 
-        // 2. Legacy Filter: isPopular OR isTopBoxOffice
-        return movie.isPopular === true || movie.isTopBoxOffice === true
+        // 2. Legacy Filter: isPopular OR isTopBoxOffice OR has boxOffice amount
+        return movie.isPopular === true || movie.isTopBoxOffice === true || (movie.boxOffice && movie.boxOffice.length > 0)
       })
         .map((movie: any) => ({
           ...movie,
@@ -206,6 +201,7 @@ export default function TopBoxOfficePage() {
                     releaseDate={movie.releaseDate ? (movie.releaseDate.toDate ? movie.releaseDate.toDate().toISOString() : movie.releaseDate) : ""}
                     isTopBoxOffice={movie.isTopBoxOffice}
                     isPopular={movie.isPopular}
+                    ottPlatforms={undefined}
                   />
                 ))}
               </div>

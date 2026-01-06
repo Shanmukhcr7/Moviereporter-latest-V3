@@ -406,7 +406,7 @@ export default function HomePage() {
                     {movie.isLoadMore ? (
                       <LoadMoreCard item={movie} onClick={handleLoadMoreLatest} />
                     ) : (
-                      <MovieCard {...movie} />
+                      <MovieCard {...movie} ottPlatforms={undefined} />
                     )}
                   </div>
                 ))}
@@ -484,7 +484,7 @@ export default function HomePage() {
                     {movie.isLoadMore ? (
                       <LoadMoreCard item={movie} onClick={handleLoadMoreUpcoming} icon={Calendar} />
                     ) : (
-                      <MovieCard {...movie} enableInterest={true} />
+                      <MovieCard {...movie} enableInterest={true} ottPlatforms={undefined} />
                     )}
                   </div>
                 ))}

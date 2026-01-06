@@ -215,6 +215,7 @@ export default function MoviesInfoPage() {
                 releaseDate={movie.releaseDate ? (movie.releaseDate.toDate ? movie.releaseDate.toDate().toISOString() : movie.releaseDate) : ""}
                 industry={movie.industry}
                 genre={movie.genre}
+                ottPlatforms={undefined}
               // Legacy doesn't show rating in this list, but we can if available
               // rating={movie.avgRating} 
               />

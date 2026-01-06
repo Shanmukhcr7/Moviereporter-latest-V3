@@ -27,6 +27,7 @@ const sidebarItems = [
     { name: "Awards (Vote Enroll)", href: "/admin/awards", icon: Trophy },
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Moderation", href: "/admin/moderation", icon: ShieldAlert },
+    { name: "Activity Logs", href: "/admin/logs", icon: BarChart2 }, // Reusing BarChart or new icon
     { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
 ]
 

@@ -25,6 +25,7 @@ import { toast } from "sonner"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { AdminSearch } from "@/components/admin/admin-search"
+import { logAdminAction } from "@/lib/logger"
 
 const ITEMS_PER_PAGE = 5
 
@@ -171,6 +172,14 @@ export default function NewsAndBlogsPage() {
                 toast.success("Deleted successfully")
                 setItems(prev => prev.filter(item => item.id !== id))
                 setFilteredItems(prev => prev.filter(item => item.id !== id))
+
+                await logAdminAction({
+                    action: "DELETE",
+                    resourceType: activeTab === "news" ? "News" : "Blog",
+                    resourceId: id,
+                    resourceTitle: title,
+                    details: `Deleted ${activeTab}`
+                })
             } catch (error) {
                 console.error("Error deleting:", error)
                 toast.error("Failed to delete")

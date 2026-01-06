@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { addDoc, collection, doc, updateDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { logAdminAction } from "@/lib/logger"
 import { ImageUpload } from "@/components/admin/image-upload"
 import { Button } from "@/components/ui/button"
 import {
@@ -89,12 +90,28 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
             if (initialData) {
                 await updateDoc(doc(db, collectionName, initialData.id), docData)
                 toast.success(`${type === "news" ? "News" : "Blog"} updated`)
+
+                await logAdminAction({
+                    action: "UPDATE",
+                    resourceType: type === "news" ? "News" : "Blog",
+                    resourceId: initialData.id,
+                    resourceTitle: values.title,
+                    details: `Updated ${type} content`
+                })
             } else {
-                await addDoc(collection(db, collectionName), {
+                const docRef = await addDoc(collection(db, collectionName), {
                     ...docData,
                     createdAt: Timestamp.now(),
                 })
                 toast.success(`${type === "news" ? "News" : "Blog"} published`)
+
+                await logAdminAction({
+                    action: "CREATE",
+                    resourceType: type === "news" ? "News" : "Blog",
+                    resourceId: docRef.id,
+                    resourceTitle: values.title,
+                    details: `Published new ${type}`
+                })
             }
             onSuccess()
         } catch (error) {

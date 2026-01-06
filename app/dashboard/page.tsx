@@ -31,7 +31,7 @@ export default function DashboardPage() {
       return
     }
 
-    if (user && userData?.role === "admin") {
+    if (user && (userData?.role === "admin" || userData?.role === "super_admin")) {
       fetchStats()
     }
   }, [user, userData, authLoading])

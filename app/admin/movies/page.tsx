@@ -23,6 +23,8 @@ import { Plus, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { AdminSearch } from "@/components/admin/admin-search"
+import { logAdminAction } from "@/lib/logger"
+import { clearCacheByKey } from "@/lib/cache-utils"
 
 const ITEMS_PER_PAGE = 5
 
@@ -152,6 +154,18 @@ export default function MoviesPage() {
         toast.success("Movie deleted")
         setMovies(prev => prev.filter(m => m.id !== id))
         setFilteredMovies(prev => prev.filter(m => m.id !== id))
+
+        await logAdminAction({
+          action: "DELETE",
+          resourceType: "Movie",
+          resourceId: id,
+          resourceTitle: title,
+          details: "Deleted movie"
+        })
+
+        // Clear cache
+        clearCacheByKey("movies_initial_all")
+        clearCacheByKey("home_data_cache_v3")
       } catch (error) {
         console.error("Error deleting:", error)
         toast.error("Failed to delete")
