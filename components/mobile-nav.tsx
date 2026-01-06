@@ -194,7 +194,7 @@ export function MobileNav() {
                     <div className="mt-2">
                         <PushNotificationsToggle />
                     </div>
-                    {user && (
+                    {user ? (
                         <div className="px-4 mt-4">
                             <div className="mb-4">
                                 <div className="flex items-center gap-2 mb-1">
@@ -204,6 +204,15 @@ export function MobileNav() {
                             </div>
                             <Button variant="destructive" className="w-full h-10" onClick={() => signOut()}>
                                 Logout
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="px-4 mt-4 grid grid-cols-2 gap-2">
+                            <Button variant="outline" asChild className="w-full">
+                                <Link href="/login">Login</Link>
+                            </Button>
+                            <Button asChild className="w-full">
+                                <Link href="/signup">Sign Up</Link>
                             </Button>
                         </div>
                     )}
