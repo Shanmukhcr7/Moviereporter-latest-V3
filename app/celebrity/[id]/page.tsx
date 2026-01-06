@@ -293,6 +293,31 @@ export default function CelebrityDetailsPage() {
                   </div>
                 )}
               </div>
+
+              <Separator className="my-8" />
+
+              {/* More Celebrities Recommendation */}
+              {relatedCelebs.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6">More Celebrities</h2>
+                  <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                    {relatedCelebs.map((c: any) => (
+                      <Link key={c.id} href={`/celebrity/${c.id}`} className="min-w-[100px] flex flex-col items-center gap-2 group">
+                        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-border/50 group-hover:border-primary transition-colors relative">
+                          <Image
+                            src={c.image || c.imageUrl || c.profileImage || "/placeholder.svg"}
+                            alt={c.name}
+                            fill
+                            sizes="100px"
+                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                        </div>
+                        <p className="text-sm font-medium text-center line-clamp-2 group-hover:text-primary transition-colors leading-tight">{c.name}</p>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </FadeIn>
           </div>
         </div>
