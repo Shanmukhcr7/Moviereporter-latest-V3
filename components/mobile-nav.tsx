@@ -37,7 +37,7 @@ export function MobileNav() {
                 </SheetHeader>
 
                 {/* Menu Items - Scrollable */}
-                <ScrollArea className="flex-1 w-full">
+                <ScrollArea className="flex-1 w-full min-h-0">
                     <div className="flex flex-col py-0">
                         <Link
                             href="/"
