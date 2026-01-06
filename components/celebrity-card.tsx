@@ -22,13 +22,17 @@ export function CelebrityCard({ id, name, image, imageUrl, posterUrl, profileIma
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
               className="object-cover group-hover:scale-110 transition-transform duration-500"
             />
+            {/* Overlay Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+
+            {/* Overlay Content */}
+            <div className="absolute bottom-0 left-0 right-0 p-3 pt-6 flex flex-col justify-end items-center text-center">
+              <h3 className="font-bold text-white text-base line-clamp-2 leading-tight drop-shadow-sm mb-1">{name}</h3>
+              <Badge variant="secondary" className="text-[10px] h-5 px-2 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm border-0">
+                {role}
+              </Badge>
+            </div>
           </div>
-          <CardContent className="p-2 pt-1 space-y-0.5 text-center">
-            <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors leading-tight">{name}</h3>
-            <Badge variant="secondary" className="text-xs">
-              {role}
-            </Badge>
-          </CardContent>
         </Card>
       </Link>
 

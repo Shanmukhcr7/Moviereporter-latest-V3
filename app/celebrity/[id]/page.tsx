@@ -255,10 +255,10 @@ export default function CelebrityDetailsPage() {
                 {movies.length === 0 ? (
                   <p className="text-muted-foreground">No movies found</p>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                     {movies.map((movie) => (
                       <Link key={movie.id} href={`/movie/${movie.id}`}>
-                        <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border/50 bg-card/50 backdrop-blur h-full">
+                        <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border/50 bg-card/50 backdrop-blur h-full p-0 gap-0">
                           <div className="relative aspect-[2/3] overflow-hidden">
                             <Image
                               src={movie.poster || movie.posterUrl || "/placeholder.svg"}
@@ -267,11 +267,11 @@ export default function CelebrityDetailsPage() {
                               className="object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                           </div>
-                          <CardContent className="p-3">
-                            <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-primary transition-colors">
+                          <CardContent className="p-2 pt-1">
+                            <h3 className="font-semibold text-xs line-clamp-1 group-hover:text-primary transition-colors leading-tight">
                               {movie.title}
                             </h3>
-                            <p className="text-[10px] text-muted-foreground mt-1">
+                            <p className="text-[10px] text-muted-foreground mt-0">
                               {movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : "N/A"}
                             </p>
                           </CardContent>
