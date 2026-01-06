@@ -61,7 +61,7 @@ export default function AdminLogsPage() {
     const fetchLogs = async () => {
         setLoading(true)
         try {
-            const res = await fetch("/api/admin/logs?limit=500") // Fetch last 500 lines
+            const res = await fetch("/api/admin/logs?limit=30") // Fetch last 30 lines
             const data = await res.json()
             if (data.logs) {
                 setLogs(data.logs)
