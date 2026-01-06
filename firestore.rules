@@ -99,6 +99,11 @@ service cloud.firestore {
     allow read: if true;
     allow create, delete: if isAdmin();
     allow update: if isAdmin() || (
+      // Allow views increment for everyone (including unauthenticated)
+      (request.resource.data.diff(resource.data).changedKeys().hasOnly(['views']) &&
+       isValidCountChange(request.resource.data.views, 'views', resource.data))
+    ) || (
+      // Allow likes/dislikes for authenticated users
       isAuthenticated() &&
       request.resource.data.diff(resource.data).changedKeys().hasOnly(['likesCount', 'dislikesCount']) &&
       isValidCountChange(request.resource.data.likesCount, 'likesCount', resource.data) &&
@@ -118,6 +123,10 @@ service cloud.firestore {
     allow read: if true;
     allow create, delete: if isAdmin();
     allow update: if isAdmin() || (
+       // Allow views increment
+       (request.resource.data.diff(resource.data).changedKeys().hasOnly(['views']) &&
+        isValidCountChange(request.resource.data.views, 'views', resource.data))
+    ) || (
       isAuthenticated() &&
       request.resource.data.diff(resource.data).changedKeys().hasOnly(['likesCount', 'dislikesCount']) &&
       isValidCountChange(request.resource.data.likesCount, 'likesCount', resource.data) &&
@@ -132,19 +141,24 @@ service cloud.firestore {
     }
   }
 
-  // --- Comments ---
+  // --- Comments (Old Schema - Keep if needed, but adding new one) ---
   match /databases/{database}/documents/artifacts/{appId}/comments/{commentId} {
     allow read: if true;
-    allow create: if isCurrentUser(request.resource.data.userId) &&
-                   request.resource.data.commentText is string &&
-                   request.resource.data.commentText.size() > 1 &&
-                   request.resource.data.commentText.size() <= 750 &&
-                   request.resource.data.commentText.size() > 1 &&
-                   request.resource.data.commentText.size() <= 750 &&
-                   (request.resource.data.createdAt is timestamp || request.resource.data.createdAt is string) &&
-                   request.resource.data.articleId is string &&
-                   request.resource.data.articleType is string;
-    // Allow author or admin to update/delete
+    allow create: if isCurrentUser(request.resource.data.userId);
+    allow update: if isAdmin() || (resource.data.userId == request.auth.uid) || (
+      isAuthenticated() && request.resource.data.diff(resource.data).changedKeys().hasOnly(['reactions'])
+    );
+    allow delete: if (resource.data.userId == request.auth.uid) || isAdmin();
+  }
+
+  // --- Article Comments (New Schema used by CommentSection) ---
+  match /databases/{database}/documents/artifacts/{appId}/article_comments/{commentId} {
+    allow read: if true;
+    allow create: if isAuthenticated() &&
+                   request.resource.data.userId == request.auth.uid &&
+                   request.resource.data.text is string &&
+                   request.resource.data.text.size() > 0 &&
+                   request.resource.data.articleId is string;
     allow update, delete: if (resource.data.userId == request.auth.uid) || isAdmin();
   }
 
@@ -152,8 +166,11 @@ service cloud.firestore {
   match /databases/{database}/documents/artifacts/{appId}/reviews/{reviewId} {
     allow read: if true;
     allow create: if isCurrentUser(request.resource.data.userId);
-    // Allow update/delete if author
-    allow update, delete: if (resource.data.userId == request.auth.uid) || isAdmin();
+    // Allow author/admin update/delete OR auth users for reactions
+    allow update: if isAdmin() || (resource.data.userId == request.auth.uid) || (
+      isAuthenticated() && request.resource.data.diff(resource.data).changedKeys().hasOnly(['reactions'])
+    );
+    allow delete: if (resource.data.userId == request.auth.uid) || isAdmin();
   }
 
   // --- User Interests ---

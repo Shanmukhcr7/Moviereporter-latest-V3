@@ -14,7 +14,8 @@ import {
   increment,
   setDoc,
   Timestamp,
-  orderBy
+  orderBy,
+  limit
 } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Header } from "@/components/header"
@@ -37,13 +38,34 @@ export default function NewsDetailsPage() {
   const [userFeedback, setUserFeedback] = useState<"like" | "dislike" | null>(null)
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [recentNews, setRecentNews] = useState<any[]>([])
   const { user, userData } = useAuth()
   const articleId = params.id as string
 
   useEffect(() => {
     fetchArticleDetails()
     incrementViewCount()
+    fetchRecentNews()
   }, [articleId, user])
+
+  const fetchRecentNews = async () => {
+    try {
+      const q = query(
+        collection(db, "artifacts/default-app-id/news"),
+        orderBy("createdAt", "desc"),
+        limit(5)
+      )
+      const snap = await getDocs(q)
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      setRecentNews(list.filter((n: any) => n.id !== articleId).slice(0, 4))
+    } catch (e) {
+      console.warn("Recent news sort error, fallback", e)
+      const q2 = query(collection(db, "artifacts/default-app-id/news"), limit(5))
+      const snap2 = await getDocs(q2)
+      const list2 = snap2.docs.map(d => ({ id: d.id, ...d.data() }))
+      setRecentNews(list2.filter((n: any) => n.id !== articleId).slice(0, 4))
+    }
+  }
 
   const incrementViewCount = async () => {
     const storageKey = `viewed_news_${articleId}`
@@ -250,6 +272,36 @@ export default function NewsDetailsPage() {
                 </Button>
               )}
             </div>
+
+            {recentNews.length > 0 && (
+              <div className="mb-12">
+                <h2 className="text-2xl font-bold mb-6">Recent News</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {recentNews.map((news: any) => (
+                    <a href={`/news/${news.id}`} key={news.id} className="group block">
+                      <div className="flex gap-4 h-24">
+                        <div className="relative w-24 h-24 flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                          <Image
+                            src={news.imageUrl || news.image || "/placeholder.svg"}
+                            alt={news.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform"
+                          />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                            {news.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {news.publishedAt ? new Date(news.publishedAt.seconds ? news.publishedAt.seconds * 1000 : news.publishedAt).toLocaleDateString() : "Recent"}
+                          </p>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <Separator className="my-12" />
 

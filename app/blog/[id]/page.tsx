@@ -15,7 +15,8 @@ import {
   setDoc,
   Timestamp,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  limit
 } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Header } from "@/components/header"
@@ -62,12 +63,33 @@ export default function BlogDetailsPage() {
   const [isSaved, setIsSaved] = useState(false)
   const [showFullDescription, setShowFullDescription] = useState(true)
   const [loading, setLoading] = useState(true)
+  const [relatedBlogs, setRelatedBlogs] = useState<any[]>([])
   const { user, userData } = useAuth()
   const articleId = params.id as string
 
   useEffect(() => {
     fetchArticleDetails()
+    fetchRelatedBlogs()
   }, [articleId, user])
+
+  const fetchRelatedBlogs = async () => {
+    try {
+      const q = query(
+        collection(db, "artifacts/default-app-id/blogs"),
+        orderBy("createdAt", "desc"),
+        limit(5)
+      )
+      const snap = await getDocs(q)
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      setRelatedBlogs(list.filter((b: any) => b.id !== articleId).slice(0, 4))
+    } catch (e) {
+      console.warn("Related blog error", e)
+      const q2 = query(collection(db, "artifacts/default-app-id/blogs"), limit(5))
+      const snap2 = await getDocs(q2)
+      const list2 = snap2.docs.map(d => ({ id: d.id, ...d.data() }))
+      setRelatedBlogs(list2.filter((b: any) => b.id !== articleId).slice(0, 4))
+    }
+  }
 
   const fetchArticleDetails = async () => {
     try {
@@ -433,6 +455,36 @@ export default function BlogDetailsPage() {
                 {(article.content || '').replace(/\\n/g, '\n')}
               </p>
             </div>
+
+            {relatedBlogs.length > 0 && (
+              <div className="mb-12">
+                <h2 className="text-2xl font-bold mb-6">Related Blogs</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {relatedBlogs.map((blog: any) => (
+                    <a href={`/blog/${blog.id}`} key={blog.id} className="group block">
+                      <div className="flex gap-4 h-24">
+                        <div className="relative w-24 h-24 flex-shrink-0 rounded-md overflow-hidden bg-muted">
+                          <Image
+                            src={blog.imageUrl || blog.image || "/placeholder.svg"}
+                            alt={blog.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform"
+                          />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                            {blog.title}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatDate(blog.createdAt || blog.publishedAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <Separator className="my-12" />
 

@@ -246,10 +246,10 @@ export default function CelebrityDetailsPage() {
                 {/* Biography */}
                 <div>
                   <h2 className="text-2xl font-bold mb-4">Biography</h2>
-                  <p className="text-muted-foreground leading-relaxed text-lg">
-                    {showFullBio ? celebrity.description : `${celebrity.description?.substring(0, 400) || "No description available."}...`}
+                  <p className="text-muted-foreground leading-relaxed">
+                    {showFullBio ? celebrity.description : `${celebrity.description?.substring(0, 250) || "No description available."}...`}
                   </p>
-                  {(celebrity.description?.length || 0) > 400 && (
+                  {(celebrity.description?.length || 0) > 250 && (
                     <Button variant="link" className="px-0 mt-2 text-primary" onClick={() => setShowFullBio(!showFullBio)}>
                       {showFullBio ? "Show Less" : "Read More"}
                     </Button>
@@ -269,7 +269,7 @@ export default function CelebrityDetailsPage() {
                   {movies.length === 0 ? (
                     <p className="text-muted-foreground">No movies found</p>
                   ) : (
-                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 gap-y-6">
                       {movies.map((movie) => (
                         <Link key={movie.id} href={`/movie/${movie.id}`}>
                           <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer border-border/50 bg-card/50 backdrop-blur h-full p-0 gap-0">
@@ -300,9 +300,11 @@ export default function CelebrityDetailsPage() {
 
                 {/* More Celebrities Recommendation */}
                 {relatedCelebs.length > 0 && (
-                  <div>
-                    <h2 className="text-2xl font-bold mb-6">More Celebrities</h2>
-                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                  <div className="bg-secondary/5 rounded-xl p-6 border border-border/50">
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <span className="text-primary">✦</span> More Celebrities
+                    </h2>
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x">
                       {relatedCelebs.map((c: any) => (
                         <Link key={c.id} href={`/celebrity/${c.id}`} className="min-w-[100px] flex flex-col items-center gap-2 group">
                           <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-border/50 group-hover:border-primary transition-colors relative">
