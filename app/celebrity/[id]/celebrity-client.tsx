@@ -173,170 +173,145 @@ export function CelebrityClient({ initialId }: { initialId?: string }) {
     const displayImage = celebrity.image || celebrity.imageUrl || celebrity.profileImage || "/placeholder.svg"
 
     return (
-        <div className="min-h-screen bg-background text-foreground animate-in fade-in duration-500">
+        <div className="min-h-screen bg-background text-foreground selection:bg-primary/20 overflow-x-hidden w-full font-sans">
             <Header />
 
-            {/* Immersive Hero Section */}
-            <div className="relative w-full h-[40vh] md:h-[50vh] overflow-hidden">
-                {/* Background Image with Blur */}
+            {/* Hero Section */}
+            <div className="relative h-[180px] md:h-[200px] w-full bg-muted/20">
                 <Image
                     src={displayImage}
                     alt={celebrity.name}
                     fill
-                    className="object-cover blur-md opacity-50 scale-105"
-                    priority
+                    className="object-cover blur-2xl opacity-40 select-none pointer-events-none transform scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/20 to-background" />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-
-                {/* Hero Content (Name & Role) */}
-                <div className="absolute bottom-0 left-0 right-0 container mx-auto px-4 pb-12 z-10 flex flex-col items-center md:items-start">
-                    <div className="md:pl-[280px] text-center md:text-left">
-                        <Badge variant="secondary" className="mb-2 backdrop-blur-md bg-white/10 border-white/20 text-white hover:bg-white/20">{celebrity.role}</Badge>
-                        <h1 className="text-4xl md:text-7xl font-black tracking-tight text-foreground drop-shadow-lg mb-2">{celebrity.name}</h1>
-                        <p className="text-muted-foreground max-w-2xl line-clamp-2 md:line-clamp-none hidden md:block">
-                            {celebrity.description?.substring(0, 150)}...
-                        </p>
-                    </div>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
             </div>
 
-            <main className="container mx-auto px-4 relative z-20 -mt-20 md:-mt-32 pb-20">
-                <div className="flex flex-col md:flex-row gap-8">
+            <main className="container mx-auto px-4 relative z-10 -mt-24 md:-mt-24 pb-16 max-w-6xl">
+                <FadeIn>
+                    <div className="flex flex-col md:flex-row gap-6 md:gap-10">
 
-                    {/* Floating Profile Column */}
-                    <div className="shrink-0 flex flex-col items-center md:block md:w-[250px]">
-                        <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full md:rounded-2xl overflow-hidden shadow-2xl border-4 border-background bg-muted">
-                            <Image src={displayImage} alt={celebrity.name} fill className="object-cover" />
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col gap-3 w-full mt-6">
-                            <Button
-                                className={`w-full h-12 text-lg font-semibold shadow-lg transition-all ${isFavorite ? "bg-red-600 hover:bg-red-700 text-white" : "bg-primary hover:bg-primary/90"}`}
-                                onClick={handleToggleFavorite}
-                                disabled={favLoading}
-                            >
-                                <Heart className={`w-5 h-5 mr-2 ${isFavorite ? "fill-current" : ""}`} />
-                                {isFavorite ? "Favorite" : "Add to Favorites"}
-                            </Button>
-                            <Button variant="outline" className="w-full h-11 border-primary/20 hover:bg-primary/5" onClick={handleShare}>
-                                <Share2 className="w-4 h-4 mr-2" /> Share Profile
-                            </Button>
-                        </div>
-
-                        {/* Quick Stats Mobile only (Desktop uses specific area) */}
-                        <div className="flex gap-4 mt-6 md:hidden w-full justify-between px-4 bg-muted/30 py-3 rounded-lg border border-border/50">
-                            <div className="text-center">
-                                <p className="text-2xl font-bold">{likesCount}</p>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Likes</p>
+                        {/* Profile Avatar (Left) */}
+                        <div className="shrink-0 flex justify-center md:block">
+                            <div className="relative w-36 h-36 md:w-56 md:h-56 rounded-xl overflow-hidden shadow-xl border-4 border-background bg-muted">
+                                <Image src={displayImage} alt={celebrity.name} fill className="object-cover" />
                             </div>
-                            <Separator orientation="vertical" className="h-10" />
-                            <div className="text-center">
-                                <p className="text-2xl font-bold">{movies.length}</p>
-                                <p className="text-xs text-muted-foreground uppercase tracking-wider">Movies</p>
+                        </div>
+
+                        {/* Profile Header Info (Right of Avatar on Desktop, Below on Mobile) */}
+                        <div className="flex-1 text-center md:text-left pt-2 md:pt-0 md:pb-2 flex flex-col justify-end">
+                            <h1 className="text-3xl md:text-5xl font-bold mb-2">{celebrity.name}</h1>
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-4">
+                                <Badge variant="secondary">{celebrity.role}</Badge>
+                                {movies.length > 0 && <Badge variant="outline">{movies.length} Movies</Badge>}
+                            </div>
+
+                            <div className="flex items-center justify-center md:justify-start gap-3">
+                                <Button
+                                    size="sm"
+                                    className={`${isFavorite ? "bg-red-500 hover:bg-red-600 text-white" : ""}`}
+                                    onClick={handleToggleFavorite}
+                                    disabled={favLoading}
+                                >
+                                    <Heart className={`w-4 h-4 mr-2 ${isFavorite ? "fill-current" : ""}`} />
+                                    {isFavorite ? "Liked" : "Like"} ({likesCount})
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={handleShare}>
+                                    <Share2 className="w-4 h-4 mr-2" /> Share
+                                </Button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Main Content Area */}
-                    <div className="flex-1 pt-4 md:pt-[140px] space-y-12">
+                    <Separator className="my-8 opacity-50" />
 
-                        {/* Stats Bar (Desktop) */}
-                        <div className="hidden md:flex items-center gap-12 p-6 bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl shadow-sm">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-red-500/10 text-red-500 rounded-full">
-                                    <Heart className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <p className="text-3xl font-bold leading-none">{likesCount}</p>
-                                    <p className="text-sm text-muted-foreground font-medium">Fan Following</p>
-                                </div>
-                            </div>
-                            <Separator orientation="vertical" className="h-10" />
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-blue-500/10 text-blue-500 rounded-full">
-                                    <Film className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <p className="text-3xl font-bold leading-none">{movies.length}</p>
-                                    <p className="text-sm text-muted-foreground font-medium">Movies Released</p>
-                                </div>
-                            </div>
-                        </div>
+                    {/* Layout Grid: Content + Sidebar */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10">
 
-                        {/* Biography */}
-                        <section className="space-y-4">
-                            <h2 className="text-2xl font-bold border-l-4 border-primary pl-4">About {celebrity.name}</h2>
-                            <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground/90 leading-relaxed bg-card/30 p-6 rounded-xl border border-border/30">
-                                <p className="whitespace-pre-wrap">
-                                    {showFullBio ? celebrity.description : `${celebrity.description?.substring(0, 450) || "No biography available yet."}...`}
-                                </p>
-                                {(celebrity.description?.length || 0) > 450 && (
-                                    <Button variant="link" className="px-0 mt-2 h-auto text-primary font-semibold text-base" onClick={() => setShowFullBio(!showFullBio)}>
-                                        {showFullBio ? "Read Less" : "Read Full Biography"}
-                                    </Button>
-                                )}
-                            </div>
-                        </section>
+                        {/* Main Column */}
+                        <div className="space-y-10 min-w-0"> {/* min-w-0 is critical for preventing grid blowout */}
 
-                        {/* Filmography Grid */}
-                        <section className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-bold border-l-4 border-primary pl-4">Filmography</h2>
-                            </div>
-
-                            {movies.length === 0 ? (
-                                <div className="p-12 text-center border-2 border-dashed rounded-xl bg-muted/20">
-                                    <Film className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
-                                    <p className="text-muted-foreground">No movies found in our database.</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                                    {movies.map((movie) => (
-                                        <Link
-                                            key={movie.id}
-                                            href={`/movie/${movie.id}`}
-                                            className="group relative aspect-[2/3] rounded-xl overflow-hidden border border-border/50 bg-card shadow-sm hover:shadow-xl transition-all hover:-translate-y-2 duration-300"
-                                        >
-                                            <Image
-                                                src={movie.poster || movie.posterUrl || "/placeholder.svg"}
-                                                alt={movie.title}
-                                                fill
-                                                sizes="(max-width: 768px) 50vw, 33vw"
-                                                className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                                                <p className="text-white font-bold line-clamp-2 md:text-lg">{movie.title}</p>
-                                                <p className="text-white/70 text-sm font-medium mt-1">
-                                                    {movie.releaseDate && !isNaN(new Date(movie.releaseDate).getFullYear()) ? new Date(movie.releaseDate).getFullYear() : "N/A"}
-                                                </p>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-
-                        {/* Similar Celebrities */}
-                        {relatedCelebs.length > 0 && (
-                            <section className="space-y-6 pt-8 border-t border-border/40">
-                                <h2 className="text-2xl font-bold border-l-4 border-primary pl-4">Related Celebrities</h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                    {relatedCelebs.map(c => (
-                                        <Link key={c.id} href={`/celebrity/${c.id}`} className="group flex flex-col items-center">
-                                            <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-3 border-2 border-border/50 group-hover:border-primary transition-colors bg-muted">
-                                                <Image src={c.image || c.imageUrl || c.profileImage || "/placeholder.svg"} alt={c.name} fill className="object-cover group-hover:scale-110 transition-transform" />
-                                            </div>
-                                            <p className="font-semibold text-center text-sm md:text-base group-hover:text-primary transition-colors">{c.name}</p>
-                                            <p className="text-xs text-muted-foreground">{c.role}</p>
-                                        </Link>
-                                    ))}
+                            {/* Biography */}
+                            <section>
+                                <h2 className="text-2xl font-bold mb-4">Biography</h2>
+                                <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
+                                    <p>{showFullBio ? celebrity.description : `${celebrity.description?.substring(0, 300) || "No description available."}...`}</p>
+                                    {(celebrity.description?.length || 0) > 300 && (
+                                        <Button variant="link" className="px-0 mt-2 h-auto font-semibold" onClick={() => setShowFullBio(!showFullBio)}>
+                                            {showFullBio ? "Read Less" : "Read More"}
+                                        </Button>
+                                    )}
                                 </div>
                             </section>
-                        )}
+
+                            {/* Filmography (Horizontal Scroll) */}
+                            <section>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-2xl font-bold flex items-center gap-2">
+                                        <Film className="w-5 h-5" /> Filmography
+                                    </h2>
+                                </div>
+
+                                {movies.length === 0 ? (
+                                    <div className="p-8 text-center border rounded-lg bg-muted/20">
+                                        <p className="text-muted-foreground">No movies found</p>
+                                    </div>
+                                ) : (
+                                    <div className="relative -mx-4 px-4 md:mx-0 md:px-0"> {/* Negative margin hack for full-bleed mobile */}
+                                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x overscroll-x-contain">
+                                            {movies.map((movie) => (
+                                                <Link
+                                                    key={movie.id}
+                                                    href={`/movie/${movie.id}`}
+                                                    className="group relative flex-shrink-0 w-[120px] md:w-[150px] aspect-[2/3] rounded-lg overflow-hidden border border-border/50 bg-card shadow-sm snap-start"
+                                                >
+                                                    <Image
+                                                        src={movie.poster || movie.posterUrl || "/placeholder.svg"}
+                                                        alt={movie.title}
+                                                        fill
+                                                        sizes="(max-width: 768px) 120px, 150px"
+                                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                                    />
+                                                    {/* Simple Overlay */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
+                                                        <p className="text-white text-xs font-bold line-clamp-2">{movie.title}</p>
+                                                        <p className="text-white/80 text-[10px]">
+                                                            {movie.releaseDate && !isNaN(new Date(movie.releaseDate).getFullYear()) ? new Date(movie.releaseDate).getFullYear() : "N/A"}
+                                                        </p>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </section>
+                        </div>
+
+                        {/* Sidebar Column (Stacked on mobile, Right on Desktop) */}
+                        <aside className="space-y-8">
+                            {/* Similar Artists */}
+                            {relatedCelebs.length > 0 && (
+                                <div className="bg-card/40 rounded-xl p-5 border border-border/50">
+                                    <h3 className="font-bold mb-4 text-sm uppercase tracking-wider text-muted-foreground">You might also like</h3>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {relatedCelebs.slice(0, 5).map(c => (
+                                            <Link key={c.id} href={`/celebrity/${c.id}`} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg transition-colors group">
+                                                <div className="relative w-10 h-10 rounded-full overflow-hidden border border-border/30 bg-muted">
+                                                    <Image src={c.image || c.imageUrl || c.profileImage || "/placeholder.svg"} alt={c.name} fill className="object-cover group-hover:scale-110 transition-transform" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">{c.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{c.role}</p>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </aside>
+
                     </div>
-                </div>
+                </FadeIn>
             </main>
         </div>
     )
