@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context"
 import { Header } from "@/components/header"
 import { ProfileHeader } from "@/components/profile/profile-header"
 import { UserActivityTabs } from "@/components/profile/user-activity-tabs"
+import { Button } from "@/components/ui/button"
 
 export default function ProfilePage() {
   const { user, loading } = useAuth()
@@ -39,6 +40,16 @@ export default function ProfilePage() {
         <ProfileHeader />
 
         <UserActivityTabs />
+
+        <div className="pt-8 border-t mt-8">
+          <Button
+            variant="destructive"
+            className="w-full md:w-auto md:min-w-[200px]"
+            onClick={() => useAuth().signOut()}
+          >
+            Log Out
+          </Button>
+        </div>
       </main>
     </div>
   )
