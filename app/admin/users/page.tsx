@@ -38,50 +38,71 @@ export default function UsersPage() {
     const [roleFilter, setRoleFilter] = useState("all")
 
     useEffect(() => {
+        // Initial load
         fetchUsers(true)
         fetchSearchIndex()
     }, [])
 
+    // Refetch when filter changes
     useEffect(() => {
-        applyFilters()
-    }, [roleFilter, users])
+        if (!isSearching) {
+            fetchUsers(true)
+        }
+    }, [roleFilter])
 
     const fetchUsers = async (isInitial = false) => {
         try {
             if (isInitial) {
                 setLoading(true)
                 setHasMore(true)
-                setIsSearching(false)
+                // setIsSearching(false) // Don't reset searching here, handled by clears
             } else {
                 setLoadingMore(true)
             }
 
-            let q = query(
-                collection(db, "artifacts/default-app-id/users"),
-                orderBy("createdAt", "desc"), // Ensure you have this index or fallback to default sort
+            // Base Query Constraints
+            let constraints: any[] = [
+                orderBy("createdAt", "desc"),
                 limit(ITEMS_PER_PAGE)
-            )
+            ]
 
-            // Fallback if createdAt doesn't exist on all docs, use email or simple list
-            // Note: Users created via Auth might not have createdAt in Firestore unless explicitly saved.
-            // If query fails due to missing field/index, we might need a simpler fetch.
-
-            if (!isInitial && lastVisible && !isSearching) {
-                q = query(
-                    collection(db, "artifacts/default-app-id/users"),
-                    orderBy("createdAt", "desc"),
-                    startAfter(lastVisible),
-                    limit(ITEMS_PER_PAGE)
-                )
+            // Apply Role Filter (Server-Side)
+            if (roleFilter !== "all" && !isSearching) {
+                // Determine filter value
+                if (roleFilter === "admin_only") {
+                    // Firestore doesn't support logical OR in simple where clauses efficiently in all cases
+                    // simplified to 'admin' for now or need "in" query
+                    constraints.unshift(where("role", "in", ["admin", "super_admin"]))
+                } else if (roleFilter === "user") {
+                    // explicit filter for "user" or where role is missing?
+                    // It's safer to just filter strict matches if we strictly set roles.
+                    // For "user" role, sometimes it's undefined in legacy data.
+                    // We will assume "user" string is set for now or handle client side fallbacks if needed.
+                    constraints.unshift(where("role", "==", "user"))
+                } else {
+                    constraints.unshift(where("role", "==", roleFilter))
+                }
             }
+
+            // Pagination
+            if (!isInitial && lastVisible && !isSearching) {
+                constraints.push(startAfter(lastVisible))
+            }
+
+            const q = query(
+                collection(db, "artifacts/default-app-id/users"),
+                ...constraints
+            )
 
             const snapshot = await getDocs(q)
             const newUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
 
             if (isInitial) {
                 setUsers(newUsers)
+                setFilteredUsers(newUsers) // Sync filtered list directly with fetched data
             } else {
                 setUsers(prev => [...prev, ...newUsers])
+                setFilteredUsers(prev => [...prev, ...newUsers])
             }
 
             setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null)
@@ -89,11 +110,16 @@ export default function UsersPage() {
             if (snapshot.docs.length < ITEMS_PER_PAGE) {
                 setHasMore(false)
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error fetching users:", error)
-            // Fallback for missing 'createdAt' index or field
-            // Try fetching without sort if it failed
-            if (isInitial) fetchFallback()
+
+            // Helpful error handling for missing indexes
+            if (error?.message?.includes("requires an index")) {
+                toast.error("Missing Index: check console for link to create it")
+            } else if (isInitial) {
+                // Fallback: simplified fetch if sort/filter fails
+                fetchFallback()
+            }
         } finally {
             setLoading(false)
             setLoadingMore(false)
@@ -106,6 +132,7 @@ export default function UsersPage() {
             const snapshot = await getDocs(q)
             const newUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
             setUsers(newUsers)
+            setFilteredUsers(newUsers)
             setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null)
         } catch (e) {
             console.error("Fallback failed", e)
@@ -134,20 +161,14 @@ export default function UsersPage() {
         setLoading(true)
         setIsSearching(true)
         try {
-            const local = users.find(u => u.id === userId)
-            if (local) {
-                setFilteredUsers([local]) // Set directly for search view
-                setLoading(false)
-                return
-            }
-
-            // Fetch specific
+            // Fetch specific user ignoring current filters
             const docRef = doc(db, "artifacts/default-app-id/users", userId)
             const docSnap = await getDoc(docRef)
             if (docSnap.exists()) {
                 const userData = { id: docSnap.id, ...docSnap.data() }
                 setFilteredUsers([userData])
-                // We don't add to main list to avoid pagination conflicts
+                // Clear paginated state to avoid confusion
+                setUsers([])
             }
         } catch (error) {
             toast.error("Error finding user")
@@ -158,25 +179,15 @@ export default function UsersPage() {
 
     const handleClearSearch = () => {
         setIsSearching(false)
-        setRoleFilter("all")
-        // Resetting to main list happens in useEffect [users]
+        // Triggering role filter effect will reload list
+        // But we need to make sure we force a reload if role didn't change
+        // Ideally just calling fetchUsers(true) works, but effect might double call.
+        // We'll call fetchUsers(true) explicitly.
+        fetchUsers(true)
     }
 
-    const applyFilters = () => {
-        if (isSearching) return // Search overrides filters
+    // Removed client-side applyFilters as we now use server-side fetching
 
-        let result = users
-        if (roleFilter !== "all") {
-            // "admin" covers both generic admin and super_admin if we want?
-            // User requested "Filter", usually by specific role.
-            if (roleFilter === "admin_only") {
-                result = result.filter(u => u.role === "admin" || u.role === "super_admin")
-            } else {
-                result = result.filter(u => (u.role || "user") === roleFilter)
-            }
-        }
-        setFilteredUsers(result)
-    }
 
     const toggleAdmin = async (targetUser: any) => {
         const newRole = targetUser.role === "admin" ? "user" : "admin"
