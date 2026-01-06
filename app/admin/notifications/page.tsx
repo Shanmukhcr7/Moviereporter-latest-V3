@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 import { Bell, Trash2, CheckCircle, AlertTriangle, Info, Plus } from "lucide-react"
+import { ImageUpload } from "@/components/admin/image-upload"
 
 interface Notification {
     id: string
@@ -181,11 +182,11 @@ export default function AdminNotificationsPage() {
 
                             {displayStyle === 'banner' && (
                                 <div className="space-y-2">
-                                    <Label>Image URL (Optional)</Label>
-                                    <Input
-                                        placeholder="https://imgur.com/..."
+                                    <Label>Banner Image (Optional)</Label>
+                                    <ImageUpload
                                         value={imageUrl}
-                                        onChange={e => setImageUrl(e.target.value)}
+                                        onChange={(url) => setImageUrl(url)}
+                                        onRemove={() => setImageUrl("")}
                                     />
                                 </div>
                             )}
