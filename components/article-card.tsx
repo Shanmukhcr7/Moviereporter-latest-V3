@@ -20,7 +20,7 @@ interface ArticleCardProps {
 export function ArticleCard({ id, title, image, author, publishedAt, category, excerpt, type }: ArticleCardProps) {
   return (
     <Link href={`/${type}/${id}`}>
-      <Card className="group h-full overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-card/50 backdrop-blur">
+      <Card className="group h-full p-0 gap-0 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-card/50 backdrop-blur">
         <div className="relative aspect-video overflow-hidden">
           <Image
             src={image || "/placeholder.svg"}

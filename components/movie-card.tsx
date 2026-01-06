@@ -161,7 +161,7 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
   return (
     <div className="h-full relative select-none">
       <Link href={`/movie/${id}`} draggable={false} className="h-full block">
-        <Card className="group h-full overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-card/50 backdrop-blur relative flex flex-col">
+        <Card className="group h-full p-0 gap-0 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-card/50 backdrop-blur relative flex flex-col">
           <div className="relative aspect-[2/3] overflow-hidden shrink-0">
             <Image
               src={getImageUrl(poster || "/placeholder.svg")}

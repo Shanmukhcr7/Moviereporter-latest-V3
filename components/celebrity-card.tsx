@@ -13,7 +13,7 @@ export function CelebrityCard({ id, name, image, imageUrl, posterUrl, profileIma
   return (
     <div className="group relative h-full">
       <Link href={`/celebrity/${id}`} className="block h-full">
-        <Card className="h-full overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-card/50 backdrop-blur">
+        <Card className="h-full p-0 gap-0 overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-border/50 bg-card/50 backdrop-blur">
           <div className="relative aspect-[3/4] overflow-hidden">
             <Image
               src={displayImage}
