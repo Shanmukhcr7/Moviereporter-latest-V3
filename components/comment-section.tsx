@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { collection, query, where, orderBy, getDocs, addDoc, Timestamp, limit, deleteDoc, doc, updateDoc, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useAuth } from "@/lib/auth-context"
@@ -26,7 +26,7 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [activeReactionId, setActiveReactionId] = useState<string | null>(null)
-    const [longPressTimer, setLongPressTimer] = useState<any>(null)
+    const longPressTimerRef = useRef<any>(null)
 
     const handleReaction = async (commentId: string, reaction: string) => {
         if (!user) {
@@ -212,21 +212,19 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
                                 className="flex gap-4 p-4 rounded-lg hover:bg-muted/30 transition-colors group relative select-none"
                                 onContextMenu={(e) => e.preventDefault()}
                                 onTouchStart={() => {
-                                    const timer = setTimeout(() => setActiveReactionId(comment.id), 500)
-                                    setLongPressTimer(timer)
+                                    longPressTimerRef.current = setTimeout(() => setActiveReactionId(comment.id), 500)
                                 }}
                                 onTouchEnd={() => {
-                                    if (longPressTimer) clearTimeout(longPressTimer)
+                                    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
                                 }}
                                 onMouseDown={() => {
-                                    const timer = setTimeout(() => setActiveReactionId(comment.id), 500)
-                                    setLongPressTimer(timer)
+                                    longPressTimerRef.current = setTimeout(() => setActiveReactionId(comment.id), 500)
                                 }}
                                 onMouseUp={() => {
-                                    if (longPressTimer) clearTimeout(longPressTimer)
+                                    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
                                 }}
                                 onMouseLeave={() => {
-                                    if (longPressTimer) clearTimeout(longPressTimer)
+                                    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
                                 }}
                             >
                                 {activeReactionId === comment.id && (
