@@ -172,10 +172,10 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
             />
             <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-10">
               {isTopBoxOffice && <Badge className="bg-yellow-500 text-black shadow-sm order-2">Top Box Office</Badge>}
-              {typeof rating === 'number' && (
+              {(typeof rating === 'number' || (typeof rating === 'string' && !isNaN(parseFloat(rating)))) && (
                 <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-yellow-500 border border-white/10 shadow-sm order-1">
                   <Star className="h-3.5 w-3.5 fill-current" />
-                  <span className="font-bold text-xs">{rating.toFixed(1)}</span>
+                  <span className="font-bold text-xs">{Number(rating).toFixed(1)}</span>
                 </div>
               )}
             </div>
@@ -188,7 +188,19 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
                 <button
                   onClick={toggleInterest}
                   className={`text-foreground/80 hover:text-red-500 transition-colors z-20 relative ${isInterested ? "text-red-500 fill-current" : ""}`}
-                  title={isInterested ? "Remove from interests" : "Mark as interested"}
+                  title={(() => {
+                    // Parse date to check semantic
+                    let isUpcoming = false;
+                    try {
+                      const d = new Date(releaseDate);
+                      if (!isNaN(d.getTime()) && d > new Date()) isUpcoming = true;
+                    } catch { }
+
+                    if (isUpcoming) {
+                      return isInterested ? "Remove from interests" : "Mark as interested";
+                    }
+                    return isInterested ? "Remove from favourites" : "Add to favourites";
+                  })()}
                 >
                   <Heart className={`h-5 w-5 ${isInterested ? "fill-current" : ""}`} />
                 </button>
