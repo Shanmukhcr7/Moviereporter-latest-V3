@@ -181,9 +181,9 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
             </div>
             {industry && <Badge className="absolute top-2 left-2 bg-primary/90 backdrop-blur z-10">{industry}</Badge>}
           </div>
-          <CardContent className="p-2 space-y-1 flex flex-col flex-1">
+          <CardContent className="p-2 pt-1 space-y-0.5 flex flex-col flex-1">
             <div className="flex justify-between items-start">
-              <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors">{title}</h3>
+              <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors leading-tight">{title}</h3>
               {enableInterest && (
                 <button
                   onClick={toggleInterest}
@@ -193,10 +193,10 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
                 </button>
               )}
             </div>
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center justify-between text-sm text-muted-foreground mt-0">
               <div className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
-                <span>
+                <span className="text-xs">
                   {(() => {
                     try {
                       if (!releaseDate) return 'TBD'

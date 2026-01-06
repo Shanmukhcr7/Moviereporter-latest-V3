@@ -31,18 +31,18 @@ export function ArticleCard({ id, title, image, author, publishedAt, category, e
           />
           {category && <Badge className="absolute top-3 left-3 bg-primary/90 backdrop-blur">{category}</Badge>}
         </div>
-        <CardContent className="p-3 space-y-1">
+        <CardContent className="p-3 pt-1 space-y-1">
           <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors leading-tight">
             {title}
           </h3>
-          {excerpt && <p className="text-sm text-muted-foreground line-clamp-2">{excerpt}</p>}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+          {excerpt && <p className="text-sm text-muted-foreground line-clamp-2 leading-snug">{excerpt}</p>}
+          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
             <div className="flex items-center gap-1">
-              <User className="h-3.5 w-3.5" />
+              <User className="h-3 w-3" />
               <span>{author}</span>
             </div>
             <div className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3 w-3" />
               <span>
                 {(() => {
                   if (!publishedAt) return "N/A"
