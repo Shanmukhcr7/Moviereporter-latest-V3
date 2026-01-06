@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { ThumbsUp, ThumbsDown, Share2, Calendar, Star as StarIcon, Info, MessageSquare, Play, Edit, Trash } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Share2, Calendar, Star as StarIcon, Info, MessageSquare, Play, Edit, Trash, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
@@ -34,6 +34,54 @@ export default function MovieDetailsPage() {
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
   const [isTrailerOpen, setIsTrailerOpen] = useState(false)
   const { user } = useAuth()
+  const [activeReactionId, setActiveReactionId] = useState<string | null>(null)
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null)
+
+  const handleReviewReaction = async (reviewId: string, reaction: string) => {
+    if (!user) {
+      toast.error("Please login to react.")
+      return
+    }
+
+    try {
+      const reviewRef = doc(db, "artifacts/default-app-id/reviews", reviewId)
+      const reviewDoc = await getDoc(reviewRef)
+
+      if (reviewDoc.exists()) {
+        const data = reviewDoc.data()
+        const reactions = data.reactions || {}
+        const userReactions = reactions[user.uid] || []
+
+        let updated
+        if (userReactions.includes(reaction)) {
+          updated = userReactions.filter((r: string) => r !== reaction)
+        } else {
+          updated = [...userReactions, reaction]
+        }
+
+        // Optimistic Update
+        setReviews(prev => prev.map(r => {
+          if (r.id === reviewId) {
+            return {
+              ...r,
+              reactions: {
+                ...(r.reactions || {}),
+                [user.uid]: updated
+              }
+            }
+          }
+          return r
+        }))
+
+        await updateDoc(reviewRef, {
+          [`reactions.${user.uid}`]: updated
+        })
+      }
+    } catch (error) {
+      console.error("Error reacting to review:", error)
+      toast.error("Failed to react")
+    }
+  }
 
   useEffect(() => {
     fetchMovieDetails()
