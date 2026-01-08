@@ -36,7 +36,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
     const [loading, setLoading] = useState(true)
     const [showFullDescription, setShowFullDescription] = useState(false)
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
-    const isTrailerOpen, setIsTrailerOpen] = useState(false)
+    const [isTrailerOpen, setIsTrailerOpen] = useState(false)
     const { user } = useAuth()
 
     const handleReviewReaction = async (reviewId: string, reaction: string) => {
