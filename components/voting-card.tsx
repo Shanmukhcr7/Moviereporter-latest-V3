@@ -41,7 +41,7 @@ export function VotingCard({ nominee, isVoted, onVote, onShare, onCustomVote, on
                             alt={nominee.celebrity?.name || "Nominee"}
                             fill
                             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                            className="object-cover object-top group-hover:scale-110 transition-transform duration-500"
                         />
                     </Link>
                 )}
@@ -70,7 +70,7 @@ export function VotingCard({ nominee, isVoted, onVote, onShare, onCustomVote, on
             <CardContent className="p-2 flex flex-col h-full">
                 {/* Movie Name Rendering */}
                 {!isOther && (
-                    <div className="mb-1 h-10 flex items-center justify-center text-center px-1">
+                    <div className="mb-1 h-10 flex items-start justify-center text-center px-1 pt-0.5">
                         {nominee.movieId ? (
                             <Link href={`/movie/${nominee.movieId}`} className="text-sm font-bold text-foreground hover:text-primary transition-colors hover:underline block line-clamp-2 leading-tight">
                                 {nominee.movie?.title || "Unknown Movie"}
