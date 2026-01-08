@@ -131,7 +131,7 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
 
                 try {
                     // Try fetch to absolute URL first (Production)
-                    const res = await fetch("https://www.movie-lovers.com/upload-profile.php", {
+                    const res = await fetch("https://movielovers.in/upload-profile.php", {
                         method: "POST",
                         body: formData
                     })
