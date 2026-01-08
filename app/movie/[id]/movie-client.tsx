@@ -706,61 +706,61 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                                         </button>
                                                     </div>
                                                 )}
-                                                <CardContent className="p-3">
-                                                    <div className="flex items-start justify-between mb-2">
+                                                <CardContent className="p-2">
+                                                    <div className="flex items-start justify-between mb-1">
                                                         <div className="flex items-center gap-2">
-                                                            <Avatar className="h-8 w-8">
+                                                            <Avatar className="h-6 w-6">
                                                                 <AvatarImage src={review.userImage || ""} className="object-cover" />
-                                                                <AvatarFallback>{review.userName?.charAt(0) || "U"}</AvatarFallback>
+                                                                <AvatarFallback className="text-[10px]">{review.userName?.charAt(0) || "U"}</AvatarFallback>
                                                             </Avatar>
                                                             <div>
-                                                                <p className="font-semibold text-sm">{review.userName || "Anonymous"}</p>
-                                                                <p className="text-xs text-muted-foreground">
+                                                                <p className="font-semibold text-xs">{review.userName || "Anonymous"}</p>
+                                                                <p className="text-[10px] text-muted-foreground">
                                                                     {review.createdAt?.toDate ? new Date(review.createdAt.toDate()).toLocaleDateString() : "Recent"}
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-3">
+                                                        <div className="flex items-center gap-2">
                                                             {/* Actions for own review */}
                                                             {user && review.userId === user.uid && (
                                                                 <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
-                                                                        className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                                                        className="h-5 w-5 text-muted-foreground hover:text-primary hover:bg-primary/10"
                                                                         onClick={() => setIsRatingModalOpen(true)}
                                                                         title="Edit Review"
                                                                     >
-                                                                        <Edit className="h-3.5 w-3.5" />
+                                                                        <Edit className="h-3 w-3" />
                                                                     </Button>
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
-                                                                        className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                                        className="h-5 w-5 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                                         onClick={() => handleDeleteReview(review)}
                                                                         title="Delete Review"
                                                                     >
-                                                                        <Trash className="h-3.5 w-3.5" />
+                                                                        <Trash className="h-3 w-3" />
                                                                     </Button>
                                                                 </div>
                                                             )}
-                                                            <div className="flex items-center text-yellow-500 gap-1">
+                                                            <div className="flex items-center text-yellow-500 gap-0.5">
                                                                 {Array.from({ length: 5 }).map((_, i) => (
-                                                                    <StarIcon key={i} className={`h-3 w-3 ${i < (review.rating || 0) ? 'fill-current' : 'text-muted/30'}`} />
+                                                                    <StarIcon key={i} className={`h-2.5 w-2.5 ${i < (review.rating || 0) ? 'fill-current' : 'text-muted/30'}`} />
                                                                 ))}
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <p className="text-sm text-foreground/80">{review.review}</p>
+                                                    <p className="text-xs text-foreground/80 leading-tight">{review.review}</p>
                                                     {/* Reaction Badges */}
                                                     {review.reactions && Object.values(review.reactions).some((r: any) => r && r.length > 0) && (
-                                                        <div className="flex gap-1 mt-3 flex-wrap">
+                                                        <div className="flex gap-1 mt-2 flex-wrap">
                                                             {["👍", "❤️", "😂", "😮", "😢", "🔥"].filter(emoji =>
                                                                 Object.values(review.reactions).some((r: any) => r?.includes(emoji))
                                                             ).map(emoji => {
                                                                 const count = Object.values(review.reactions).filter((r: any) => r?.includes(emoji)).length;
                                                                 return (
-                                                                    <Badge key={emoji} variant="secondary" className="text-[10px] px-1 py-0 h-5 gap-1 cursor-pointer" onClick={(e) => {
+                                                                    <Badge key={emoji} variant="secondary" className="text-[9px] px-1 py-0 h-4 gap-1 cursor-pointer" onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         handleReviewReaction(review.id, emoji);
                                                                     }}>
