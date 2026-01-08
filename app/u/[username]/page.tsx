@@ -18,21 +18,46 @@ import { Trophy, User, Calendar } from "lucide-react"
 // NOTE: This assumes 'username' is stored in 'users' collection. 
 // If separate artifacts/users, need to check paths.
 
+// Helper to fetch user for metadata
 async function getUser(username: string) {
-    // This is a placeholder. Real implementation needs Admin SDK or specific public API.
-    // Converting to client-side fetch for now to ensure it works without Admin SDK setup.
+    try {
+        const usersRef = collection(db, "users")
+        const q = query(usersRef, where("username", "==", username), limit(1))
+        const snapshot = await getDocs(q)
+        if (!snapshot.empty) {
+            return snapshot.docs[0].data()
+        }
+    } catch (e) {
+        console.error("Error fetching user metadata:", e)
+    }
     return null
 }
 
 export async function generateMetadata({ params }: { params: { username: string } }): Promise<Metadata> {
     const username = decodeURIComponent(params.username)
+    const user = await getUser(username)
+
+    const displayName = user?.displayName || username
+    const photoURL = user?.photoURL || "https://movielovers.in/placeholder-user.jpg" // Fallback image
+    const description = user?.bio || `Check out ${displayName}'s profile, reviews, and activity on Movie Lovers.`
+
     return {
-        title: `${username}'s Profile - Movie Lovers`,
-        description: `Check out ${username}'s profile on Movie Lovers!`,
+        title: `${displayName} (@${username}) - Movie Lovers`,
+        description: description,
         openGraph: {
-            title: `${username} on Movie Lovers`,
-            description: `See ${username}'s reviews, badge, and activity.`,
-            // images: ['/api/og/profile?username=' + username], // Advanced: generating image
+            title: `${displayName} on Movie Lovers`,
+            description: description,
+            url: `https://movielovers.in/u/${username}`,
+            siteName: "Movie Lovers",
+            images: [
+                {
+                    url: photoURL,
+                    width: 800,
+                    height: 800,
+                    alt: `${displayName}'s Profile Photo`,
+                },
+            ],
+            type: "profile",
         }
     }
 }
