@@ -18,6 +18,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
+import Cropper from "react-easy-crop"
+import getCroppedImg from "@/lib/canvasUtils"
+import { Slider } from "@/components/ui/slider"
+import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface EditProfileDialogProps {
     open: boolean
@@ -35,25 +40,49 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
 }
 
 function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
+    // Form States
     const [username, setUsername] = useState("")
+    const [displayName, setDisplayName] = useState("")
     const [mobile, setMobile] = useState("")
+    const [bio, setBio] = useState("")
     const [loading, setLoading] = useState(false)
+
+    // Image States
     const [originalPhoto, setOriginalPhoto] = useState("")
-    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imageFile, setImageFile] = useState<Blob | null>(null)
     const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+    // Cropper States
+    const [crop, setCrop] = useState({ x: 0, y: 0 })
+    const [zoom, setZoom] = useState(1)
+    const [rotation, setRotation] = useState(0)
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null)
+    const [showCropper, setShowCropper] = useState(false)
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
 
     // Validation State
     const [checkingUsername, setCheckingUsername] = useState(false)
     const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
     const [usernameMsg, setUsernameMsg] = useState("")
 
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
     useEffect(() => {
         if (open && userData) {
-            setUsername(userData.displayName || userData.username || "")
+            setUsername(userData.username || "")
+            setDisplayName(userData.displayName || "")
             setMobile(userData.phoneNumber || "")
+            setBio(userData.bio || "")
             setOriginalPhoto(user?.photoURL || "")
             setPreviewUrl(user?.photoURL || "")
             setImageFile(null)
+
+            // Reset Cropper
+            setShowCropper(false)
+            setCropImageSrc(null)
+            setZoom(1)
+            setRotation(0)
+
             setUsernameAvailable(null)
             setUsernameMsg("")
         }
@@ -67,9 +96,11 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
                 return
             }
 
-            if (user && username === user.displayName) {
+            // Note: If username field didn't exist before, we assume current display name might be it, or check against doc
+            // For simplicity, checking availability logic:
+            if (user && userData?.username === username) {
                 setUsernameAvailable(true)
-                setUsernameMsg("") // It's their own
+                setUsernameMsg("")
                 return
             }
 
@@ -100,66 +131,54 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
 
         const timer = setTimeout(checkAvailability, 500)
         return () => clearTimeout(timer)
-    }, [username, user])
+    }, [username, user, userData])
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
+        if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0]
-            setImageFile(file)
-            setPreviewUrl(URL.createObjectURL(file))
+            const reader = new FileReader()
+            reader.addEventListener("load", () => {
+                setCropImageSrc(reader.result as string)
+                setShowCropper(true) // Switch to crop view
+            })
+            reader.readAsDataURL(file)
+            e.target.value = "" // Reset input
         }
     }
 
-    // Client-side compression helper
-    const compressImage = (file: File): Promise<Blob> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target?.result as string;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 800;
-                    const MAX_HEIGHT = 800;
-                    let width = img.width;
-                    let height = img.height;
+    const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
+        setCroppedAreaPixels(croppedAreaPixels)
+    }
 
-                    if (width > height) {
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-                    } else {
-                        if (height > MAX_HEIGHT) {
-                            width *= MAX_HEIGHT / height;
-                            height = MAX_HEIGHT;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx?.drawImage(img, 0, 0, width, height);
-
-                    canvas.toBlob((blob) => {
-                        if (blob) {
-                            resolve(blob);
-                        } else {
-                            reject(new Error("Compression failed"));
-                        }
-                    }, 'image/jpeg', 0.7); // 70% Quality
-                };
-                img.onerror = reject;
-            };
-            reader.onerror = reject;
-        });
-    };
+    const handleCropSave = async () => {
+        try {
+            if (cropImageSrc && croppedAreaPixels) {
+                const croppedBlob = await getCroppedImg(
+                    cropImageSrc,
+                    croppedAreaPixels,
+                    rotation
+                )
+                if (croppedBlob) {
+                    setImageFile(croppedBlob)
+                    setPreviewUrl(URL.createObjectURL(croppedBlob))
+                    setShowCropper(false) // Return to main view
+                }
+            }
+        } catch (e) {
+            console.error("Crop error", e)
+            toast.error("Failed to crop image")
+        }
+    }
 
     const handleSave = async () => {
         if (!user) return
-        if (!usernameAvailable && username !== user.displayName) {
-            toast.error("Please choose a valid available username")
+        // Only block if username is explicitly taken (false), allow null/true
+        if (usernameAvailable === false) {
+            toast.error("Please choose a different username")
+            return
+        }
+        if (!displayName.trim()) {
+            toast.error("Display Name is required")
             return
         }
 
@@ -167,19 +186,15 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
         try {
             let finalPhotoUrl = originalPhoto
 
-            // 1. Upload Image if changed
+            // 1. Upload Image (It's already a cropped Blob)
             if (imageFile) {
-                // Compress Image Client-Side
-                const compressedBlob = await compressImage(imageFile);
-
                 const formData = new FormData()
-                formData.append("file", compressedBlob, "profile.jpg") // Force .jpg
+                formData.append("file", imageFile, "profile.jpg")
                 if (originalPhoto) {
                     formData.append("oldUrl", originalPhoto)
                 }
 
                 try {
-                    // Use internal Node.js API route (Same as Admin Dashboard style)
                     const res = await fetch("/api/user/profile-upload", {
                         method: "POST",
                         body: formData
@@ -198,29 +213,15 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
                     }
                 } catch (e: any) {
                     console.error("Upload error", e)
-                    // Try local fallback if absolute failed immediately
-                    try {
-                        const resLocal = await fetch("/upload-profile.php", {
-                            method: "POST",
-                            body: formData
-                        })
-                        if (!resLocal.ok) throw new Error("Upload request failed")
-                        const dataLocal = await resLocal.json()
-                        if (dataLocal.success) {
-                            finalPhotoUrl = dataLocal.url
-                        } else {
-                            throw new Error(dataLocal.error)
-                        }
-                    } catch (innerE: any) {
-                        throw new Error("Image upload failed: " + innerE.message)
-                    }
+                    // Fallback not strictly needed if API matches, but keeping simple
+                    throw new Error("Image upload failed: " + e.message)
                 }
             }
 
             // 2. Update Auth Profile
-            if (username !== user.displayName || finalPhotoUrl !== user.photoURL) {
+            if (displayName !== user.displayName || finalPhotoUrl !== user.photoURL) {
                 await updateProfile(user, {
-                    displayName: username,
+                    displayName: displayName,
                     photoURL: finalPhotoUrl
                 })
             }
@@ -229,15 +230,16 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
             const userRef = doc(db, "artifacts/default-app-id/users", user.uid)
             await updateDoc(userRef, {
                 username: username,
-                displayName: username,
+                displayName: displayName,
                 phoneNumber: mobile,
                 mobileNumber: mobile,
-                photoURL: finalPhotoUrl
+                photoURL: finalPhotoUrl,
+                bio: bio,
+                updatedAt: new Date()
             })
 
             toast.success("Profile updated successfully!")
             onOpenChange(false)
-            // Reload to update UI
             window.location.reload()
         } catch (error: any) {
             console.error("Update failed", error)
@@ -248,62 +250,124 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
     }
 
     return (
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
             <DialogHeader>
-                <DialogTitle>Edit Profile</DialogTitle>
-                <DialogDescription>
-                    Make changes to your profile here.
-                </DialogDescription>
+                <DialogTitle>{showCropper ? "Adjust Photo" : "Edit Profile"}</DialogTitle>
+                {!showCropper && <DialogDescription>Update your profile details below.</DialogDescription>}
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-                {/* Profile Pic Upload */}
-                <div className="flex flex-col items-center gap-4 mb-4">
-                    <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-border mb-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={previewUrl || "/placeholder.svg"} alt="Profile" className="h-full w-full object-cover" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Label htmlFor="picture" className="cursor-pointer bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                            Change Picture
-                        </Label>
-                        <Input id="picture" type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                    </div>
-                </div>
 
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="username" className="text-right">
-                        Username
-                    </Label>
-                    <div className="col-span-3">
-                        <Input
-                            id="username"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+            {showCropper && cropImageSrc ? (
+                <div className="flex flex-col gap-4">
+                    <div className="relative w-full h-[300px] bg-black/90 rounded-md overflow-hidden">
+                        <Cropper
+                            image={cropImageSrc}
+                            crop={crop}
+                            zoom={zoom}
+                            rotation={rotation}
+                            aspect={1}
+                            onCropChange={setCrop}
+                            onCropComplete={onCropComplete}
+                            onZoomChange={setZoom}
                         />
-                        <p className={`text-xs mt-1 ${usernameAvailable ? "text-green-500" : "text-red-500"}`}>
-                            {checkingUsername ? "Checking..." : usernameMsg}
-                        </p>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Zoom</span>
+                            <span>{Math.round(zoom * 100)}%</span>
+                        </div>
+                        <Slider
+                            value={[zoom]}
+                            min={1}
+                            max={3}
+                            step={0.1}
+                            onValueChange={(v) => setZoom(v[0])}
+                        />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="outline" onClick={() => setShowCropper(false)}>Cancel</Button>
+                        <Button onClick={handleCropSave}>Done</Button>
                     </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="mobile" className="text-right">
-                        Mobile
-                    </Label>
-                    <Input
-                        id="mobile"
-                        value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
-                        className="col-span-3"
-                        placeholder="+1234567890"
-                    />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button type="submit" onClick={handleSave} disabled={loading || (username !== user?.displayName && !usernameAvailable)}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save changes
-                </Button>
-            </DialogFooter>
+            ) : (
+                <>
+                    <div className="grid gap-4 py-4">
+                        {/* Profile Pic Upload */}
+                        <div className="flex flex-col items-center gap-4 mb-2">
+                            <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                <Avatar className="h-24 w-24 border-2 border-border">
+                                    <AvatarImage src={previewUrl || userData?.photoURL || ""} className="object-cover" />
+                                    <AvatarFallback className="text-lg">
+                                        {(displayName || "U").charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-white text-xs font-medium">Change</span>
+                                </div>
+                            </div>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                            />
+                            <p className="text-xs text-muted-foreground">Tap image to change</p>
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="displayName">Display Name</Label>
+                            <Input
+                                id="displayName"
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="username">Username</Label>
+                            <div className="relative">
+                                <Input
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                />
+                                <p className={`text-[10px] mt-1 absolute right-2 top-2 ${usernameAvailable === false ? "text-red-500" : "text-green-500"}`}>
+                                    {checkingUsername ? "..." : usernameAvailable === false ? "Taken" : usernameAvailable === true ? "Available" : ""}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="bio">Bio</Label>
+                            <Textarea
+                                id="bio"
+                                value={bio}
+                                onChange={(e) => setBio(e.target.value)}
+                                placeholder="Tell us about yourself..."
+                                className="resize-none"
+                            />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="mobile">Mobile</Label>
+                            <Input
+                                id="mobile"
+                                value={mobile}
+                                onChange={(e) => setMobile(e.target.value)}
+                                placeholder="+1234567890"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => onOpenChange(false)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSave} disabled={loading}>
+                            {loading ? "Saving..." : "Save Changes"}
+                        </Button>
+                    </DialogFooter>
+                </>
+            )}
         </DialogContent>
     )
 }
