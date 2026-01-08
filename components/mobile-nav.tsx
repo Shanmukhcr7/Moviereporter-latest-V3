@@ -15,6 +15,7 @@ import { AwardWinnersDropdown } from "@/components/award-winners-dropdown"
 import { UserBadges } from "@/components/user-badges"
 import { PushNotificationsToggle } from "@/components/push-notifications-toggle"
 import { SocialMediaIcons } from "@/components/social-media-icons"
+import { PWAInstallButton } from "@/components/pwa-install-button"
 
 export function MobileNav() {
     const { theme, toggleTheme } = useTheme()
@@ -182,8 +183,12 @@ export function MobileNav() {
                     </div>
                 </ScrollArea>
 
-                {/* Footer - Pinned to Bottom */}
                 <div className="p-4 border-t bg-background shrink-0 pb-safe-area mt-auto space-y-4">
+                    {/* PWA Install Button */}
+                    <div className="px-4">
+                        <PWAInstallButton className="w-full" variant="outline" />
+                    </div>
+
                     {/* Social Media Icons */}
                     <SocialMediaIcons className="pb-2" iconSize="h-5 w-5" />
 

@@ -1,5 +1,6 @@
 
 import { SocialMediaIcons } from "@/components/social-media-icons"
+import { PWAInstallButton } from "@/components/pwa-install-button"
 
 export function SiteFooter() {
     return (
@@ -8,7 +9,10 @@ export function SiteFooter() {
                 <div className="text-center text-sm leading-loose text-muted-foreground md:text-left">
                     <p>© 2026 Movie Lovers. All rights reserved.</p>
                 </div>
-                <SocialMediaIcons className="gap-6" iconSize="h-5 w-5" />
+                <div className="flex flex-col items-center gap-4 md:items-end">
+                    <SocialMediaIcons className="gap-6" iconSize="h-5 w-5" />
+                    <PWAInstallButton variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-auto p-0" />
+                </div>
             </div>
         </footer>
     )
