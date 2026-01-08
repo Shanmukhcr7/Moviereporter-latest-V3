@@ -42,8 +42,8 @@ export function PWAInstallButton({ className, variant = "outline", size = "defau
         // we'll just try to install again. `installPWA` has a guard check `if (!deferredPrompt)`.
 
         // We will show a toast ONLY if it fails after the check
-        toast.error("Install feature not available", {
-            description: "This device or browser may not support automatic installation. Try 'Add to Home Screen' manually."
+        toast.error("Cannot install app", {
+            description: "The app might already be installed, or your browser doesn't support automatic installation."
         })
     }
 
