@@ -7,6 +7,7 @@ import * as z from "zod"
 import { addDoc, collection, doc, updateDoc, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { ImageUpload } from "@/components/admin/image-upload"
+import { DateTimePicker } from "@/components/admin/date-time-picker"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -116,13 +117,9 @@ export function PollForm({ initialData, onSuccess }: PollFormProps) {
                             <FormItem className="flex flex-col">
                                 <FormLabel>Start Date</FormLabel>
                                 <FormControl>
-                                    <Input
-                                        type="datetime-local"
-                                        value={field.value ? format(field.value, "yyyy-MM-dd'T'HH:mm") : ""}
-                                        onChange={(e) => {
-                                            const date = e.target.value ? new Date(e.target.value) : undefined;
-                                            field.onChange(date);
-                                        }}
+                                    <DateTimePicker
+                                        date={field.value}
+                                        setDate={field.onChange}
                                         disabled={loading}
                                     />
                                 </FormControl>
@@ -137,13 +134,9 @@ export function PollForm({ initialData, onSuccess }: PollFormProps) {
                             <FormItem className="flex flex-col">
                                 <FormLabel>End Date</FormLabel>
                                 <FormControl>
-                                    <Input
-                                        type="datetime-local"
-                                        value={field.value ? format(field.value, "yyyy-MM-dd'T'HH:mm") : ""}
-                                        onChange={(e) => {
-                                            const date = e.target.value ? new Date(e.target.value) : undefined;
-                                            field.onChange(date);
-                                        }}
+                                    <DateTimePicker
+                                        date={field.value}
+                                        setDate={field.onChange}
                                         disabled={loading}
                                     />
                                 </FormControl>

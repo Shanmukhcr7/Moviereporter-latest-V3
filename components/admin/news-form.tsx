@@ -8,6 +8,7 @@ import { addDoc, collection, doc, updateDoc, Timestamp } from "firebase/firestor
 import { db } from "@/lib/firebase"
 import { logAdminAction } from "@/lib/logger"
 import { ImageUpload } from "@/components/admin/image-upload"
+import { DateTimePicker } from "@/components/admin/date-time-picker"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -278,23 +279,17 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
                     <FormField
                         control={form.control}
                         name="scheduledPublish"
-                        render={({ field }) => (
                             <FormItem className="flex flex-col">
-                                <FormLabel>Schedule Publish</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        type="datetime-local"
-                                        placeholder="Select date and time"
-                                        value={field.value ? format(field.value, "yyyy-MM-dd'T'HH:mm") : ""}
-                                        onChange={(e) => {
-                                            const date = e.target.value ? new Date(e.target.value) : undefined;
-                                            field.onChange(date);
-                                        }}
-                                        disabled={loading}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
+                        <FormLabel>Schedule Publish</FormLabel>
+                        <FormControl>
+                            <DateTimePicker
+                                date={field.value}
+                                setDate={field.onChange}
+                                disabled={loading}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
                         )}
                     />
 

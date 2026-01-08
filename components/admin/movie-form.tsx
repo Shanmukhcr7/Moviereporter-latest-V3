@@ -9,6 +9,7 @@ import { db } from "@/lib/firebase"
 import { logAdminAction } from "@/lib/logger"
 import { clearCacheByKey } from "@/lib/cache-utils"
 import { ImageUpload } from "@/components/admin/image-upload"
+import { DateTimePicker } from "@/components/admin/date-time-picker"
 import { CastSelector } from "@/components/admin/cast-selector"
 import { Button } from "@/components/ui/button"
 import {
@@ -445,14 +446,9 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                             <FormItem className="flex flex-col">
                                 <FormLabel>Scheduled Publish (Optional)</FormLabel>
                                 <FormControl>
-                                    <Input
-                                        type="datetime-local"
-                                        placeholder="Select date and time"
-                                        value={field.value ? format(field.value, "yyyy-MM-dd'T'HH:mm") : ""}
-                                        onChange={(e) => {
-                                            const date = e.target.value ? new Date(e.target.value) : undefined;
-                                            field.onChange(date);
-                                        }}
+                                    <DateTimePicker
+                                        date={field.value}
+                                        setDate={field.onChange}
                                         disabled={loading}
                                     />
                                 </FormControl>
