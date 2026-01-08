@@ -66,10 +66,11 @@ export default function BlogsPage() {
             id: doc.id,
             type: "blog" as const, // Consistently use "blog" type
             ...data,
+            ...data,
             image: data.imageUrl || data.image, // Handle legacy imageUrl
-            publishedAt: data.scheduledAt ? data.scheduledAt.toDate().toISOString() : (data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString())
-          }
-        })
+            publishedAt: data.scheduledAt ? data.scheduledAt.toDate().toISOString() : (data.createdAt ? data.createdAt.toDate().toISOString() : new Date().toISOString()),
+            excerpt: data.excerpt || data.description || data.summary || (data.content ? data.content.substring(0, 100) + "..." : "Read article for more details")
+          })
 
         setBlogs(prev => isInitial ? newBlogs : [...prev, ...newBlogs])
 
