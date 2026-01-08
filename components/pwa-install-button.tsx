@@ -88,7 +88,7 @@ export function PWAStoreBadges() {
     }
 
     return (
-        <div className="flex flex-row gap-2 w-full justify-center items-center">
+        <div className="flex flex-row gap-2">
             <button
                 onClick={handleClick}
                 disabled={loading}

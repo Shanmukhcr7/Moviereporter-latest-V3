@@ -185,7 +185,7 @@ export function MobileNav() {
 
                 <div className="p-4 border-t bg-background shrink-0 pb-safe-area mt-auto space-y-4">
                     {/* PWA Install Button */}
-                    <div className="px-4">
+                    <div className="px-4 flex justify-center w-full">
                         <PWAStoreBadges />
                     </div>
 

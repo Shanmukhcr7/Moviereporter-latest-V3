@@ -1,6 +1,6 @@
 
 import { SocialMediaIcons } from "@/components/social-media-icons"
-import { PWAInstallButton } from "@/components/pwa-install-button"
+import { PWAInstallButton, PWAStoreBadges } from "@/components/pwa-install-button"
 
 export function SiteFooter() {
     return (
@@ -11,7 +11,7 @@ export function SiteFooter() {
                 </div>
                 <div className="flex flex-col items-center gap-4 md:items-end">
                     <SocialMediaIcons className="gap-6" iconSize="h-5 w-5" />
-                    <PWAInstallButton variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground h-auto p-0" />
+                    <PWAStoreBadges />
                 </div>
             </div>
         </footer>
