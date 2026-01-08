@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { db } from "@/lib/firebase"
-import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/firestore"
+import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, deleteDoc, Timestamp, limit, startAfter } from "firebase/firestore"
 import { Loader2, Edit2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,41 +20,85 @@ export function UserCommentsList() {
     const { user } = useAuth()
     const [comments, setComments] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [loadingMore, setLoadingMore] = useState(false)
+    const [lastDoc, setLastDoc] = useState<any>(null)
+    const [hasMore, setHasMore] = useState(true)
+    const BATCH_SIZE = 4
 
     // Edit State
     const [editOpen, setEditOpen] = useState(false)
     const [currentComment, setCurrentComment] = useState<any>(null)
     const [editText, setEditText] = useState("")
 
-    const loadComments = async () => {
+    const fetchDetail = async (d: any) => {
+        const data = d.data()
+        let articleTitle = "Unknown Article"
+
+        if (data.articleId && data.articleType) {
+            const coll = data.articleType === 'news' ? 'news' : 'blogs' // Legacy mapping
+            const artDoc = await getDoc(doc(db, "artifacts/default-app-id", coll, data.articleId))
+            if (artDoc.exists()) articleTitle = artDoc.data().title
+        }
+        return { id: d.id, ...data, articleTitle }
+    }
+
+    const loadComments = async (isInitial = false) => {
         if (!user) return
-        setLoading(true)
+
+        if (isInitial) {
+            setLoading(true)
+            setHasMore(true)
+        } else {
+            setLoadingMore(true)
+        }
+
         try {
-            const q = query(collection(db, "artifacts/default-app-id/users", user.uid, "userComments"), orderBy("createdAt", "desc"))
+            let q = query(
+                collection(db, "artifacts/default-app-id/users", user.uid, "userComments"),
+                orderBy("createdAt", "desc"),
+                limit(BATCH_SIZE)
+            )
+
+            if (!isInitial && lastDoc) {
+                q = query(
+                    collection(db, "artifacts/default-app-id/users", user.uid, "userComments"),
+                    orderBy("createdAt", "desc"),
+                    startAfter(lastDoc),
+                    limit(BATCH_SIZE)
+                )
+            }
+
             const snapshot = await getDocs(q)
 
-            const detailed = await Promise.all(snapshot.docs.map(async (d) => {
-                const data = d.data()
-                let articleTitle = "Unknown Article"
-                // naive check for collection? Legacy used articleType field 'news' or 'blog'
-                // Assuming data.articleType exists
-                if (data.articleId && data.articleType) {
-                    const coll = data.articleType === 'news' ? 'news' : 'blogs'
-                    const artDoc = await getDoc(doc(db, "artifacts/default-app-id", coll, data.articleId))
-                    if (artDoc.exists()) articleTitle = artDoc.data().title
-                }
-                return { id: d.id, ...data, articleTitle }
-            }))
-            setComments(detailed)
+            if (snapshot.empty) {
+                if (isInitial) setComments([])
+                setHasMore(false)
+                setLoading(false)
+                setLoadingMore(false)
+                return
+            }
+
+            setLastDoc(snapshot.docs[snapshot.docs.length - 1])
+            if (snapshot.docs.length < BATCH_SIZE) setHasMore(false)
+
+            const detailed = await Promise.all(snapshot.docs.map(fetchDetail))
+
+            if (isInitial) {
+                setComments(detailed)
+            } else {
+                setComments(prev => [...prev, ...detailed])
+            }
+
         } catch (error) {
             console.error(error)
         } finally {
             setLoading(false)
+            setLoadingMore(false)
         }
     }
 
     useEffect(() => {
-        loadComments()
+        loadComments(true)
     }, [user])
 
     const handleDelete = async (commentId: string) => {
@@ -64,7 +108,8 @@ export function UserCommentsList() {
             await deleteDoc(doc(db, "artifacts/default-app-id/comments", commentId))
             await deleteDoc(doc(db, "artifacts/default-app-id/users", user!.uid, "userComments", commentId))
             toast.success("Comment deleted")
-            loadComments()
+            // Reload to refresh list correctly or filter out
+            setComments(prev => prev.filter(c => c.id !== commentId))
         } catch (e: any) {
             toast.error("Failed to delete")
         }
@@ -88,7 +133,8 @@ export function UserCommentsList() {
             await updateDoc(doc(db, "artifacts/default-app-id/users", user.uid, "userComments", currentComment.id), updateData)
             toast.success("Comment updated")
             setEditOpen(false)
-            loadComments()
+            // Update local state instead of full reload to keep pagination
+            setComments(prev => prev.map(c => c.id === currentComment.id ? { ...c, ...updateData } : c))
         } catch (e: any) {
             toast.error("Failed to update")
         }
@@ -103,30 +149,34 @@ export function UserCommentsList() {
                 <div key={c.id} className="p-4 border rounded-lg bg-card">
                     <div className="flex justify-between items-start">
                         <div>
-                            <p className="font-semibold text-sm">On: {c.articleTitle}</p>
-                            <p className="text-xs text-muted-foreground">
-                                {new Date(c.createdAt?.toDate ? c.createdAt.toDate() : c.createdAt).toLocaleString()}
+                            <p className="font-semibold line-clamp-1">{c.articleTitle}</p>
+                            <p className="text-sm text-muted-foreground">
+                                {c.createdAt?.toDate ? c.createdAt.toDate().toLocaleDateString() : "Just now"}
                             </p>
                         </div>
-                        <div className="flex gap-2">
-                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openEdit(c)}>
-                                <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(c.id)}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                        <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Edit2 className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4" /></Button>
                         </div>
                     </div>
                     <p className="mt-2 text-sm">{c.commentText}</p>
                 </div>
             ))}
+            {hasMore && (
+                <div className="flex justify-center pt-2">
+                    <Button variant="outline" onClick={() => loadComments(false)} disabled={loadingMore}>
+                        {loadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Load More
+                    </Button>
+                </div>
+            )}
 
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Edit Comment</DialogTitle>
                     </DialogHeader>
-                    <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} rows={4} />
+                    <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} />
                     <DialogFooter>
                         <Button onClick={handleUpdate}>Save Changes</Button>
                     </DialogFooter>

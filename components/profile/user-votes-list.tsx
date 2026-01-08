@@ -3,60 +3,105 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { db } from "@/lib/firebase"
-import { collection, query, where, getDocs, doc, getDoc, orderBy } from "firebase/firestore"
+import { useRef } from "react"
+import { collection, query, where, getDocs, doc, getDoc, orderBy, limit, startAfter } from "firebase/firestore"
 import { Loader2, Calendar, Trophy } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function UserVotesList() {
     const { user } = useAuth()
     const [votes, setVotes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [loadingMore, setLoadingMore] = useState(false)
+    const [lastDoc, setLastDoc] = useState<any>(null)
+    const [hasMore, setHasMore] = useState(true)
+    const BATCH_SIZE = 4
+
+    const fetchDetail = async (d: any) => {
+        const data = d.data()
+        let categoryName = "Unknown"
+        let nomineeName = "Unknown"
+        let nomineePhoto = "/placeholder.png"
+
+        try {
+            const catDoc = await getDoc(doc(db, "artifacts/default-app-id/categories", data.categoryId))
+            if (catDoc.exists()) categoryName = catDoc.data().name
+
+            if (data.isOther) {
+                nomineeName = data.customName || "Other"
+            } else {
+                const nomDoc = await getDoc(doc(db, "artifacts/default-app-id/nominees", data.nomineeId))
+                if (nomDoc.exists()) {
+                    nomineeName = nomDoc.data().name
+                    nomineePhoto = nomDoc.data().photoUrl || nomineePhoto
+                }
+            }
+        } catch (e) { console.error(e) }
+
+        return {
+            id: d.id,
+            ...data,
+            categoryName,
+            nomineeName,
+            nomineePhoto
+        }
+    }
+
+    const loadVotes = async (isInitial = false) => {
+        if (!user) return
+        if (isInitial) {
+            setLoading(true)
+            setHasMore(true) // Reset hasMore on initial load
+        } else {
+            setLoadingMore(true)
+        }
+
+        try {
+            let q = query(
+                collection(db, "artifacts/default-app-id/users", user.uid, "userVotes"),
+                orderBy("votedAt", "desc"),
+                limit(BATCH_SIZE)
+            )
+
+            if (!isInitial && lastDoc) {
+                q = query(
+                    collection(db, "artifacts/default-app-id/users", user.uid, "userVotes"),
+                    orderBy("votedAt", "desc"),
+                    startAfter(lastDoc),
+                    limit(BATCH_SIZE)
+                )
+            }
+
+            const snapshot = await getDocs(q)
+
+            if (snapshot.empty) {
+                if (isInitial) setVotes([])
+                setHasMore(false)
+                setLoading(false)
+                setLoadingMore(false)
+                return
+            }
+
+            setLastDoc(snapshot.docs[snapshot.docs.length - 1])
+            if (snapshot.docs.length < BATCH_SIZE) setHasMore(false)
+
+            const detailedVotes = await Promise.all(snapshot.docs.map(fetchDetail))
+
+            if (isInitial) {
+                setVotes(detailedVotes)
+            } else {
+                setVotes(prev => [...prev, ...detailedVotes])
+            }
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setLoading(false)
+            setLoadingMore(false)
+        }
+    }
 
     useEffect(() => {
-        const loadVotes = async () => {
-            if (!user) return
-            try {
-                // users/{uid}/userVotes
-                const q = query(collection(db, "artifacts/default-app-id/users", user.uid, "userVotes"), orderBy("votedAt", "desc"))
-                const snapshot = await getDocs(q)
-
-                const detailedVotes = await Promise.all(snapshot.docs.map(async (d) => {
-                    const data = d.data()
-                    // Fetch Details
-                    let categoryName = "Unknown"
-                    let nomineeName = "Unknown"
-                    let nomineePhoto = "/placeholder.png"
-
-                    try {
-                        const catDoc = await getDoc(doc(db, "artifacts/default-app-id/categories", data.categoryId))
-                        if (catDoc.exists()) categoryName = catDoc.data().name
-
-                        if (data.isOther) {
-                            nomineeName = data.customName || "Other"
-                        } else {
-                            const nomDoc = await getDoc(doc(db, "artifacts/default-app-id/nominees", data.nomineeId))
-                            if (nomDoc.exists()) {
-                                nomineeName = nomDoc.data().name
-                                nomineePhoto = nomDoc.data().photoUrl || nomineePhoto
-                            }
-                        }
-                    } catch (e) { console.error(e) }
-
-                    return {
-                        id: d.id,
-                        ...data,
-                        categoryName,
-                        nomineeName,
-                        nomineePhoto
-                    }
-                }))
-                setVotes(detailedVotes)
-            } catch (error) {
-                console.error(error)
-            } finally {
-                setLoading(false)
-            }
-        }
-        loadVotes()
+        loadVotes(true)
     }, [user])
 
     if (loading) return <Loader2 className="animate-spin" />
@@ -82,6 +127,15 @@ export function UserVotesList() {
                     </div>
                 </div>
             ))}
+
+            {hasMore && (
+                <div className="flex justify-center pt-2">
+                    <Button variant="outline" onClick={() => loadVotes(false)} disabled={loadingMore}>
+                        {loadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Load More
+                    </Button>
+                </div>
+            )}
         </div>
     )
 }
