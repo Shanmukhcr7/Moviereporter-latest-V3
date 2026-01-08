@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Download, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useState } from "react"
+import Image from "next/image"
 
 interface PWAInstallButtonProps {
     className?: string
@@ -62,5 +63,58 @@ export function PWAInstallButton({ className, variant = "outline", size = "defau
             )}
             {showLabel && (loading ? "Checking..." : "Download App")}
         </Button>
+    )
+}
+
+export function PWAStoreBadges() {
+    const { isInstallable, installPWA } = usePWAInstall()
+    const [loading, setLoading] = useState(false)
+
+    const handleClick = async () => {
+        setLoading(true)
+
+        if (isInstallable) {
+            setLoading(false)
+            installPWA()
+            return
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        setLoading(false)
+
+        toast.error("Cannot install app", {
+            description: "The app might already be installed, or your browser doesn't support automatic installation."
+        })
+    }
+
+    return (
+        <div className="flex flex-col gap-3 w-full">
+            <button
+                onClick={handleClick}
+                disabled={loading}
+                className="relative h-12 w-full transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+            >
+                <Image
+                    src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+                    alt="Get it on Google Play"
+                    fill
+                    className="object-contain" // Preserves aspect ratio
+                    unoptimized // SVG often needs this
+                />
+            </button>
+            <button
+                onClick={handleClick}
+                disabled={loading}
+                className="relative h-12 w-full transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+            >
+                <Image
+                    src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
+                    alt="Download on the App Store"
+                    fill
+                    className="object-contain"
+                    unoptimized
+                />
+            </button>
+        </div>
     )
 }
