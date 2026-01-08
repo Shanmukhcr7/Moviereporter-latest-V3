@@ -64,7 +64,7 @@ export function BlogClient({ initialId }: { initialId?: string }) {
     const [editText, setEditText] = useState("")
     const [userFeedback, setUserFeedback] = useState<"like" | "dislike" | null>(null)
     const [isSaved, setIsSaved] = useState(false)
-    const [showFullDescription, setShowFullDescription] = useState(true)
+    const [showFullDescription, setShowFullDescription] = useState(false)
     const [loading, setLoading] = useState(true)
     const [relatedBlogs, setRelatedBlogs] = useState<any[]>([])
     const { user, userData } = useAuth()
@@ -456,8 +456,16 @@ export function BlogClient({ initialId }: { initialId?: string }) {
                         {/* Content */}
                         <div className="prose prose-lg dark:prose-invert max-w-none mb-12">
                             <p className="text-lg leading-relaxed whitespace-pre-wrap">
-                                {(article.content || '').replace(/\\n/g, '\n')}
+                                {(() => {
+                                    const content = (article.content || '').replace(/\\n/g, '\n');
+                                    return showFullDescription ? content : `${content.substring(0, 800)}...`;
+                                })()}
                             </p>
+                            {(article.content || '').length > 800 && (
+                                <Button variant="link" className="px-0 mt-4" onClick={() => setShowFullDescription(!showFullDescription)}>
+                                    {showFullDescription ? "Show Less" : "Read More"}
+                                </Button>
+                            )}
                         </div>
 
                         {relatedBlogs.length > 0 && (
