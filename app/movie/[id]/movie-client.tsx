@@ -672,7 +672,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                         {reviews.slice(0, 10).map((review) => (
                                             <Card
                                                 key={review.id}
-                                                className="border-border/50 group relative select-none"
+                                                className="border-border/50 group relative select-none py-0 gap-0"
                                                 onContextMenu={(e) => e.preventDefault()}
                                                 onTouchStart={() => {
                                                     longPressTimerRef.current = setTimeout(() => setActiveReactionId(review.id), 500)
