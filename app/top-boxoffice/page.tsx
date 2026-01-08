@@ -202,6 +202,7 @@ export default function TopBoxOfficePage() {
                     isTopBoxOffice={movie.isTopBoxOffice}
                     isPopular={movie.isPopular}
                     ottPlatforms={undefined}
+                    enableInterest={true}
                   />
                 ))}
               </div>

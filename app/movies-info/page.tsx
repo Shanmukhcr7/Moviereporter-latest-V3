@@ -216,6 +216,7 @@ export default function MoviesInfoPage() {
                 industry={movie.industry}
                 genre={movie.genre}
                 ottPlatforms={undefined}
+                enableInterest={true}
               // Legacy doesn't show rating in this list, but we can if available
               // rating={movie.avgRating} 
               />
