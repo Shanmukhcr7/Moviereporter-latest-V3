@@ -3,6 +3,7 @@
 import { usePWAInstall } from "@/hooks/use-pwa-install"
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
+import { toast } from "sonner"
 
 interface PWAInstallButtonProps {
     className?: string
