@@ -7,10 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { EditProfileDialog } from "./edit-profile-dialog"
 import { ChangePasswordDialog } from "./change-password-dialog"
-import { User, Mail, Phone, Calendar, Shield, Trophy, Pencil } from "lucide-react"
+import { User, Mail, Phone, Calendar, Shield, Trophy, Pencil, Share } from "lucide-react"
 import { collection, query, where, getCountFromServer } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Progress } from "@/components/ui/progress"
+import { toast } from "sonner"
 
 export function ProfileHeader() {
     const { user, userData } = useAuth()
@@ -111,6 +112,27 @@ export function ProfileHeader() {
                     </Button>
                     <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => setPwdOpen(true)}>
                         Change Password
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1 sm:flex-none"
+                        onClick={() => {
+                            const shareData = {
+                                title: "Movie Lovers Profile",
+                                text: `Check out my profile on MovieLovers.in!`,
+                                url: window.location.href
+                            }
+                            if (navigator.share) {
+                                navigator.share(shareData).catch(console.error)
+                            } else {
+                                navigator.clipboard.writeText(`Check out my profile on MovieLovers.in! ${window.location.href}`)
+                                toast.success("Profile link copied to clipboard!")
+                            }
+                        }}
+                    >
+                        <Share className="h-4 w-4 mr-2" />
+                        Share
                     </Button>
                 </div>
             </CardHeader>
