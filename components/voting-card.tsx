@@ -72,7 +72,7 @@ export function VotingCard({ nominee, isVoted, onVote, onShare, onCustomVote, on
                 {!isOther && (
                     <div className="text-center">
                         {nominee.movieId ? (
-                            <Link href={`/movie/${nominee.movieId}`} className="text-sm font-bold text-foreground hover:text-primary transition-colors hover:underline block line-clamp-2 leading-tight">
+                            <Link href={`/movie/${nominee.movieId}`} className="text-sm font-bold text-primary hover:text-primary/80 transition-colors underline decoration-primary/30 underline-offset-4 block line-clamp-2 leading-tight">
                                 {nominee.movie?.title || "Unknown Movie"}
                             </Link>
                         ) : (
