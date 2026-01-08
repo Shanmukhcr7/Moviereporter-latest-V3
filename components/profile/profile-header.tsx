@@ -154,18 +154,26 @@ ${registerUrl}`
                                 }
                             }
 
+                            // Helper: Copy text to clipboard
+                            const copyToClipboard = () => {
+                                navigator.clipboard.writeText(shareText)
+                                toast.success("Message copied! Paste it after sharing.", { duration: 3000 })
+                            }
+
                             if (navigator.share) {
                                 try {
+                                    // Copy first, in case the app ignores text
+                                    copyToClipboard()
+
+                                    // Small delay to ensure toast is seen/clipboard is set before UI context switch
+                                    await new Promise(resolve => setTimeout(resolve, 100))
                                     await navigator.share(shareData)
                                 } catch (err) {
                                     console.error("Error sharing:", err)
-                                    // Fallback to clipboard if share fails (e.g. user cancelled or not supported for data)
-                                    navigator.clipboard.writeText(shareText)
-                                    toast.success("Share message copied to clipboard!")
+                                    // Already copied, maybe show error or just let it be
                                 }
                             } else {
-                                navigator.clipboard.writeText(shareText)
-                                toast.success("Share message copied to clipboard!")
+                                copyToClipboard()
                             }
                         }}
                     >
