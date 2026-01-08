@@ -279,17 +279,18 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
                     <FormField
                         control={form.control}
                         name="scheduledPublish"
+                        render={({ field }) => (
                             <FormItem className="flex flex-col">
-                        <FormLabel>Schedule Publish</FormLabel>
-                        <FormControl>
-                            <DateTimePicker
-                                date={field.value}
-                                setDate={field.onChange}
-                                disabled={loading}
-                            />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
+                                <FormLabel>Schedule Publish</FormLabel>
+                                <FormControl>
+                                    <DateTimePicker
+                                        date={field.value}
+                                        setDate={field.onChange}
+                                        disabled={loading}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
                         )}
                     />
 
