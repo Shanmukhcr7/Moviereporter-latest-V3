@@ -118,13 +118,30 @@ export function ProfileHeader() {
                             const displayName = userData?.displayName || "User"
                             const homeUrl = window.location.origin
                             const registerUrl = `${window.location.origin}/login` // Assuming login page has register toggle or is the entry
+                            const photoURL = userData?.photoURL || user?.photoURL
 
                             const shareText = `Check out ${displayName} on Movie Reporter!\n\nExplore movies and reviews here: ${homeUrl}\n\nJoin our community: ${registerUrl}`
 
-                            const shareData = {
+                            let shareData: any = {
                                 title: `Join ${displayName} on Movie Reporter!`,
                                 text: shareText,
                                 url: homeUrl
+                            }
+
+                            // Try to add image if available
+                            if (photoURL && navigator.share) {
+                                try {
+                                    const response = await fetch(photoURL)
+                                    const blob = await response.blob()
+                                    const file = new File([blob], "profile.png", { type: blob.type })
+
+                                    // Check if sharing files is supported
+                                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                        shareData.files = [file]
+                                    }
+                                } catch (e) {
+                                    console.error("Failed to fetch image for sharing", e)
+                                }
                             }
 
                             if (navigator.share) {
