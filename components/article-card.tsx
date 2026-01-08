@@ -98,7 +98,14 @@ export function ArticleCard({ id, title, image, author, publishedAt, category, e
             <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors leading-snug">
               {title}
             </h3>
-            {excerpt && <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{excerpt}</p>}
+            {excerpt && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{excerpt}</p>
+                <span className="text-xs font-semibold text-primary group-hover:underline inline-flex items-center">
+                  Read More &rarr;
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1">
               <div className="flex items-center gap-1.5">
                 <User className="h-4 w-4" />
