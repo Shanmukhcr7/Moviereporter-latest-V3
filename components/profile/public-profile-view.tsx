@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, User, Calendar, MapPin, Film } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { ShareButton } from "@/components/share-button"
+import { Users } from "lucide-react"
 
 interface UserData {
     username: string
@@ -89,13 +91,23 @@ export function PublicProfileView({ username }: { username: string }) {
             <div className="mt-8 text-center space-y-4">
                 <p className="text-muted-foreground">Join <strong>@{profile.username}</strong> on Movie Lovers today!</p>
 
-                <div className="flex justify-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
                     <Button asChild size="lg" className="font-bold">
                         <Link href="/signup">Join Community</Link>
                     </Button>
                     <Button asChild variant="outline" size="lg">
                         <Link href="/">Explore Movies</Link>
                     </Button>
+                    <ShareButton
+                        title={`Check out ${profile.displayName || profile.username} on Movie Lovers!`}
+                        text={`Join the community and see what ${profile.displayName || profile.username} is watching.`}
+                        url={typeof window !== 'undefined' ? `${window.location.origin}/u/${profile.username}` : undefined}
+                        className="w-full sm:w-auto font-bold"
+                        variant="secondary"
+                    >
+                        <Users className="h-4 w-4 mr-2" />
+                        Invite Friends
+                    </ShareButton>
                 </div>
 
                 <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary/80 pt-4">

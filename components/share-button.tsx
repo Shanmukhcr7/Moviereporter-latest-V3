@@ -15,9 +15,12 @@ interface ShareButtonProps {
     title: string
     text?: string
     url?: string
+    className?: string
+    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+    children?: React.ReactNode
 }
 
-export function ShareButton({ title, text, url }: ShareButtonProps) {
+export function ShareButton({ title, text, url, className, variant, children }: ShareButtonProps) {
     const [copied, setCopied] = useState(false)
     const shareUrl = url || (typeof window !== "undefined" ? window.location.href : "")
 
@@ -67,9 +70,13 @@ export function ShareButton({ title, text, url }: ShareButtonProps) {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                    <Share2 className="h-4 w-4" />
-                    Share
+                <Button variant={variant || "outline"} size="sm" className={`gap-2 ${className}`}>
+                    {children || (
+                        <>
+                            <Share2 className="h-4 w-4" />
+                            Share
+                        </>
+                    )}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

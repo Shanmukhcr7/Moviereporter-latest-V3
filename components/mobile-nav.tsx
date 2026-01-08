@@ -1,6 +1,6 @@
 "use client"
 
-import { Film, Menu, Search, User, X, Home, Globe, Star, Newspaper, BookOpen, BarChart2, CheckSquare, Trophy, Book, Info, HelpCircle, Megaphone, Copyright, Shield } from "lucide-react"
+import { Film, Menu, Search, User, X, Home, Globe, Star, Newspaper, BookOpen, BarChart2, CheckSquare, Trophy, Book, Info, HelpCircle, Megaphone, Copyright, Shield, Users } from "lucide-react"
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import { UserBadges } from "@/components/user-badges"
 import { PushNotificationsToggle } from "@/components/push-notifications-toggle"
 import { SocialMediaIcons } from "@/components/social-media-icons"
 import { PWAInstallButton, PWAStoreBadges } from "@/components/pwa-install-button"
+import { ShareButton } from "@/components/share-button"
 
 export function MobileNav() {
     const { theme, toggleTheme } = useTheme()
@@ -150,6 +151,8 @@ export function MobileNav() {
                             Magazine
                         </Link>
 
+
+
                         <Accordion type="single" collapsible className="w-full">
                             <AccordionItem value="about" className="border-b-0">
                                 <AccordionTrigger className="px-4 py-2 text-sm hover:no-underline hover:bg-accent hover:text-accent-foreground">
@@ -180,6 +183,15 @@ export function MobileNav() {
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
+                        <ShareButton
+                            title="Join Movie Lovers!"
+                            text="Check out this amazing app for movie enthusiasts: Movie Lovers"
+                            className="w-full justify-start px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                            variant="ghost"
+                        >
+                            <Users className={iconClass} />
+                            Invite Friend
+                        </ShareButton>
                     </div>
                 </ScrollArea>
 
