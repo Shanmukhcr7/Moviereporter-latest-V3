@@ -539,53 +539,54 @@ export function BlogClient({ initialId }: { initialId?: string }) {
                                 ) : (
                                     comments.map((comment) => (
                                         <Card key={comment.id}>
-                                            <CardContent className="p-6">
-                                                <div className="flex items-start justify-between mb-3">
+                                            <CardContent className="p-4">
+                                                <div className="flex items-start justify-between mb-2">
                                                     <div>
-                                                        <p className="font-semibold">
+                                                        <p className="font-semibold text-sm">
                                                             {comment.userName || comment.username || comment.name || "Anonymous"}
                                                         </p>
-                                                        <p className="text-xs text-muted-foreground">
+                                                        <p className="text-[10px] text-muted-foreground">
                                                             {formatDate(comment.createdAt)}
                                                         </p>
                                                     </div>
                                                     {user && user.uid === comment.userId && (
-                                                        <div className="flex gap-2">
+                                                        <div className="flex gap-1">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
+                                                                className="h-6 w-6 p-0"
                                                                 onClick={() => {
                                                                     setEditingComment(comment.id)
                                                                     setEditText(comment.comment || comment.commentText)
                                                                 }}
                                                             >
-                                                                <Edit className="h-4 w-4" />
+                                                                <Edit className="h-3 w-3" />
                                                             </Button>
-                                                            <Button variant="ghost" size="sm" onClick={() => handleDeleteComment(comment.id)}>
-                                                                <Trash className="h-4 w-4" />
+                                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleDeleteComment(comment.id)}>
+                                                                <Trash className="h-3 w-3" />
                                                             </Button>
                                                         </div>
                                                     )}
                                                 </div>
 
                                                 {editingComment === comment.id ? (
-                                                    <div className="space-y-3">
-                                                        <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} rows={3} />
+                                                    <div className="space-y-2">
+                                                        <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} rows={2} className="min-h-[60px]" />
                                                         <div className="flex gap-2">
-                                                            <Button size="sm" onClick={() => handleEditComment(comment.id)}>
+                                                            <Button size="sm" onClick={() => handleEditComment(comment.id)} className="h-7 text-xs">
                                                                 Save
                                                             </Button>
-                                                            <Button variant="outline" size="sm" onClick={() => setEditingComment(null)}>
+                                                            <Button variant="outline" size="sm" onClick={() => setEditingComment(null)} className="h-7 text-xs">
                                                                 Cancel
                                                             </Button>
                                                         </div>
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <p className="text-sm mb-3 whitespace-pre-wrap">{comment.comment || comment.commentText}</p>
+                                                        <p className="text-sm mb-2 whitespace-pre-wrap">{comment.comment || comment.commentText}</p>
 
                                                         {/* Reactions */}
-                                                        <div className="flex gap-2 flex-wrap">
+                                                        <div className="flex gap-1.5 flex-wrap">
                                                             {REACTIONS.map((reaction) => {
                                                                 const reactionCount = Object.values(comment.reactions || {}).filter((r: any) =>
                                                                     r.includes(reaction),
@@ -599,9 +600,10 @@ export function BlogClient({ initialId }: { initialId?: string }) {
                                                                         size="sm"
                                                                         onClick={() => handleReaction(comment.id, reaction)}
                                                                         disabled={!user}
-                                                                        className="h-8 text-base"
+                                                                        className="h-7 px-2 text-sm gap-1.5"
                                                                     >
-                                                                        {reaction} {reactionCount > 0 && reactionCount}
+                                                                        <span>{reaction}</span>
+                                                                        {reactionCount > 0 && <span className="text-xs opacity-70">{reactionCount}</span>}
                                                                     </Button>
                                                                 )
                                                             })}
