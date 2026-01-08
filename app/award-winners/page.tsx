@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Trophy, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import { CelebrityCard } from "@/components/celebrity-card"
 
 interface Winner {
   id: string
@@ -240,45 +241,18 @@ export default function AwardWinnersPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {displayedWinners.map((w) => (
-                  <div key={w.id} className="group relative">
-                    <Card className="overflow-hidden hover:shadow-lg transition-all border-l-4 border-l-yellow-500 h-full">
-                      {/* Make the entire card clickable if link exists */}
-                      {w.realCelebrityId ? (
-                        <Link href={`/celebrity/${w.realCelebrityId}`} className="block h-full">
-                          <CardContent className="p-4 flex items-center gap-4 h-full">
-                            <Avatar className="w-16 h-16 border-2 border-yellow-500/20 shrink-0">
-                              <AvatarImage src={w.finalPhoto} className="object-cover" />
-                              <AvatarFallback>{w.finalName[0]}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0 text-left">
-                              <h3 className="font-bold text-lg truncate group-hover:text-primary transition-colors">
-                                {w.finalName}
-                              </h3>
-                              <p className="text-sm text-yellow-600/90 font-medium truncate">
-                                {w.categoryName || w.category || "Winner"}
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Link>
-                      ) : (
-                        <CardContent className="p-4 flex items-center gap-4 h-full">
-                          <Avatar className="w-16 h-16 border-2 border-yellow-500/20 shrink-0">
-                            <AvatarImage src={w.finalPhoto} className="object-cover" />
-                            <AvatarFallback>{w.finalName[0]}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0 text-left">
-                            <h3 className="font-bold text-lg truncate text-muted-foreground">
-                              {w.finalName}
-                            </h3>
-                            <p className="text-sm text-yellow-600/90 font-medium truncate">
-                              {w.categoryName || w.category || "Winner"}
-                            </p>
-                          </div>
-                        </CardContent>
-                      )}
-                    </Card>
+                  <div key={w.id} className="aspect-[2/3]">
+                    <CelebrityCard
+                      id={w.realCelebrityId || w.id} // Fallback to winner ID if no celeb ID (e.g. Other/Unknown) but Link might fail. 
+                      // Ideally we only link if realCelebrityId exists. CelebrityCard assumes Link.
+                      // If w.realCelebrityId is null, Link will go to /celebrity/winnerId which is 404.
+                      // But effectively most winners should be resolved.
+                      name={w.finalName}
+                      image={w.finalPhoto} // CelebrityCard handles fallback
+                      role={w.categoryName || w.category || "Winner"}
+                    />
                   </div>
                 ))}
               </div>

@@ -52,8 +52,10 @@ export function VotingCard({ nominee, isVoted, onVote, onShare, onCustomVote, on
                     </div>
                 )}
 
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 pt-12 transform translate-y-2 group-hover:translate-y-0 transition-transform">
-                    <h3 className="font-bold text-white text-lg line-clamp-1">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+
+                <div className="absolute bottom-0 left-0 right-0 p-3 pt-6 flex flex-col justify-end items-center text-center transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                    <h3 className="font-bold text-white text-base line-clamp-2 leading-tight drop-shadow-sm mb-1">
                         {isOther ? (
                             "Other Choice"
                         ) : (
