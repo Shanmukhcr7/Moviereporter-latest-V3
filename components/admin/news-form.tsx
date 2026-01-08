@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -71,6 +71,27 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
             isWeeklyMagazine: false,
         },
     })
+
+    // Reset form when initialData changes (fixes "edit only once" bug)
+    useEffect(() => {
+        if (initialData) {
+            form.reset({
+                ...initialData,
+                scheduledPublish: initialData.scheduledPublish?.toDate(),
+            })
+        } else {
+            form.reset({
+                title: "",
+                author: "",
+                imageUrl: "",
+                category: "",
+                summary: "",
+                content: "",
+                isPromotion: false,
+                isWeeklyMagazine: false,
+            })
+        }
+    }, [initialData, form])
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setLoading(true)

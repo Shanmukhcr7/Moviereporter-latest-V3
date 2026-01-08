@@ -100,25 +100,21 @@ export function ProfileHeader() {
         .slice(0, 2) || "U"
 
     return (
-        <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm">
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 pb-4 border-b">
-                <CardTitle className="text-xl md:text-2xl font-bold flex items-center gap-2">
-                    <User className="h-5 w-5 md:h-6 md:w-6" />
-                    Profile Details
-                </CardTitle>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditOpen(true)}>
-                        Edit Profile
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setPwdOpen(true)}>
-                        Change Password
-                    </Button>
+        <div className="space-y-6">
+            <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm relative">
+                <CardHeader className="pb-4 border-b">
+                    <CardTitle className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                        <User className="h-5 w-5 md:h-6 md:w-6" />
+                        Profile Details
+                    </CardTitle>
+
+                    {/* Share Button (Top Right) */}
                     <Button
-                        variant="secondary"
-                        size="sm"
-                        className="w-full sm:w-auto"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-4 right-4 rounded-full hover:bg-muted"
                         onClick={() => {
-                            const username = userData?.username || user?.uid || "unknown" // Fallback
+                            const username = userData?.username || user?.uid || "unknown"
                             const publicUrl = `${window.location.origin}/u/${username}`
                             const role = userData?.role || "Member"
                             const displayName = userData?.displayName || "User"
@@ -136,100 +132,111 @@ export function ProfileHeader() {
                             }
                         }}
                     >
-                        <Share className="h-4 w-4 mr-2" />
-                        Share
+                        <Share className="h-5 w-5" />
                     </Button>
-                </div>
-            </CardHeader>
-            <CardContent className="flex flex-col md:flex-row gap-6 mt-6">
-                {/* Avatar Section */}
-                <div className="flex flex-col items-center gap-3 relative">
-                    <div className="relative group">
-                        <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background shadow-md">
-                            <AvatarImage src={userData?.photoURL || user?.photoURL || ""} className="object-cover" />
-                            <AvatarFallback className="text-4xl">{initials}</AvatarFallback>
-                        </Avatar>
-                        <Button
-                            size="icon"
-                            variant="secondary"
-                            className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-md transition-opacity" // Removed opacity-0 group-hover:opacity-100
-                            onClick={() => setEditOpen(true)}
-                        >
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Edit Profile</span>
-                        </Button>
-                    </div>
+                </CardHeader>
+                <CardContent className="flex flex-col md:flex-row gap-6 mt-6">
+                    {/* Avatar Section */}
+                    <div className="flex flex-col items-center gap-3 relative">
+                        <div className="relative group">
+                            <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background shadow-md">
+                                <AvatarImage src={userData?.photoURL || user?.photoURL || ""} className="object-cover" />
+                                <AvatarFallback className="text-4xl">{initials}</AvatarFallback>
+                            </Avatar>
+                            <Button
+                                size="icon"
+                                variant="secondary"
+                                className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-md transition-opacity"
+                                onClick={() => setEditOpen(true)}
+                            >
+                                <Pencil className="h-4 w-4" />
+                                <span className="sr-only">Edit Profile</span>
+                            </Button>
+                        </div>
 
-                    <div className="flex flex-col items-center text-center">
-                        <span className="font-bold text-xl">{userData?.displayName || userData?.username || "Guest Member"}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase font-bold tracking-wider mb-2">
-                            {userData?.role || "Member"}
-                        </span>
+                        <div className="flex flex-col items-center text-center">
+                            <span className="font-bold text-xl">{userData?.displayName || userData?.username || "Guest Member"}</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase font-bold tracking-wider mb-2">
+                                {userData?.role || "Member"}
+                            </span>
 
-                        {/* User Level Progress */}
-                        {levelInfo && (
-                            <div className="w-full min-w-[180px] mt-2 bg-muted/40 p-2 rounded-lg border border-border/50">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs font-bold text-primary flex items-center gap-1">
-                                        <Trophy className="h-3 w-3" /> {levelInfo.currentLevel}
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground">{reviewCount} / {levelInfo.nextThreshold} Reviews</span>
+                            {/* User Level Progress */}
+                            {levelInfo && (
+                                <div className="w-full min-w-[180px] mt-2 bg-muted/40 p-2 rounded-lg border border-border/50">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs font-bold text-primary flex items-center gap-1">
+                                            <Trophy className="h-3 w-3" /> {levelInfo.currentLevel}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">{reviewCount} / {levelInfo.nextThreshold} Reviews</span>
+                                    </div>
+                                    <Progress value={levelInfo.progress} className="h-1.5" />
+                                    <p className="text-[10px] text-center mt-1 text-muted-foreground">
+                                        {levelInfo.nextThreshold - reviewCount} more to reach {levelInfo.nextLevel}
+                                    </p>
                                 </div>
-                                <Progress value={levelInfo.progress} className="h-1.5" />
-                                <p className="text-[10px] text-center mt-1 text-muted-foreground">
-                                    {levelInfo.nextThreshold - reviewCount} more to reach {levelInfo.nextLevel}
-                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 flex-1 content-center">
+                        <div className="group flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
+                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 group-hover:bg-background">
+                                <User className="h-4 w-4 text-muted-foreground" />
                             </div>
-                        )}
-                    </div>
-                </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground font-medium uppercase">Username</span>
+                                <span className="font-medium truncate">{userData?.username || userData?.displayName || "N/A"}</span>
+                            </div>
+                        </div>
 
-                {/* Details Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 flex-1 content-center">
-                    <div className="group flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 group-hover:bg-background">
-                            <User className="h-4 w-4 text-muted-foreground" />
+                        <div className="group flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
+                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 group-hover:bg-background">
+                                <Mail className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground font-medium uppercase">Email</span>
+                                <span className="font-medium truncate" title={user?.email || ""}>{user?.email || "N/A"}</span>
+                            </div>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground font-medium uppercase">Username</span>
-                            <span className="font-medium truncate">{userData?.username || userData?.displayName || "N/A"}</span>
-                        </div>
-                    </div>
 
-                    <div className="group flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 group-hover:bg-background">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
+                        <div className="group flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
+                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 group-hover:bg-background">
+                                <Phone className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground font-medium uppercase">Mobile</span>
+                                <span className="font-medium">{userData?.phoneNumber || user?.phoneNumber || "N/A"}</span>
+                            </div>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground font-medium uppercase">Email</span>
-                            <span className="font-medium truncate" title={user?.email || ""}>{user?.email || "N/A"}</span>
-                        </div>
-                    </div>
 
-                    <div className="group flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 group-hover:bg-background">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground font-medium uppercase">Mobile</span>
-                            <span className="font-medium">{userData?.phoneNumber || user?.phoneNumber || "N/A"}</span>
+                        <div className="group flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
+                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 group-hover:bg-background">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-xs text-muted-foreground font-medium uppercase">Joined</span>
+                                <span className="font-medium">{formatDate(userData?.memberSince || userData?.createdAt || user?.metadata?.creationTime)}</span>
+                            </div>
                         </div>
                     </div>
+                </CardContent>
+            </Card>
 
-                    <div className="group flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0 group-hover:bg-background">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-xs text-muted-foreground font-medium uppercase">Joined</span>
-                            <span className="font-medium">{formatDate(userData?.memberSince || userData?.createdAt || user?.metadata?.creationTime)}</span>
-                        </div>
-                    </div>
-                </div>
-            </CardContent>
+            {/* Action Buttons (Between Profile Card and Tabs) */}
+            <div className="flex flex-col sm:flex-row gap-3">
+                <Button className="flex-1" variant="outline" onClick={() => setEditOpen(true)}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit Profile
+                </Button>
+                <Button className="flex-1" variant="outline" onClick={() => setPwdOpen(true)}>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Change Password
+                </Button>
+            </div>
 
             <EditProfileDialog open={editOpen} onOpenChange={setEditOpen} />
             <ChangePasswordDialog open={pwdOpen} onOpenChange={setPwdOpen} />
-        </Card>
+        </div>
     )
 }
