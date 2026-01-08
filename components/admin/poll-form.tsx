@@ -123,13 +123,40 @@ export function PollForm({ initialData, onSuccess }: PollFormProps) {
                                                 className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
                                                 disabled={loading}
                                             >
-                                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                {field.value ? format(field.value, "PPP p") : <span>Pick a date</span>}
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-100" />
                                             </Button>
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} />
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    const newDate = new Date(date);
+                                                    if (field.value) {
+                                                        newDate.setHours(field.value.getHours(), field.value.getMinutes());
+                                                    }
+                                                    field.onChange(newDate);
+                                                } else {
+                                                    field.onChange(date);
+                                                }
+                                            }}
+                                        />
+                                        <div className="p-3 border-t border-border">
+                                            <Input
+                                                type="time"
+                                                value={field.value ? format(field.value, "HH:mm") : "00:00"}
+                                                onChange={(e) => {
+                                                    const [hours, minutes] = e.target.value.split(":").map(Number);
+                                                    const newDate = new Date(field.value || new Date());
+                                                    newDate.setHours(hours);
+                                                    newDate.setMinutes(minutes);
+                                                    field.onChange(newDate);
+                                                }}
+                                            />
+                                        </div>
                                     </PopoverContent>
                                 </Popover>
                                 <FormMessage />
@@ -150,13 +177,41 @@ export function PollForm({ initialData, onSuccess }: PollFormProps) {
                                                 className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
                                                 disabled={loading}
                                             >
-                                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                {field.value ? format(field.value, "PPP p") : <span>Pick a date</span>}
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-100" />
                                             </Button>
                                         </FormControl>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date < new Date()} />
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    const newDate = new Date(date);
+                                                    if (field.value) {
+                                                        newDate.setHours(field.value.getHours(), field.value.getMinutes());
+                                                    }
+                                                    field.onChange(newDate);
+                                                } else {
+                                                    field.onChange(date);
+                                                }
+                                            }}
+                                            disabled={(date) => date < new Date()}
+                                        />
+                                        <div className="p-3 border-t border-border">
+                                            <Input
+                                                type="time"
+                                                value={field.value ? format(field.value, "HH:mm") : "00:00"}
+                                                onChange={(e) => {
+                                                    const [hours, minutes] = e.target.value.split(":").map(Number);
+                                                    const newDate = new Date(field.value || new Date());
+                                                    newDate.setHours(hours);
+                                                    newDate.setMinutes(minutes);
+                                                    field.onChange(newDate);
+                                                }}
+                                            />
+                                        </div>
                                     </PopoverContent>
                                 </Popover>
                                 <FormMessage />

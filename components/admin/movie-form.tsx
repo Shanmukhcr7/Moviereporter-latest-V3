@@ -218,7 +218,7 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                                                 ) : (
                                                     <span>Pick a date</span>
                                                 )}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-100" />
                                             </Button>
                                         </FormControl>
                                     </PopoverTrigger>
@@ -456,11 +456,11 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                                                 disabled={loading}
                                             >
                                                 {field.value ? (
-                                                    format(field.value, "PPP")
+                                                    format(field.value, "PPP p")
                                                 ) : (
                                                     <span>Pick a date</span>
                                                 )}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-100" />
                                             </Button>
                                         </FormControl>
                                     </PopoverTrigger>
@@ -468,10 +468,33 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                                         <Calendar
                                             mode="single"
                                             selected={field.value}
-                                            onSelect={field.onChange}
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    const newDate = new Date(date);
+                                                    if (field.value) {
+                                                        newDate.setHours(field.value.getHours(), field.value.getMinutes());
+                                                    }
+                                                    field.onChange(newDate);
+                                                } else {
+                                                    field.onChange(date);
+                                                }
+                                            }}
                                             initialFocus
                                             disabled={(date) => date < new Date()}
                                         />
+                                        <div className="p-3 border-t border-border">
+                                            <Input
+                                                type="time"
+                                                value={field.value ? format(field.value, "HH:mm") : "00:00"}
+                                                onChange={(e) => {
+                                                    const [hours, minutes] = e.target.value.split(":").map(Number);
+                                                    const newDate = new Date(field.value || new Date());
+                                                    newDate.setHours(hours);
+                                                    newDate.setMinutes(minutes);
+                                                    field.onChange(newDate);
+                                                }}
+                                            />
+                                        </div>
                                     </PopoverContent>
                                 </Popover>
                                 <FormDescription>Leave empty to publish immediately.</FormDescription>
