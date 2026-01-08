@@ -36,10 +36,8 @@ export function MovieClient({ initialId }: { initialId?: string }) {
     const [loading, setLoading] = useState(true)
     const [showFullDescription, setShowFullDescription] = useState(false)
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
-    const [isTrailerOpen, setIsTrailerOpen] = useState(false)
+    const isTrailerOpen, setIsTrailerOpen] = useState(false)
     const { user } = useAuth()
-    const [activeReactionId, setActiveReactionId] = useState<string | null>(null)
-    const longPressTimerRef = useRef<any>(null)
 
     const handleReviewReaction = async (reviewId: string, reaction: string) => {
         if (!user) {
@@ -673,39 +671,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                             <Card
                                                 key={review.id}
                                                 className="border-border/50 group relative select-none py-0 gap-0"
-                                                onContextMenu={(e) => e.preventDefault()}
-                                                onTouchStart={() => {
-                                                    longPressTimerRef.current = setTimeout(() => setActiveReactionId(review.id), 500)
-                                                }}
-                                                onTouchEnd={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current) }}
-                                                onMouseDown={() => {
-                                                    longPressTimerRef.current = setTimeout(() => setActiveReactionId(review.id), 500)
-                                                }}
-                                                onMouseUp={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current) }}
-                                                onMouseLeave={() => { if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current) }}
                                             >
-                                                {activeReactionId === review.id && (
-                                                    <div className="absolute -top-10 left-10 bg-background border shadow-lg rounded-full p-2 flex gap-2 z-50 animate-in zoom-in slide-in-from-bottom-2">
-                                                        {["👍", "❤️", "😂", "😮", "😢", "🔥"].map(emoji => (
-                                                            <button
-                                                                key={emoji}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleReviewReaction(review.id, emoji);
-                                                                    setActiveReactionId(null);
-                                                                }}
-                                                                className={cn("hover:scale-125 transition-transform text-xl",
-                                                                    review.reactions?.[user?.uid || ""]?.includes(emoji) ? "opacity-100" : "opacity-70 hover:opacity-100"
-                                                                )}
-                                                            >
-                                                                {emoji}
-                                                            </button>
-                                                        ))}
-                                                        <button onClick={() => setActiveReactionId(null)} className="ml-2 text-muted-foreground hover:text-foreground">
-                                                            <X className="h-4 w-4" />
-                                                        </button>
-                                                    </div>
-                                                )}
                                                 <CardContent className="p-2">
                                                     <div className="flex items-start justify-between mb-1">
                                                         <div className="flex items-center gap-2">
@@ -751,26 +717,34 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <p className="text-xs text-foreground/80 leading-tight">{review.review}</p>
-                                                    {/* Reaction Badges */}
-                                                    {review.reactions && Object.values(review.reactions).some((r: any) => r && r.length > 0) && (
-                                                        <div className="flex gap-1 mt-2 flex-wrap">
-                                                            {["👍", "❤️", "😂", "😮", "😢", "🔥"].filter(emoji =>
-                                                                Object.values(review.reactions).some((r: any) => r?.includes(emoji))
-                                                            ).map(emoji => {
-                                                                const count = Object.values(review.reactions).filter((r: any) => r?.includes(emoji)).length;
-                                                                return (
-                                                                    <Badge key={emoji} variant="secondary" className="text-[9px] px-1 py-0 h-4 gap-1 cursor-pointer" onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleReviewReaction(review.id, emoji);
-                                                                    }}>
-                                                                        <span>{emoji}</span>
-                                                                        <span>{count}</span>
-                                                                    </Badge>
-                                                                )
-                                                            })}
-                                                        </div>
-                                                    )}
+                                                    <p className="text-xs text-foreground/80 leading-tight mb-2">{review.review}</p>
+
+                                                    {/* Reactions Buttons */}
+                                                    <div className="flex gap-1 flex-wrap">
+                                                        {["👍", "❤️", "😂", "😮", "😢", "🔥"].map((reaction) => {
+                                                            const reactionCount = Object.values(review.reactions || {}).filter((r: any) =>
+                                                                r.includes(reaction),
+                                                            ).length
+                                                            const userReacted = user && review.reactions?.[user.uid]?.includes(reaction)
+
+                                                            return (
+                                                                <Button
+                                                                    key={reaction}
+                                                                    variant={userReacted ? "secondary" : "ghost"}
+                                                                    size="sm"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        handleReviewReaction(review.id, reaction)
+                                                                    }}
+                                                                    disabled={!user}
+                                                                    className={`h-6 px-1.5 text-xs gap-1 ${userReacted ? 'bg-primary/20 hover:bg-primary/30 text-primary-foreground' : 'hover:bg-muted'}`}
+                                                                >
+                                                                    <span>{reaction}</span>
+                                                                    {reactionCount > 0 && <span className="opacity-70">{reactionCount}</span>}
+                                                                </Button>
+                                                            )
+                                                        })}
+                                                    </div>
                                                 </CardContent>
                                             </Card>
                                         ))}
