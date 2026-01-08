@@ -176,23 +176,23 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
             </div>
             {industry && <Badge className="absolute top-2 left-2 bg-primary/90 backdrop-blur z-10">{industry}</Badge>}
           </div>
-          <CardContent className="p-2 pt-1 space-y-0.5 flex flex-col flex-1">
+          <CardContent className="p-4 pt-4 space-y-2 flex flex-col flex-1">
             <div className="flex justify-between items-start gap-2">
-              <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors leading-tight flex-1">{title}</h3>
+              <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors leading-snug flex-1">{title}</h3>
               {enableInterest && (
                 <button
                   onClick={toggleInterest}
-                  className={`text-foreground/80 hover:text-red-500 transition-colors z-20 relative ${isInterested ? "text-red-500 fill-current" : ""}`}
+                  className={`text-foreground/80 hover:text-red-500 transition-colors z-20 relative mt-1 ${isInterested ? "text-red-500 fill-current" : ""}`}
                   title={isUpcoming ? (isInterested ? "Remove from interests" : "Mark as interested") : (isInterested ? "Remove from favorites" : "Add to favorites")}
                 >
                   <Heart className={`h-5 w-5 ${isInterested ? "fill-current" : ""}`} />
                 </button>
               )}
             </div>
-            <div className="flex items-center justify-between text-sm text-muted-foreground mt-0">
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5" />
-                <span className="text-xs">
+            <div className="flex items-center justify-between text-muted-foreground mt-1">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-4 w-4" />
+                <span className="text-sm font-medium">
                   {(() => {
                     try {
                       if (!releaseDate) return 'TBD'
@@ -216,7 +216,7 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
               </div>
             </div>
             {genre && (
-              <p className="text-xs text-muted-foreground line-clamp-1">
+              <p className="text-sm text-muted-foreground line-clamp-1">
                 {Array.isArray(genre) ? genre.join(", ") : genre}
               </p>
             )}
