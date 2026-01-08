@@ -8,9 +8,11 @@ import { ProfileHeader } from "@/components/profile/profile-header"
 import { UserActivityTabs } from "@/components/profile/user-activity-tabs"
 import { Button } from "@/components/ui/button"
 import { PushNotificationsToggle } from "@/components/push-notifications-toggle"
+import { ShareButton } from "@/components/share-button"
+import { Users } from "lucide-react"
 
 export default function ProfilePage() {
-  const { user, loading, signOut } = useAuth()
+  const { user, userData, loading, signOut } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -48,7 +50,18 @@ export default function ProfilePage() {
           <PushNotificationsToggle />
         </div>
 
-        <div className="pt-4 border-t">
+        <div className="pt-4 border-t space-y-4">
+          <ShareButton
+            title="Join Movie Lovers!"
+            text={`Check out my profile on Movie Lovers!`}
+            url={typeof window !== 'undefined' && userData?.username ? `${window.location.origin}/u/${userData.username}` : undefined}
+            className="w-full md:w-auto md:min-w-[200px]"
+            variant="outline"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Invite Friends
+          </ShareButton>
+
           <Button
             variant="destructive"
             className="w-full md:w-auto md:min-w-[200px]"
