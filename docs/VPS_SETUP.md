@@ -1,58 +1,42 @@
-# Setting up Profile Upload on VPS (Nginx + PHP)
+# Setting up Movie Reporter on VPS (Node.js + Nginx)
 
-Since you are using a VPS with Next.js, you usually have Nginx acting as a "Reverse Proxy". By default, Nginx sends everything to Next.js (port 3000), but Next.js **cannot run PHP files**.
+GREAT NEWS: We have switched to a pure Node.js solution (like the Admin Dashboard). **You do NOT need PHP.**
 
-You must configure Nginx to intercept `.php` files and send them to `php-fpm`.
+## 1. Configure Persistent Uploads
+Since you redeploy/pull code, we want uploads to stay safe outside the code folder.
+You already created: `/var/www/movie-reporter/uploads`
 
-## 1. Install PHP and GD Library
-Connect to your VPS terminal and run:
+We need to tell the App to save files there.
 
-```bash
-# Update and install PHP + Extensions
-sudo apt update
-sudo apt install php-fpm php-gd php-common
-```
-
-## 2. Locate your Website Root
-Based on your setup, your website files are in:
-`/var/www/movie-reporter`
-
-## 3. Configure Upload Permissions
-You have already created the `uploads` folder in your project root.
-Ensure it is writable by the web server (which you likely did):
+**Create/Edit `.env.local` or `.env.production` on your server:**
 
 ```bash
 cd /var/www/movie-reporter
-sudo chown -R www-data:www-data uploads
-sudo chmod -R 775 uploads
+nano .env.local
 ```
 
-## 4. Configure Nginx
-Edit your site configuration file (e.g., `/etc/nginx/sites-available/movielovers.in`).
+**Add this line:**
+```bash
+UPLOAD_DIR=/var/www/movie-reporter/uploads
+```
+*(This tells the API to save files to your external uploads folder instead of inside the code)*
+
+## 2. Nginx Configuration
+Your Nginx config is now much simpler. We just Proxy to Next.js, and Serve the standard `/uploads` URL from your folder.
 
 ```nginx
 server {
     listen 80;
     server_name movielovers.in www.movielovers.in;
-    root /var/www/movie-reporter/public; # Next.js public files are here
-
-    # 1. Handle PHP Files (The Upload Script)
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock; # VERIFY THIS PATH (ls /var/run/php/)
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
-    }
-
-    # 2. Serve Uploaded Images Directly (From the sibling folder)
+    
+    # 1. Serve Uploads Directly (Fast & Efficient)
     location /uploads/ {
-        # This maps https://site.com/uploads/... -> /var/www/movie-reporter/uploads/...
-        alias /var/www/movie-reporter/uploads/; 
-        access_log off;
+        alias /var/www/movie-reporter/uploads/;
+        autoindex off;
         expires max;
     }
 
-    # 3. Everything else goes to Next.js
+    # 2. Proxy everything else to Next.js App
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -64,16 +48,9 @@ server {
 }
 ```
 
-**Important**: 
-- Replace `/var/www/html/movie-reporter/public` with your actual path.
-- Check your PHP version folder: `ls /var/run/php/` to see if it is `php8.1-fpm.sock` or `php8.2-fpm.sock` etc.
+## 3. Apply Changes
+1.  **Restart Nginx**: `sudo systemctl restart nginx`
+2.  **Restart Your App**: 
+    If you use pm2: `pm2 restart all`
+    Or `npm start`
 
-## 5. Restart Nginx
-```bash
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-## 6. Diagnosis
-Now run the check script from your browser again:
-`https://movielovers.in/server-check.php`

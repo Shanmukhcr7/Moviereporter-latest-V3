@@ -130,8 +130,8 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
                 }
 
                 try {
-                    // Try fetch to absolute URL first (Production)
-                    const res = await fetch("https://movielovers.in/upload-profile.php", {
+                    // Use internal Node.js API route (Same as Admin Dashboard style)
+                    const res = await fetch("/api/user/profile-upload", {
                         method: "POST",
                         body: formData
                     })
