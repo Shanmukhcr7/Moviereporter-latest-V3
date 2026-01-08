@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Trophy, CheckCircle2, Share2, AlertCircle } from "lucide-react"
+import { Trophy, CheckCircle2, Share2, AlertCircle, ExternalLink } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -72,8 +72,9 @@ export function VotingCard({ nominee, isVoted, onVote, onShare, onCustomVote, on
                 {!isOther && (
                     <div className="text-center">
                         {nominee.movieId ? (
-                            <Link href={`/movie/${nominee.movieId}`} className="text-sm font-bold text-primary hover:text-primary/80 transition-colors underline decoration-primary/30 underline-offset-4 block line-clamp-2 leading-tight">
-                                {nominee.movie?.title || "Unknown Movie"}
+                            <Link href={`/movie/${nominee.movieId}`} className="inline-flex items-center justify-center gap-1 text-sm font-bold text-primary hover:text-primary/80 transition-colors underline decoration-primary/30 underline-offset-4 leading-tight group/link w-full">
+                                <span className="line-clamp-2">{nominee.movie?.title || "Unknown Movie"}</span>
+                                <ExternalLink className="h-3 w-3 shrink-0 opacity-70 group-hover/link:opacity-100 transition-opacity" />
                             </Link>
                         ) : (
                             <span className="text-sm font-bold text-foreground block line-clamp-2 leading-tight">{nominee.movie?.title}</span>
