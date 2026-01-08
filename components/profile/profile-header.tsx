@@ -116,13 +116,14 @@ export function ProfileHeader() {
                         onClick={async () => {
                             const username = userData?.username || user?.uid || "unknown"
                             const displayName = userData?.displayName || "User"
-                            const role = userData?.role || "Member"
+                            // Use calculated gamification level (Badge) if available, fallback to role, then "Member"
+                            const badge = levelInfo?.currentLevel || userData?.role || "Novice"
                             const homeUrl = window.location.origin
                             const registerUrl = `${window.location.origin}/login`
                             const photoURL = userData?.photoURL || user?.photoURL
 
                             const shareText = `🎬 Check out ${displayName} (@${username}) on Movie Reporter!
-🏆 Badge: ${role}
+🏆 Badge: ${badge}
 
 Explore movies, reviews, and polls here:
 ${homeUrl}
@@ -157,7 +158,8 @@ ${registerUrl}`
                             // Helper: Copy text to clipboard
                             const copyToClipboard = () => {
                                 navigator.clipboard.writeText(shareText)
-                                toast.success("Message copied! Paste it after sharing.", { duration: 3000 })
+                                // More explicit message about pasting
+                                toast.success("Details copied! Paste them when sharing.", { duration: 4000 })
                             }
 
                             if (navigator.share) {
@@ -166,7 +168,7 @@ ${registerUrl}`
                                     copyToClipboard()
 
                                     // Small delay to ensure toast is seen/clipboard is set before UI context switch
-                                    await new Promise(resolve => setTimeout(resolve, 100))
+                                    await new Promise(resolve => setTimeout(resolve, 300))
                                     await navigator.share(shareData)
                                 } catch (err) {
                                     console.error("Error sharing:", err)
