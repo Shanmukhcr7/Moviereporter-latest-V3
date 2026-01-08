@@ -137,48 +137,16 @@ ${registerUrl}`
                                 url: homeUrl
                             }
 
-                            // Try to add image if available
-                            if (photoURL && navigator.share) {
-                                try {
-                                    const response = await fetch(photoURL)
-                                    const blob = await response.blob()
-                                    // Use a common extension and MIME type
-                                    const file = new File([blob], "profile.png", { type: "image/png" })
-
-                                    // Check if sharing files is supported
-                                    // Safe check using optional chaining if TS complains or just direct call if confident
-                                    if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
-                                        shareData.files = [file]
-                                        // CRITICAL Fix: Remove URL when sharing files to prevent platform from ignoring text caption
-                                        // The URL is already inside 'shareText' which we copy to clipboard.
-                                        delete shareData.url
-                                    }
-                                } catch (e) {
-                                    console.error("Failed to fetch image for sharing", e)
-                                }
-                            }
-
-                            // Helper: Copy text to clipboard
-                            const copyToClipboard = () => {
-                                navigator.clipboard.writeText(shareText)
-                                // More explicit message about pasting
-                                toast.success("Details copied! Paste them when sharing.", { duration: 4000 })
-                            }
-
+                            // Standard Share (Link Preview like Movies/News)
                             if (navigator.share) {
                                 try {
-                                    // Copy first, in case the app ignores text
-                                    copyToClipboard()
-
-                                    // Small delay to ensure toast is seen/clipboard is set before UI context switch
-                                    await new Promise(resolve => setTimeout(resolve, 300))
                                     await navigator.share(shareData)
                                 } catch (err) {
                                     console.error("Error sharing:", err)
-                                    // Already copied, maybe show error or just let it be
                                 }
                             } else {
-                                copyToClipboard()
+                                navigator.clipboard.writeText(shareText)
+                                toast.success("Share message copied to clipboard!")
                             }
                         }}
                     >

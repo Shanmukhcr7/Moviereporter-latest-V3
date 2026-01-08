@@ -21,7 +21,7 @@ import { Trophy, User, Calendar } from "lucide-react"
 // Helper to fetch user for metadata
 async function getUser(username: string) {
     try {
-        const usersRef = collection(db, "users")
+        const usersRef = collection(db, "artifacts/default-app-id/users")
         const q = query(usersRef, where("username", "==", username), limit(1))
         const snapshot = await getDocs(q)
         if (!snapshot.empty) {
