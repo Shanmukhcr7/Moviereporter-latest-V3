@@ -589,11 +589,11 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                             {cast.length > 0 && (
                                 <div className="space-y-4">
                                     <h2 className="text-2xl font-bold border-l-4 border-primary pl-4">Cast & Crew</h2>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    <div className="flex gap-4 overflow-x-auto pb-4 snap-x scrollbar-hide -mx-4 px-4 md:grid md:grid-cols-4 lg:grid-cols-5 md:gap-4 md:overflow-visible md:mx-0 md:px-0">
                                         {cast.map((person) => (
-                                            <Link href={`/celebrity/${person.id}`} key={person.id} className="group">
-                                                <div className="bg-card hover:bg-muted/50 rounded-lg p-3 transition-colors text-center border border-border/40">
-                                                    <div className="relative h-20 w-20 mx-auto mb-3 rounded-full overflow-hidden border-2 border-background shadow-md group-hover:border-primary transition-colors">
+                                            <Link href={`/celebrity/${person.id}`} key={person.id} className="group flex-shrink-0 w-[140px] md:w-auto snap-start">
+                                                <div className="bg-card hover:bg-muted/50 rounded-lg p-3 transition-colors text-center border border-border/40 h-full flex flex-col justify-center">
+                                                    <div className="relative h-20 w-20 mx-auto mb-3 rounded-full overflow-hidden border-2 border-background shadow-md group-hover:border-primary transition-colors shrink-0">
                                                         <Image
                                                             src={person.profileImage || person.image || person.imageUrl || "/placeholder.svg"}
                                                             alt={person.name}
@@ -602,7 +602,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                                         />
                                                     </div>
                                                     <p className="font-semibold text-sm line-clamp-1 group-hover:text-primary">{person.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{person.role || "Actor"}</p>
+                                                    <p className="text-xs text-muted-foreground line-clamp-1">{person.role || "Actor"}</p>
                                                 </div>
                                             </Link>
                                         ))}
