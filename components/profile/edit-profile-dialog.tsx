@@ -137,25 +137,15 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
                     })
 
                     if (!res.ok) {
-                        // Fallback to relative path
-                        const resLocal = await fetch("/upload-profile.php", {
-                            method: "POST",
-                            body: formData
-                        })
-                        if (!resLocal.ok) throw new Error("Upload request failed")
-                        const dataLocal = await resLocal.json()
-                        if (dataLocal.success) {
-                            finalPhotoUrl = dataLocal.url
-                        } else {
-                            throw new Error(dataLocal.error || "Upload failed")
-                        }
+                        const errorText = await res.text()
+                        throw new Error(`Server Error ${res.status}: ${errorText}`)
+                    }
+
+                    const data = await res.json()
+                    if (data.success) {
+                        finalPhotoUrl = data.url
                     } else {
-                        const data = await res.json()
-                        if (data.success) {
-                            finalPhotoUrl = data.url
-                        } else {
-                            throw new Error(data.error || "Upload failed")
-                        }
+                        throw new Error(data.error || "Upload failed")
                     }
                 } catch (e: any) {
                     console.error("Upload error", e)
