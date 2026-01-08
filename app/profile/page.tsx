@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { PushNotificationsToggle } from "@/components/push-notifications-toggle"
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth()
+  const { user, loading, signOut } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function ProfilePage() {
           <Button
             variant="destructive"
             className="w-full md:w-auto md:min-w-[200px]"
-            onClick={() => useAuth().signOut()}
+            onClick={() => signOut()}
           >
             Log Out
           </Button>
@@ -61,3 +61,4 @@ export default function ProfilePage() {
     </div>
   )
 }
+

@@ -113,22 +113,29 @@ export function ProfileHeader() {
                         variant="ghost"
                         size="icon"
                         className="absolute top-4 right-4 rounded-full hover:bg-muted"
-                        onClick={() => {
+                        onClick={async () => {
                             const username = userData?.username || user?.uid || "unknown"
-                            const publicUrl = `${window.location.origin}/u/${username}`
-                            const role = userData?.role || "Member"
                             const displayName = userData?.displayName || "User"
+                            const homeUrl = window.location.origin
+                            const registerUrl = `${window.location.origin}/login` // Assuming login page has register toggle or is the entry
+
+                            const shareText = `Check out ${displayName} on Movie Reporter!\n\nExplore movies and reviews here: ${homeUrl}\n\nJoin our community: ${registerUrl}`
 
                             const shareData = {
-                                title: `Join ${displayName} on Movie Lovers!`,
-                                text: `Hey! Check out my profile (@${username}) on Movie Lovers. I'm a ${role} here! 🎬\n\nJoin the best movie community with me:`,
-                                url: publicUrl
+                                title: `Join ${displayName} on Movie Reporter!`,
+                                text: shareText,
+                                url: homeUrl
                             }
+
                             if (navigator.share) {
-                                navigator.share(shareData).catch(console.error)
+                                try {
+                                    await navigator.share(shareData)
+                                } catch (err) {
+                                    console.error("Error sharing:", err)
+                                }
                             } else {
-                                navigator.clipboard.writeText(`${shareData.text} ${publicUrl}`)
-                                toast.success("Profile link copied to clipboard!")
+                                navigator.clipboard.writeText(shareText)
+                                toast.success("Share message copied to clipboard!")
                             }
                         }}
                     >
