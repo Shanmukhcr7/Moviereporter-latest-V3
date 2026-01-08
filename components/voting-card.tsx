@@ -25,7 +25,7 @@ export function VotingCard({ nominee, isVoted, onVote, onShare, onCustomVote, on
     return (
         <Card
             className={cn(
-                "group overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 backdrop-blur relative flex flex-col h-full",
+                "group overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 backdrop-blur relative",
                 isVoted ? "border-primary bg-primary/5" : "border-border/50 bg-card/50"
             )}
         >
@@ -67,21 +67,21 @@ export function VotingCard({ nominee, isVoted, onVote, onShare, onCustomVote, on
                 </div>
             </div>
 
-            <CardContent className="p-2 flex flex-col h-full">
+            <CardContent className="p-2 pt-0.5 space-y-1">
                 {/* Movie Name Rendering */}
                 {!isOther && (
-                    <div className="mb-1 h-10 flex items-start justify-center text-center px-1 pt-0.5">
+                    <div className="text-center">
                         {nominee.movieId ? (
-                            <Link href={`/movie/${nominee.movieId}`} className="text-sm font-bold text-foreground hover:text-primary transition-colors hover:underline block line-clamp-2 leading-tight">
+                            <Link href={`/movie/${nominee.movieId}`} className="text-sm font-bold text-foreground hover:text-primary transition-colors hover:underline block line-clamp-1">
                                 {nominee.movie?.title || "Unknown Movie"}
                             </Link>
                         ) : (
-                            <span className="text-sm font-bold text-foreground block line-clamp-2 leading-tight">{nominee.movie?.title}</span>
+                            <span className="text-sm font-bold text-foreground block line-clamp-1">{nominee.movie?.title}</span>
                         )}
                     </div>
                 )}
 
-                <div className="flex gap-2 mt-auto">
+                <div className="flex gap-2">
                     {!isOther ? (
                         <>
                             <Button
