@@ -120,10 +120,12 @@ export function ProfileHeader() {
                         onClick={() => {
                             const username = userData?.username || user?.uid || "unknown" // Fallback
                             const publicUrl = `${window.location.origin}/u/${username}`
+                            const role = userData?.role || "Member"
+                            const displayName = userData?.displayName || "User"
 
                             const shareData = {
-                                title: `Movie Lovers - ${userData?.displayName || "Profile"}`,
-                                text: `Check out ${userData?.displayName || "my"} profile on MovieLovers.in!`,
+                                title: `Join ${displayName} on Movie Lovers!`,
+                                text: `Hey! Check out my profile (@${username}) on Movie Lovers. I'm a ${role} here! 🎬\n\nJoin the best movie community with me:`,
                                 url: publicUrl
                             }
                             if (navigator.share) {

@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Trophy, User, Calendar, MapPin, Film } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 interface UserData {
     username: string
@@ -84,11 +86,21 @@ export function PublicProfileView({ username }: { username: string }) {
                 </CardContent>
             </Card>
 
-            <div className="mt-8 text-center">
-                <p className="text-sm text-muted-foreground mb-4">Join {profile.username} on Movie Lovers!</p>
-                <div className="flex items-center justify-center gap-2 text-xl font-bold text-primary">
-                    <Film className="h-6 w-6" />
-                    <span>Movie Lovers</span>
+            <div className="mt-8 text-center space-y-4">
+                <p className="text-muted-foreground">Join <strong>@{profile.username}</strong> on Movie Lovers today!</p>
+
+                <div className="flex justify-center gap-4">
+                    <Button asChild size="lg" className="font-bold">
+                        <Link href="/signup">Join Community</Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg">
+                        <Link href="/">Explore Movies</Link>
+                    </Button>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 text-sm font-medium text-primary/80 pt-4">
+                    <Film className="h-5 w-5" />
+                    <span>Movie Lovers India</span>
                 </div>
             </div>
         </div>
