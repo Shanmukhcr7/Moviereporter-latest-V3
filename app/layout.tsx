@@ -10,6 +10,7 @@ import { BottomNav } from "@/components/bottom-nav"
 import { Toaster } from "@/components/ui/sonner"
 import { SiteChatbot } from "@/components/site-chatbot"
 import { SiteFooter } from "@/components/site-footer"
+import { ServiceWorkerRegister } from "@/components/sw-register"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -60,6 +61,7 @@ export default function RootLayout({
           <BottomNav />
           <SiteChatbot />
           <Toaster position="top-right" />
+          <ServiceWorkerRegister />
         </ThemeProvider>
         <Analytics />
       </body>
