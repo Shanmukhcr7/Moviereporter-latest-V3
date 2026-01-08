@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { doc, getDoc, collection, query, where, getDocs, updateDoc, increment, runTransaction, Timestamp, setDoc, deleteDoc, orderBy } from "firebase/firestore"
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, increment, runTransaction, Timestamp, setDoc, deleteDoc, orderBy, limit } from "firebase/firestore"
 import { cn, getImageUrl } from "@/lib/utils"
 import { db } from "@/lib/firebase"
 import { Header } from "@/components/header"
@@ -31,6 +31,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
     const [movie, setMovie] = useState<any>(null)
     const [cast, setCast] = useState<any[]>([])
     const [reviews, setReviews] = useState<any[]>([])
+    const [recommendedMovies, setRecommendedMovies] = useState<any[]>([])
     const [userReaction, setUserReaction] = useState<"like" | "dislike" | null>(null)
     const [loading, setLoading] = useState(true)
     const [showFullDescription, setShowFullDescription] = useState(false)
@@ -181,6 +182,22 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                 if (feedbackSnap.exists()) {
                     setUserReaction(feedbackSnap.data().type)
                 }
+            }
+
+            // Fetch Recommended Movies
+            try {
+                const recQuery = query(
+                    collection(db, "artifacts/default-app-id/movies"),
+                    limit(11) // Fetch 11 to account for potentially filtering out current
+                )
+                const recSnap = await getDocs(recQuery)
+                const recDocs = recSnap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .filter((m: any) => m.id !== movieId)
+                    .slice(0, 5) // Limit to 5
+                setRecommendedMovies(recDocs)
+            } catch (e) {
+                console.error("Error fetching recommendations:", e)
             }
 
         } catch (error) {
@@ -711,26 +728,50 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                         </FadeIn>
                     </div>
                 </div>
-            </main>
+
+                <Separator className="my-12 opacity-50" />
+
+                {/* Recommended Movies */}
+                <FadeIn delay={0.4}>
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold border-l-4 border-primary pl-4">You Might Also Like</h2>
+                        {recommendedMovies.length === 0 ? (
+                            <div className="text-center py-8">
+                                <p className="text-muted-foreground">No recommendations available</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                {recommendedMovies.map((movie) => (
+                                    <div key={movie.id} className="aspect-[2/3]">
+                                        <MovieCard {...movie} />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </FadeIn>
+            </main >
 
             {/* Rating Modal */}
-            {movie && (
-                <>
-                    <MovieRatingModal
-                        movie={movie}
-                        isOpen={isRatingModalOpen}
-                        onClose={() => setIsRatingModalOpen(false)}
-                        user={user}
-                    />
-                    <TrailerModal
-                        isOpen={isTrailerOpen}
-                        onClose={() => setIsTrailerOpen(false)}
-                        videoUrl={movie.trailerUrl || movie.trailerLink || ""}
-                        posterUrl={movie.poster || movie.posterUrl || ""}
-                        title={movie.title}
-                    />
-                </>
-            )}
-        </div>
+            {
+                movie && (
+                    <>
+                        <MovieRatingModal
+                            movie={movie}
+                            isOpen={isRatingModalOpen}
+                            onClose={() => setIsRatingModalOpen(false)}
+                            user={user}
+                        />
+                        <TrailerModal
+                            isOpen={isTrailerOpen}
+                            onClose={() => setIsTrailerOpen(false)}
+                            videoUrl={movie.trailerUrl || movie.trailerLink || ""}
+                            posterUrl={movie.poster || movie.posterUrl || ""}
+                            title={movie.title}
+                        />
+                    </>
+                )
+            }
+        </div >
     )
 }
