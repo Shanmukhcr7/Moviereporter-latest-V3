@@ -465,24 +465,24 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                             </div>
                         </div>
 
-                        <Card className="border-border/50 bg-card/80 backdrop-blur">
-                            <CardContent className="p-4 space-y-2">
+                        <Card className="border-border/50 bg-card/80 backdrop-blur py-0 gap-0">
+                            <CardContent className="p-3 space-y-2">
                                 {/* Reaction Buttons */}
                                 <div className="flex gap-2">
                                     <Button
                                         variant={userReaction === 'like' ? "default" : "outline"}
-                                        className="flex-1 gap-2"
+                                        className="flex-1 gap-2 h-8 text-xs"
                                         onClick={() => handleReaction('like')}
                                     >
-                                        <ThumbsUp className={`h-4 w-4 ${userReaction === 'like' ? 'fill-current' : ''}`} />
+                                        <ThumbsUp className={`h-3.5 w-3.5 ${userReaction === 'like' ? 'fill-current' : ''}`} />
                                         {movie.likesCount || 0}
                                     </Button>
                                     <Button
                                         variant={userReaction === 'dislike' ? "destructive" : "outline"}
-                                        className="flex-1 gap-2"
+                                        className="flex-1 gap-2 h-8 text-xs"
                                         onClick={() => handleReaction('dislike')}
                                     >
-                                        <ThumbsDown className={`h-4 w-4 ${userReaction === 'dislike' ? 'fill-current' : ''}`} />
+                                        <ThumbsDown className={`h-3.5 w-3.5 ${userReaction === 'dislike' ? 'fill-current' : ''}`} />
                                         {movie.dislikesCount || 0}
                                     </Button>
                                     {/* ShareButton handles navigator share properly now, replacing manual implementation here for consistency if needed, 
@@ -491,20 +491,20 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                       The existing code here implements handleShare manually. I will update it to send image/title too if possible, 
                       but navigator.share only accepts text/title/url. OG tags handled by server component is the key. 
                   */}
-                                    <Button variant="outline" size="icon" onClick={handleShare}>
-                                        <Share2 className="h-4 w-4" />
+                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={handleShare}>
+                                        <Share2 className="h-3.5 w-3.5" />
                                     </Button>
                                 </div>
 
                                 {/* Rate & Review Button */}
                                 {isUpcoming ? (
-                                    <Button className="w-full gap-2 cursor-not-allowed opacity-80" variant="secondary" disabled>
-                                        <Calendar className="h-4 w-4" />
+                                    <Button className="w-full gap-2 cursor-not-allowed opacity-80 h-8 text-xs" variant="secondary" disabled>
+                                        <Calendar className="h-3.5 w-3.5" />
                                         Coming Soon
                                     </Button>
                                 ) : (
-                                    <Button className="w-full gap-2" variant="secondary" onClick={() => setIsRatingModalOpen(true)}>
-                                        <MessageSquare className="h-4 w-4" />
+                                    <Button className="w-full gap-2 h-8 text-xs" variant="secondary" onClick={() => setIsRatingModalOpen(true)}>
+                                        <MessageSquare className="h-3.5 w-3.5" />
                                         Rate & Review
                                     </Button>
                                 )}
