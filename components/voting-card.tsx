@@ -25,7 +25,7 @@ export function VotingCard({ nominee, isVoted, onVote, onShare, onCustomVote, on
     return (
         <Card
             className={cn(
-                "group overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 backdrop-blur relative flex flex-col h-full",
+                "group overflow-hidden hover:shadow-2xl transition-all duration-300 border-2 backdrop-blur relative flex flex-col h-full p-0",
                 isVoted ? "border-primary bg-primary/5" : "border-border/50 bg-card/50"
             )}
         >
