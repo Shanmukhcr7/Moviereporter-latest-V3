@@ -149,6 +149,9 @@ ${registerUrl}`
                                     // Safe check using optional chaining if TS complains or just direct call if confident
                                     if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
                                         shareData.files = [file]
+                                        // CRITICAL Fix: Remove URL when sharing files to prevent platform from ignoring text caption
+                                        // The URL is already inside 'shareText' which we copy to clipboard.
+                                        delete shareData.url
                                     }
                                 } catch (e) {
                                     console.error("Failed to fetch image for sharing", e)
