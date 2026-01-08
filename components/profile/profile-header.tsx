@@ -118,15 +118,18 @@ export function ProfileHeader() {
                         size="sm"
                         className="w-full sm:w-auto"
                         onClick={() => {
+                            const username = userData?.username || user?.uid || "unknown" // Fallback
+                            const publicUrl = `${window.location.origin}/u/${username}`
+
                             const shareData = {
-                                title: "Movie Lovers Profile",
-                                text: `Check out my profile on MovieLovers.in!`,
-                                url: window.location.href
+                                title: `Movie Lovers - ${userData?.displayName || "Profile"}`,
+                                text: `Check out ${userData?.displayName || "my"} profile on MovieLovers.in!`,
+                                url: publicUrl
                             }
                             if (navigator.share) {
                                 navigator.share(shareData).catch(console.error)
                             } else {
-                                navigator.clipboard.writeText(`Check out my profile on MovieLovers.in! ${window.location.href}`)
+                                navigator.clipboard.writeText(`${shareData.text} ${publicUrl}`)
                                 toast.success("Profile link copied to clipboard!")
                             }
                         }}
