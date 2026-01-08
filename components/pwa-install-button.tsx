@@ -88,24 +88,24 @@ export function PWAStoreBadges() {
     }
 
     return (
-        <div className="flex flex-col gap-3 w-full">
+        <div className="flex flex-row gap-2 w-full justify-center items-center">
             <button
                 onClick={handleClick}
                 disabled={loading}
-                className="relative h-12 w-full transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="relative h-9 w-[120px] transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
             >
                 <Image
                     src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
                     alt="Get it on Google Play"
                     fill
-                    className="object-contain" // Preserves aspect ratio
-                    unoptimized // SVG often needs this
+                    className="object-contain"
+                    unoptimized
                 />
             </button>
             <button
                 onClick={handleClick}
                 disabled={loading}
-                className="relative h-12 w-full transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="relative h-9 w-[120px] transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
             >
                 <Image
                     src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg"
