@@ -427,43 +427,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
 
             <main className="container mx-auto px-4 -mt-[20vh] md:-mt-[350px] relative z-20">
                 {/* Header Information (Title, Badges, Rating) - Placed Above Image */}
-                <div className="mb-6 md:mb-8 text-center md:text-left">
-                    <FadeIn delay={0.1}>
-                        <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-3">
-                            <Badge variant="outline" className="text-primary border-primary/50">{movie.industry}</Badge>
-                            {/* Parse Genre */}
-                            {(() => {
-                                const genres = Array.isArray(movie.genre) ? movie.genre : movie.genre?.split(',')
-                                return genres?.map((g: string) => (
-                                    <Badge key={g} variant="secondary">{g.trim()}</Badge>
-                                ))
-                            })()}
-                            {movie.releaseDate && (
-                                <Badge variant="outline" className="gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    {movie.releaseDate.toDate ? new Date(movie.releaseDate.toDate()).toLocaleDateString() : new Date(movie.releaseDate).toLocaleDateString()}
-                                </Badge>
-                            )}
-                        </div>
-
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 leading-tight">
-                            {movie.title}
-                        </h1>
-
-                        {movie.avgRating && (
-                            <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
-                                <div className="flex items-center gap-1 bg-yellow-500/10 px-2 py-1 rounded-md border border-yellow-500/20">
-                                    <StarIcon className="h-5 w-5 fill-yellow-500 text-yellow-500" />
-                                    <span className="text-xl font-bold text-yellow-500">{movie.avgRating.toFixed(1)}</span>
-                                </div>
-                                <span className="text-muted-foreground text-sm flex items-center gap-1">
-                                    <span>•</span>
-                                    <span>{movie.reviewCount || 0} reviews</span>
-                                </span>
-                            </div>
-                        )}
-                    </FadeIn>
-                </div>
+                {/* Header Info removed from here */}
 
                 <div className="flex flex-col md:flex-row gap-8">
 
@@ -576,7 +540,34 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                     <div className="flex-1 space-y-8 pt-0">
                         <FadeIn delay={0.2}>
                             <div>
-                                {/* Title moved to top */}
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    <Badge variant="outline" className="text-primary border-primary/50">{movie.industry}</Badge>
+                                    {/* Parse Genre */}
+                                    {(() => {
+                                        const genres = Array.isArray(movie.genre) ? movie.genre : movie.genre?.split(',')
+                                        return genres?.map((g: string) => (
+                                            <Badge key={g} variant="secondary">{g.trim()}</Badge>
+                                        ))
+                                    })()}
+                                    {movie.releaseDate && (
+                                        <Badge variant="outline" className="gap-1">
+                                            <Calendar className="h-3 w-3" />
+                                            {movie.releaseDate.toDate ? new Date(movie.releaseDate.toDate()).toLocaleDateString() : new Date(movie.releaseDate).toLocaleDateString()}
+                                        </Badge>
+                                    )}
+                                </div>
+
+                                <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+                                    {movie.title}
+                                </h1>
+
+                                {movie.avgRating && (
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <StarIcon className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                                        <span className="text-xl font-bold">{movie.avgRating.toFixed(1)}</span>
+                                        <span className="text-muted-foreground">({movie.reviewCount || 0} reviews)</span>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Trailer */}
