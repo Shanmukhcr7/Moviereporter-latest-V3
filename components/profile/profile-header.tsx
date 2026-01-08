@@ -116,11 +116,19 @@ export function ProfileHeader() {
                         onClick={async () => {
                             const username = userData?.username || user?.uid || "unknown"
                             const displayName = userData?.displayName || "User"
+                            const role = userData?.role || "Member"
                             const homeUrl = window.location.origin
-                            const registerUrl = `${window.location.origin}/login` // Assuming login page has register toggle or is the entry
+                            const registerUrl = `${window.location.origin}/login`
                             const photoURL = userData?.photoURL || user?.photoURL
 
-                            const shareText = `Check out ${displayName} on Movie Reporter!\n\nExplore movies and reviews here: ${homeUrl}\n\nJoin our community: ${registerUrl}`
+                            const shareText = `🎬 Check out ${displayName} (@${username}) on Movie Reporter!
+🏆 Badge: ${role}
+
+Explore movies, reviews, and polls here:
+${homeUrl}
+
+Join our community:
+${registerUrl}`
 
                             let shareData: any = {
                                 title: `Join ${displayName} on Movie Reporter!`,
@@ -133,10 +141,12 @@ export function ProfileHeader() {
                                 try {
                                     const response = await fetch(photoURL)
                                     const blob = await response.blob()
-                                    const file = new File([blob], "profile.png", { type: blob.type })
+                                    // Use a common extension and MIME type
+                                    const file = new File([blob], "profile.png", { type: "image/png" })
 
                                     // Check if sharing files is supported
-                                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                                    // Safe check using optional chaining if TS complains or just direct call if confident
+                                    if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
                                         shareData.files = [file]
                                     }
                                 } catch (e) {
@@ -149,6 +159,9 @@ export function ProfileHeader() {
                                     await navigator.share(shareData)
                                 } catch (err) {
                                     console.error("Error sharing:", err)
+                                    // Fallback to clipboard if share fails (e.g. user cancelled or not supported for data)
+                                    navigator.clipboard.writeText(shareText)
+                                    toast.success("Share message copied to clipboard!")
                                 }
                             } else {
                                 navigator.clipboard.writeText(shareText)
