@@ -39,6 +39,7 @@ const formSchema = z.object({
     author: z.string().min(2, "Author name is required"),
     imageUrl: z.string().min(1, "Cover image is required"),
     category: z.string().optional(), // Optional for Blogs
+    summary: z.string().optional(),
     content: z.string().min(10, "Content is required"),
     scheduledPublish: z.date().optional(),
     isPromotion: z.boolean().default(false),
@@ -64,6 +65,7 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
             author: "",
             imageUrl: "",
             category: "",
+            summary: "",
             content: "",
             isPromotion: false,
             isWeeklyMagazine: false,
@@ -83,6 +85,7 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
                 ...values,
                 scheduledPublish: values.scheduledPublish || null,
                 category: values.category || null,
+                summary: values.summary || null,
                 type, // Explicitly store type
                 updatedAt: Timestamp.now(),
             }
@@ -172,6 +175,25 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
                         )}
                     />
                 </div>
+
+                <FormField
+                    control={form.control}
+                    name="summary"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Summary</FormLabel>
+                            <FormControl>
+                                <Textarea
+                                    placeholder="Brief summary or excerpt..."
+                                    className="h-20 resize-none"
+                                    {...field}
+                                    disabled={loading}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
 
                 {/* Category - Only show for News */}
                 {type === "news" && (
