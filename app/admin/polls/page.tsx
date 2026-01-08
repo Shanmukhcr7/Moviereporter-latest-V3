@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog"
 import { Plus, Edit, Trash2, Loader2, BarChart2 } from "lucide-react"
 import { toast } from "sonner"
-import { format } from "date-fns"
+import { format, formatDistanceToNow } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 
 export default function PollsPage() {
@@ -124,7 +124,7 @@ export default function PollsPage() {
                                         )}
                                     </TableCell>
                                     <TableCell>
-                                        {poll.endDate ? format(poll.endDate.toDate(), "MMM d, yyyy") : "-"}
+                                        {poll.endDate ? formatDistanceToNow(poll.endDate.toDate(), { addSuffix: true }) : "-"}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
