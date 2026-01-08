@@ -91,7 +91,25 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
             // Safety check for index: if failed, try without orderBy first
             try {
                 const snapshot = await getDocs(q)
-                setComments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+                let fetchedComments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+
+                // Fetch live user data
+                const userIds = Array.from(new Set(fetchedComments.map((c: any) => c.userId).filter(Boolean)))
+                if (userIds.length > 0) {
+                    const userDocs = await Promise.all(userIds.map(uid => getDoc(doc(db, "artifacts/default-app-id/users", uid as string))))
+                    const userMap: Record<string, any> = {}
+                    userDocs.forEach(d => {
+                        if (d.exists()) userMap[d.id] = d.data()
+                    })
+
+                    fetchedComments = fetchedComments.map((c: any) => ({
+                        ...c,
+                        userImage: userMap[c.userId]?.photoURL || c.userImage,
+                        userName: userMap[c.userId]?.displayName || userMap[c.userId]?.username || c.userName
+                    }))
+                }
+
+                setComments(fetchedComments)
             } catch (e) {
                 // Fallback for missing index
                 const qFallback = query(
@@ -99,8 +117,23 @@ export function CommentSection({ articleId, articleTitle }: CommentSectionProps)
                     where("articleId", "==", articleId)
                 )
                 const snapshot = await getDocs(qFallback)
-                // Client side sort
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+
+                // Fetch live user data (Copy of logic above for fallback path)
+                const userIds = Array.from(new Set(data.map((c: any) => c.userId).filter(Boolean)))
+                if (userIds.length > 0) {
+                    const userDocs = await Promise.all(userIds.map(uid => getDoc(doc(db, "artifacts/default-app-id/users", uid as string))))
+                    const userMap: Record<string, any> = {}
+                    userDocs.forEach(d => {
+                        if (d.exists()) userMap[d.id] = d.data()
+                    })
+                    data = data.map((c: any) => ({
+                        ...c,
+                        userImage: userMap[c.userId]?.photoURL || c.userImage,
+                        userName: userMap[c.userId]?.displayName || userMap[c.userId]?.username || c.userName
+                    }))
+                }
+
                 data.sort((a: any, b: any) => b.createdAt?.seconds - a.createdAt?.seconds)
                 setComments(data)
             }
