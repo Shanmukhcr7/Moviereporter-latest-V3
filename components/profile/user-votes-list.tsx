@@ -57,10 +57,11 @@ export function UserVotesList() {
         }
 
         try {
+            // Fetch one extra item to check if there's more
             let q = query(
                 collection(db, "artifacts/default-app-id/users", user.uid, "userVotes"),
                 orderBy("votedAt", "desc"),
-                limit(BATCH_SIZE)
+                limit(BATCH_SIZE + 1)
             )
 
             if (!isInitial && lastDoc) {
@@ -68,7 +69,7 @@ export function UserVotesList() {
                     collection(db, "artifacts/default-app-id/users", user.uid, "userVotes"),
                     orderBy("votedAt", "desc"),
                     startAfter(lastDoc),
-                    limit(BATCH_SIZE)
+                    limit(BATCH_SIZE + 1)
                 )
             }
 
@@ -82,10 +83,15 @@ export function UserVotesList() {
                 return
             }
 
-            setLastDoc(snapshot.docs[snapshot.docs.length - 1])
-            if (snapshot.docs.length < BATCH_SIZE) setHasMore(false)
+            // check if we got more than requested
+            const gotMore = snapshot.docs.length > BATCH_SIZE
+            setHasMore(gotMore)
 
-            const detailedVotes = await Promise.all(snapshot.docs.map(fetchDetail))
+            // Slice if we got an extra one
+            const docsToProcess = gotMore ? snapshot.docs.slice(0, BATCH_SIZE) : snapshot.docs
+            setLastDoc(docsToProcess[docsToProcess.length - 1])
+
+            const detailedVotes = await Promise.all(docsToProcess.map(fetchDetail))
 
             if (isInitial) {
                 setVotes(detailedVotes)

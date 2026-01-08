@@ -41,7 +41,7 @@ export function SavedBlogsList() {
             let q = query(
                 collection(db, "artifacts/default-app-id/users", user.uid, "savedBlogs"),
                 orderBy("addedAt", "desc"),
-                limit(BATCH_SIZE)
+                limit(BATCH_SIZE + 1)
             )
 
             if (!isInitial && lastDoc) {
@@ -49,7 +49,7 @@ export function SavedBlogsList() {
                     collection(db, "artifacts/default-app-id/users", user.uid, "savedBlogs"),
                     orderBy("addedAt", "desc"),
                     startAfter(lastDoc),
-                    limit(BATCH_SIZE)
+                    limit(BATCH_SIZE + 1)
                 )
             }
 
@@ -63,10 +63,13 @@ export function SavedBlogsList() {
                 return
             }
 
-            setLastDoc(snap.docs[snap.docs.length - 1])
-            if (snap.docs.length < BATCH_SIZE) setHasMore(false)
+            const gotMore = snap.docs.length > BATCH_SIZE
+            setHasMore(gotMore)
 
-            const detailed = await Promise.all(snap.docs.map(fetchDetail))
+            const docsToProcess = gotMore ? snap.docs.slice(0, BATCH_SIZE) : snap.docs
+            setLastDoc(docsToProcess[docsToProcess.length - 1])
+
+            const detailed = await Promise.all(docsToProcess.map(fetchDetail))
             const filtered = detailed.filter(Boolean)
 
             if (isInitial) {

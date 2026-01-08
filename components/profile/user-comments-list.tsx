@@ -56,7 +56,7 @@ export function UserCommentsList() {
             let q = query(
                 collection(db, "artifacts/default-app-id/users", user.uid, "userComments"),
                 orderBy("createdAt", "desc"),
-                limit(BATCH_SIZE)
+                limit(BATCH_SIZE + 1)
             )
 
             if (!isInitial && lastDoc) {
@@ -64,7 +64,7 @@ export function UserCommentsList() {
                     collection(db, "artifacts/default-app-id/users", user.uid, "userComments"),
                     orderBy("createdAt", "desc"),
                     startAfter(lastDoc),
-                    limit(BATCH_SIZE)
+                    limit(BATCH_SIZE + 1)
                 )
             }
 
@@ -78,10 +78,13 @@ export function UserCommentsList() {
                 return
             }
 
-            setLastDoc(snapshot.docs[snapshot.docs.length - 1])
-            if (snapshot.docs.length < BATCH_SIZE) setHasMore(false)
+            const gotMore = snapshot.docs.length > BATCH_SIZE
+            setHasMore(gotMore)
 
-            const detailed = await Promise.all(snapshot.docs.map(fetchDetail))
+            const docsToProcess = gotMore ? snapshot.docs.slice(0, BATCH_SIZE) : snapshot.docs
+            setLastDoc(docsToProcess[docsToProcess.length - 1])
+
+            const detailed = await Promise.all(docsToProcess.map(fetchDetail))
 
             if (isInitial) {
                 setComments(detailed)
