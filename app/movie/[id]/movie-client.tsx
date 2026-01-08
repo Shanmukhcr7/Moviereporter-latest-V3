@@ -445,6 +445,22 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                             </div>
                         </FadeIn>
 
+                        {/* Mobile Title - Visible only on mobile, placed just below poster */}
+                        <div className="md:hidden text-center space-y-2">
+                            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 leading-tight">
+                                {movie.title}
+                            </h1>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                                <Badge variant="outline" className="text-primary border-primary/50 text-xs">{movie.industry}</Badge>
+                                {movie.avgRating && (
+                                    <div className="flex items-center gap-1 bg-yellow-500/10 px-2 py-0.5 rounded-md border border-yellow-500/20">
+                                        <StarIcon className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                                        <span className="text-sm font-bold text-yellow-500">{movie.avgRating.toFixed(1)}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <Card className="border-border/50 bg-card/80 backdrop-blur">
                             <CardContent className="p-4 space-y-2">
                                 {/* Reaction Buttons */}
@@ -539,7 +555,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                     {/* Right Column: Info */}
                     <div className="flex-1 space-y-8 pt-0">
                         <FadeIn delay={0.2}>
-                            <div>
+                            <div className="hidden md:block">
                                 <div className="flex flex-wrap gap-2 mb-4">
                                     <Badge variant="outline" className="text-primary border-primary/50">{movie.industry}</Badge>
                                     {/* Parse Genre */}
