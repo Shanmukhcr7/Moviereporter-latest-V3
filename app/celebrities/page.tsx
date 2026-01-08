@@ -189,7 +189,7 @@ export default function CelebritiesPage() {
 
       {/* Page Header */}
       {/* Search Header */}
-      <div className="container mx-auto px-4 pt-8 pb-4 max-w-7xl relative z-20 mt-4 md:mt-8 text-center">
+      <div className="container mx-auto px-4 pt-8 pb-4 max-w-7xl relative z-50 mt-4 md:mt-8 text-center">
         <h1 className="text-3xl md:text-5xl font-bold mb-8">Celebrity Profiles</h1>
         <div className="max-w-xl mx-auto">
           <CelebritySearch onSearch={setSearchTerm} />

@@ -406,7 +406,7 @@ export default function HomePage() {
                     {movie.isLoadMore ? (
                       <LoadMoreCard item={movie} onClick={handleLoadMoreLatest} />
                     ) : (
-                      <MovieCard {...movie} ottPlatforms={undefined} />
+                      <MovieCard {...movie} enableInterest={true} ottPlatforms={undefined} />
                     )}
                   </div>
                 ))}
