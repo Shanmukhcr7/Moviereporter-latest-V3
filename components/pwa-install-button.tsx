@@ -14,10 +14,18 @@ interface PWAInstallButtonProps {
 export function PWAInstallButton({ className, variant = "outline", size = "default", showLabel = true }: PWAInstallButtonProps) {
     const { isInstallable, installPWA } = usePWAInstall()
 
-    if (!isInstallable) return null
+    const handleClick = () => {
+        if (isInstallable) {
+            installPWA()
+        } else {
+            toast.info("To install the app:", {
+                description: "Tap your browser's Share/Menu button and select 'Add to Home Screen' or 'Install App'."
+            })
+        }
+    }
 
     return (
-        <Button onClick={installPWA} variant={variant} size={size} className={className}>
+        <Button onClick={handleClick} variant={variant} size={size} className={className}>
             <Download className="h-4 w-4 mr-2" />
             {showLabel && "Download App"}
         </Button>
