@@ -24,11 +24,17 @@ export default function BlogsPage() {
 
   const fetchBlogs = async (isInitial = false) => {
     // Cache Check
-    const cacheKey = "blogs_initial_list"
+    // Cache Check
+    const cacheKey = "blogs_list_v2"
     if (isInitial && !searchTerm) {
       const cached = getFromCache<any>(cacheKey)
-      if (cached) {
-        setBlogs(cached.data)
+      if (cached && Array.isArray(cached.data)) {
+        // Ensure cached data also has excerpts
+        const processedCache = cached.data.map((b: any) => ({
+          ...b,
+          excerpt: b.excerpt || b.description || b.summary || (b.content ? b.content.substring(0, 100) + "..." : "Read article for more details")
+        }))
+        setBlogs(processedCache)
         setLastVisible(cached.lastDate)
         setLoading(false)
         // SWR: Do NOT return here. Continue to fetch fresh data.
