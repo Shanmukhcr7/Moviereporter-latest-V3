@@ -24,6 +24,8 @@ interface UserData {
   memberSince: string
   phoneNumber?: string
   username?: string
+  photoURL?: string // Added per user request to use schema for rendering
+  bio?: string
   createdAt?: string
 }
 

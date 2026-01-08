@@ -119,7 +119,7 @@ export function ProfileHeader() {
                 <div className="flex flex-col items-center gap-3 relative">
                     <div className="relative group">
                         <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background shadow-md">
-                            <AvatarImage src={user?.photoURL || ""} className="object-cover" />
+                            <AvatarImage src={userData?.photoURL || user?.photoURL || ""} className="object-cover" />
                             <AvatarFallback className="text-4xl">{initials}</AvatarFallback>
                         </Avatar>
                         <Button
