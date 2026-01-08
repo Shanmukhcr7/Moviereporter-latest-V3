@@ -114,19 +114,19 @@ export function ProfileHeader() {
                         size="icon"
                         className="absolute top-4 right-4 rounded-full hover:bg-muted"
                         onClick={async () => {
-                            const username = userData?.username || user?.uid || "unknown"
+                            const username = userData?.username || "unknown"
                             const displayName = userData?.displayName || "User"
                             // Use calculated gamification level (Badge) if available, fallback to role, then "Member"
                             const badge = levelInfo?.currentLevel || userData?.role || "Novice"
-                            const homeUrl = window.location.origin
+                            // FIX: Share the specific profile URL, not just origin
+                            const profileUrl = `${window.location.origin}/u/${username}`
                             const registerUrl = `${window.location.origin}/login`
-                            const photoURL = userData?.photoURL || user?.photoURL
 
                             const shareText = `🎬 Check out ${displayName} (@${username}) on Movie Reporter!
 🏆 Badge: ${badge}
 
-Explore movies, reviews, and polls here:
-${homeUrl}
+Explore their reviews and activity here:
+${profileUrl}
 
 Join our community:
 ${registerUrl}`
@@ -134,7 +134,7 @@ ${registerUrl}`
                             let shareData: any = {
                                 title: `Join ${displayName} on Movie Reporter!`,
                                 text: shareText,
-                                url: homeUrl
+                                url: profileUrl
                             }
 
                             // Standard Share (Link Preview like Movies/News)
