@@ -162,9 +162,29 @@ export function MovieClient({ initialId }: { initialId?: string }) {
             // Note: Index might be needed for 'createdAt' desc. If fail, remove orderBy
             try {
                 const reviewsSnapshot = await getDocs(reviewsQuery)
-                setReviews(reviewsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
+                let fetchedReviews = reviewsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+
+                // Fetch user data for reviews to get latest profile layout
+                const userIds = Array.from(new Set(fetchedReviews.map((r: any) => r.userId).filter(Boolean)))
+                if (userIds.length > 0) {
+                    // Fetch users in batches of 10 if necessary, but simple Promise.all is fine for now
+                    const userDocs = await Promise.all(userIds.map(uid => getDoc(doc(db, "artifacts/default-app-id/users", uid as string))))
+                    const userMap: Record<string, any> = {}
+                    userDocs.forEach(d => {
+                        if (d.exists()) userMap[d.id] = d.data()
+                    })
+
+                    fetchedReviews = fetchedReviews.map((r: any) => ({
+                        ...r,
+                        userImage: userMap[r.userId]?.photoURL || r.userImage, // Prefer live data, fallback to stored
+                        userName: userMap[r.userId]?.displayName || userMap[r.userId]?.username || r.userName // Prefer live name
+                    }))
+                }
+
+                setReviews(fetchedReviews)
             } catch (e) {
-                console.warn("Index missing for reviews sort, fetching without sort first")
+                console.warn("Review fetch error", e)
+                // Fallback (mostly for verify index issues, simple fetch)
                 const reviewsQueryFallback = query(
                     collection(db, "artifacts/default-app-id/reviews"),
                     where("movieId", "==", movieId),
@@ -665,6 +685,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                                     <div className="flex items-start justify-between mb-2">
                                                         <div className="flex items-center gap-2">
                                                             <Avatar className="h-8 w-8">
+                                                                <AvatarImage src={review.userImage || ""} className="object-cover" />
                                                                 <AvatarFallback>{review.userName?.charAt(0) || "U"}</AvatarFallback>
                                                             </Avatar>
                                                             <div>

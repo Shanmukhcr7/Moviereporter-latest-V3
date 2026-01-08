@@ -96,6 +96,7 @@ export function MovieRatingModal({ movie, isOpen, onClose, user }: MovieRatingMo
         movieId: movie.id,
         userId: user.uid,
         userName: user.displayName || "Anonymous",
+        userImage: user.photoURL, // Store profile image
         rating,
         review,
         createdAt: now,
