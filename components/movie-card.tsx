@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, Calendar, Heart, X, Check } from "lucide-react"
+import { Star, Calendar, Heart, X, Check, Bookmark } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
@@ -182,10 +182,18 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
               {enableInterest && (
                 <button
                   onClick={toggleInterest}
-                  className={`text-foreground/80 hover:text-red-500 transition-colors z-20 relative mt-1 ${isInterested ? "text-red-500 fill-current" : ""}`}
-                  title={isUpcoming ? (isInterested ? "Remove from interests" : "Mark as interested") : (isInterested ? "Remove from favorites" : "Add to favorites")}
+                  className={`transition-colors z-20 relative mt-1 hover:scale-110 active:scale-95 duration-200 
+                    ${isUpcoming
+                      ? `text-foreground/80 hover:text-red-500 ${isInterested ? "text-red-500 fill-current" : ""}`
+                      : `text-foreground/80 hover:text-primary ${isInterested ? "text-primary fill-current" : ""}`
+                    }`}
+                  title={isUpcoming ? (isInterested ? "Remove from interests" : "Mark as interested") : (isInterested ? "Remove from saved" : "Save for later")}
                 >
-                  <Heart className={`h-5 w-5 ${isInterested ? "fill-current" : ""}`} />
+                  {isUpcoming ? (
+                    <Heart className={`h-5 w-5 ${isInterested ? "fill-current" : ""}`} />
+                  ) : (
+                    <Bookmark className={`h-5 w-5 ${isInterested ? "fill-current" : ""}`} />
+                  )}
                 </button>
               )}
             </div>
