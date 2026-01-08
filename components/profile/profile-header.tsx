@@ -125,7 +125,7 @@ export function ProfileHeader() {
                         <Button
                             size="icon"
                             variant="secondary"
-                            className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-md transition-opacity" // Removed opacity-0 group-hover:opacity-100
                             onClick={() => setEditOpen(true)}
                         >
                             <Pencil className="h-4 w-4" />
