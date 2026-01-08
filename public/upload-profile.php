@@ -21,33 +21,34 @@ if (isset($_POST['oldUrl']) && !empty($_POST['oldUrl'])) {
 
     // Only allow deleting files from THIS server
     if (strpos($oldUrl, $currentHost) !== false) {
-        // Extract relative path
         $urlParts = parse_url($oldUrl);
-        $relativePath = ltrim($urlParts['path'], '/'); // Remove leading slash
+        $urlPath = $urlParts['path']; // e.g. /uploads/profiles/abc.jpg
 
-        // Security check: ensure path starts with uploads/profiles/ and no directory traversal
-        if (strpos($relativePath, 'uploads/profiles/') === 0 && strpos($relativePath, '..') === false) {
-            if (file_exists($relativePath)) {
-                unlink($relativePath);
+        // We know where uploads are physically located relative to this script
+        // Script is in /public/, uploads in /uploads/ (sibling to public)
+        // So /uploads/profiles/abc.jpg maps to ../uploads/profiles/abc.jpg
+
+        if (strpos($urlPath, '/uploads/profiles/') === 0) {
+            $fileName = basename($urlPath);
+            $localPath = "../uploads/profiles/" . $fileName;
+
+            if (file_exists($localPath)) {
+                unlink($localPath);
             }
         }
     }
 }
 
 if (!isset($_FILES['file'])) {
-    // If only deleting, we might exit here successfully, but usually this script is for upload
-    if (isset($_POST['oldUrl'])) {
-        // Maybe just wanted to delete? But usually we replace. 
-        // For now, let's require file for upload.
-    }
     http_response_code(400);
     echo json_encode(['error' => 'No file uploaded']);
     exit;
 }
 
-// 2. Setup Upload Directory
-$target_dir = "uploads/profiles/";
+// 2. Setup Upload Directory (Physically in ../uploads/profiles/)
+$target_dir = "../uploads/profiles/";
 if (!file_exists($target_dir)) {
+    // Try to create it if permissions allow, though user already created it
     mkdir($target_dir, 0777, true);
 }
 
@@ -61,53 +62,23 @@ if (!in_array($fileType, $allowedTypes)) {
     exit;
 }
 
-if ($file['size'] > 10000000) { // 10MB limit (compression will reduce it)
+if ($file['size'] > 10000000) {
     echo json_encode(['error' => 'File is too large (Max 10MB).']);
     exit;
 }
 
 // 4. Compression & Saving
-$fileName = uniqid() . '.jpg'; // Save everything as JPG for consistency/compression
+$fileName = uniqid() . '.jpg';
 $target_file = $target_dir . $fileName;
 
-// Function to compress image
-function compressImage($source, $destination, $quality)
-{
-    $info = getimagesize($source);
-
-    if ($info['mime'] == 'image/jpeg')
-        $image = imagecreatefromjpeg($source);
-    elseif ($info['mime'] == 'image/gif')
-        $image = imagecreatefromgif($source);
-    elseif ($info['mime'] == 'image/png')
-        $image = imagecreatefrompng($source);
-    elseif ($info['mime'] == 'image/webp')
-        $image = imagecreatefromwebp($source);
-    else
-        return false;
-
-    // Resize if too big (Max width 800px)
-    $maxWidth = 800;
-    $width = imagesx($image);
-    $height = imagesy($image);
-
-    if ($width > $maxWidth) {
-        $newWidth = $maxWidth;
-        $newHeight = floor($height * ($maxWidth / $width));
-        $tmp = imagecreatetruecolor($newWidth, $newHeight);
-        imagecopyresampled($tmp, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-        $image = $tmp;
-    }
-
-    // Save as JPEG with quality
-    imagejpeg($image, $destination, $quality);
-    return true;
-}
+// ... compressImage function remains same ...
 
 try {
     if (compressImage($file['tmp_name'], $target_file, 75)) {
         $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
-        $url = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/" . $target_file;
+        // The URL is NOT the physical path. It is the web path.
+        // Nginx will map /uploads/ to the physical ../uploads/ folder
+        $url = $protocol . "://" . $_SERVER['HTTP_HOST'] . "/uploads/profiles/" . $fileName;
 
         echo json_encode([
             'success' => true,

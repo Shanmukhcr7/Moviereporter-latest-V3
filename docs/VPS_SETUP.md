@@ -14,48 +14,40 @@ sudo apt install php-fpm php-gd php-common
 ```
 
 ## 2. Locate your Website Root
-Your website files (from the git pull) are likely in a folder. Let's assume:
-`/var/www/html/movie-reporter`
+Based on your setup, your website files are in:
+`/var/www/movie-reporter`
 
 ## 3. Configure Upload Permissions
-The PHP script needs to write to `public/uploads`.
+You have already created the `uploads` folder in your project root.
+Ensure it is writable by the web server (which you likely did):
 
 ```bash
-cd /var/www/html/movie-reporter/public
-mkdir -p uploads/profiles
-# Give ownership to the web server user (usually www-data)
+cd /var/www/movie-reporter
 sudo chown -R www-data:www-data uploads
 sudo chmod -R 775 uploads
 ```
 
 ## 4. Configure Nginx
-Edit your site configuration file (usually inside `/etc/nginx/sites-available/`).
-
-```bash
-sudo nano /etc/nginx/sites-available/movielovers.in
-# OR
-sudo nano /etc/nginx/sites-available/default
-```
-
-You need to add a `location` block for PHP **BEFORE** the Next.js proxy block.
+Edit your site configuration file (e.g., `/etc/nginx/sites-available/movielovers.in`).
 
 ```nginx
 server {
     listen 80;
     server_name movielovers.in www.movielovers.in;
-    root /var/www/html/movie-reporter/public; # POINT THIS TO YOUR NEXT.JS PUBLIC FOLDER
+    root /var/www/movie-reporter/public; # Next.js public files are here
 
-    # 1. Handle PHP Files
+    # 1. Handle PHP Files (The Upload Script)
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock; # CHECK YOUR PHP VERSION (ls /var/run/php/)
+        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock; # VERIFY THIS PATH (ls /var/run/php/)
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
         include fastcgi_params;
     }
 
-    # 2. Serve Uploaded Images Directly
+    # 2. Serve Uploaded Images Directly (From the sibling folder)
     location /uploads/ {
-        alias /var/www/html/movie-reporter/public/uploads/;
+        # This maps https://site.com/uploads/... -> /var/www/movie-reporter/uploads/...
+        alias /var/www/movie-reporter/uploads/; 
         access_log off;
         expires max;
     }
