@@ -55,6 +55,17 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <GlobalNotificationListener />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    window.pwaDeferredPrompt = e;
+                    console.log("PWA event captured globally");
+                  });
+                `,
+              }}
+            />
             {children}
           </AuthProvider>
           <SiteFooter />

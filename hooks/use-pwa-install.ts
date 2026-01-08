@@ -8,11 +8,18 @@ export function usePWAInstall() {
 
     useEffect(() => {
         const handler = (e: any) => {
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault()
-            // Stash the event so it can be triggered later.
             setDeferredPrompt(e)
             setIsInstallable(true)
+            console.log("PWA event captured by hook")
+        }
+
+        // Check if event already fired and was captured globally
+        if ((window as any).pwaDeferredPrompt) {
+            console.log("Found global PWA event")
+            setDeferredPrompt((window as any).pwaDeferredPrompt)
+            setIsInstallable(true)
+                ; (window as any).pwaDeferredPrompt = null // Consume it
         }
 
         window.addEventListener("beforeinstallprompt", handler)
