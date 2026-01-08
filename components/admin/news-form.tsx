@@ -76,8 +76,15 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
     useEffect(() => {
         if (initialData) {
             form.reset({
-                ...initialData,
-                scheduledPublish: initialData.scheduledPublish?.toDate(),
+                title: initialData.title || "",
+                author: initialData.author || "",
+                imageUrl: initialData.imageUrl || "",
+                category: initialData.category || "",
+                summary: initialData.summary || "",
+                content: initialData.content || "",
+                isPromotion: initialData.isPromotion || false,
+                isWeeklyMagazine: initialData.isWeeklyMagazine || false,
+                scheduledPublish: initialData.scheduledPublish?.toDate ? initialData.scheduledPublish.toDate() : undefined,
             })
         } else {
             form.reset({
@@ -146,9 +153,15 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
         }
     }
 
+    const onError = (errors: any) => {
+        console.error("Form validation errors:", errors)
+        toast.error("Please check the form for errors")
+        setLoading(false)
+    }
+
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-6">
 
                 <FormField
                     control={form.control}
