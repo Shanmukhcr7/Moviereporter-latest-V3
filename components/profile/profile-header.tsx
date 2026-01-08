@@ -106,17 +106,17 @@ export function ProfileHeader() {
                     <User className="h-5 w-5 md:h-6 md:w-6" />
                     Profile Details
                 </CardTitle>
-                <div className="flex gap-2 w-full sm:w-auto">
-                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => setEditOpen(true)}>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setEditOpen(true)}>
                         Edit Profile
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => setPwdOpen(true)}>
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setPwdOpen(true)}>
                         Change Password
                     </Button>
                     <Button
                         variant="secondary"
                         size="sm"
-                        className="flex-1 sm:flex-none"
+                        className="w-full sm:w-auto"
                         onClick={() => {
                             const shareData = {
                                 title: "Movie Lovers Profile",
