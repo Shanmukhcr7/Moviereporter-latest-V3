@@ -253,7 +253,9 @@ function EditProfileDialogContent({ open, onOpenChange, user, userData }: any) {
         <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
             <DialogHeader>
                 <DialogTitle>{showCropper ? "Adjust Photo" : "Edit Profile"}</DialogTitle>
-                {!showCropper && <DialogDescription>Update your profile details below.</DialogDescription>}
+                <DialogDescription className={showCropper ? "sr-only" : ""}>
+                    Update your profile details below.
+                </DialogDescription>
             </DialogHeader>
 
             {showCropper && cropImageSrc ? (

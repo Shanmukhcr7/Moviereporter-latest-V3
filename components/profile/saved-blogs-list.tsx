@@ -109,7 +109,7 @@ export function SavedBlogsList() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {blogs.map(b => (
                     <div key={b.id} className="border rounded-lg overflow-hidden flex flex-col">
-                        <img src={b.imageUrl || "/placeholder.png"} alt={b.title} className="w-full h-40 object-cover bg-muted" />
+                        <img src={b.imageUrl || "/placeholder.svg"} alt={b.title} className="w-full h-40 object-cover bg-muted" />
                         <div className="p-4 flex flex-col flex-1">
                             <h4 className="font-semibold line-clamp-1">{b.title}</h4>
                             <p className="text-sm text-muted-foreground mb-2">

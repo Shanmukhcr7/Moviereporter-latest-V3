@@ -106,7 +106,7 @@ export function SavedNewsList() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {news.map(n => (
                     <div key={n.id} className="border rounded-lg overflow-hidden flex flex-col">
-                        <img src={n.imageUrl || n.image || "/placeholder.png"} alt={n.title} className="w-full h-40 object-cover bg-muted" />
+                        <img src={n.imageUrl || n.image || "/placeholder.svg"} alt={n.title} className="w-full h-40 object-cover bg-muted" />
                         <div className="p-4 flex flex-col flex-1">
                             <h4 className="font-semibold line-clamp-1">{n.title}</h4>
                             <p className="text-sm text-muted-foreground mb-2">
