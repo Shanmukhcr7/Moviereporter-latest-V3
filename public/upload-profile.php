@@ -14,6 +14,27 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// 0. Environment Checks (Prevent Fatal Errors)
+if (!extension_loaded('gd')) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Server Error: PHP GD Library is missing. Install it with: sudo apt install php-gd']);
+    exit;
+}
+
+$target_dir = "../uploads/profiles/";
+if (!is_dir($target_dir) || !is_writable($target_dir)) {
+    // Attempt to create
+    if (!@mkdir($target_dir, 0777, true)) {
+        $p = realpath($target_dir) ?: $target_dir;
+        // Check if we can write up one level
+        if (!is_writable(dirname($target_dir))) {
+            http_response_code(500);
+            echo json_encode(['error' => "Server Error: Permission denied. Cannot write to $target_dir. Run: sudo chown -R www-data:www-data uploads"]);
+            exit;
+        }
+    }
+}
+
 // 1. Handle Deletion of Old Image (if provided)
 if (isset($_POST['oldUrl']) && !empty($_POST['oldUrl'])) {
     $oldUrl = $_POST['oldUrl'];
