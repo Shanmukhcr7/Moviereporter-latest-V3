@@ -453,6 +453,13 @@ export function BlogClient({ initialId }: { initialId?: string }) {
                             </Button>
                         </div>
 
+                        {/* Summary */}
+                        {article.summary && (
+                            <div className="mb-8 p-4 bg-muted/50 rounded-lg border-l-4 border-primary italic">
+                                {article.summary}
+                            </div>
+                        )}
+
                         {/* Content */}
                         <div className="prose prose-lg dark:prose-invert max-w-none mb-12">
                             <p className="text-lg leading-relaxed whitespace-pre-wrap">
