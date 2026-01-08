@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { ThumbsUp, ThumbsDown, Share2, Calendar, Star as StarIcon, Info, MessageSquare, Play, Edit, Trash, X } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Share2, Calendar, Star as StarIcon, Info, MessageSquare, Play, Edit, Trash, X, Bookmark } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
@@ -37,7 +37,64 @@ export function MovieClient({ initialId }: { initialId?: string }) {
     const [showFullDescription, setShowFullDescription] = useState(false)
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false)
     const [isTrailerOpen, setIsTrailerOpen] = useState(false)
+    const [isInterested, setIsInterested] = useState(false) // New state for Save functionality
     const { user } = useAuth()
+
+    // Interest/Save Logic (Copied/Adapted from MovieCard)
+    useEffect(() => {
+        if (user && movieId) {
+            const checkStatus = async () => {
+                try {
+                    const interestRef = doc(db, `artifacts/default-app-id/users/${user.uid}/interests/${movieId}`)
+                    const interestSnap = await getDoc(interestRef)
+                    if (interestSnap.exists()) setIsInterested(true)
+                } catch (e) {
+                    console.error("Error checking interest status", e)
+                }
+            }
+            checkStatus()
+        }
+    }, [user, movieId])
+
+    const addToInterests = async () => {
+        if (!user) {
+            toast.info("Please login to save movies")
+            return
+        }
+        try {
+            const ref = doc(db, `artifacts/default-app-id/users/${user.uid}/interests/${movieId}`)
+            await setDoc(ref, {
+                movieId: movieId,
+                title: movie.title,
+                posterUrl: movie.poster || movie.posterUrl || "",
+                releaseDate: movie.releaseDate || null,
+                addedAt: Timestamp.now()
+            })
+            setIsInterested(true)
+            toast.success("Added to saved movies")
+        } catch (e) {
+            toast.error("Failed to add")
+        }
+    }
+
+    const removeFromInterests = async () => {
+        if (!user) return
+        try {
+            const ref = doc(db, `artifacts/default-app-id/users/${user.uid}/interests/${movieId}`)
+            await deleteDoc(ref)
+            setIsInterested(false)
+            toast.info("Removed from saved movies")
+        } catch (e) {
+            toast.error("Failed to remove")
+        }
+    }
+
+    const toggleInterest = async (e?: React.MouseEvent) => {
+        e?.preventDefault()
+        e?.stopPropagation()
+        if (isInterested) await removeFromInterests()
+        else await addToInterests()
+    }
 
     const handleReviewReaction = async (reviewId: string, reaction: string) => {
         if (!user) {
@@ -485,15 +542,23 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                         <ThumbsDown className={`h-3.5 w-3.5 ${userReaction === 'dislike' ? 'fill-current' : ''}`} />
                                         {movie.dislikesCount || 0}
                                     </Button>
-                                    {/* ShareButton handles navigator share properly now, replacing manual implementation here for consistency if needed, 
-                      but existing manual implementation is fine too. Let's keep manual but improve it if needed. 
-                      Actually, let's use the ShareButton component if available to be consistent, but user asked for "all sections".
-                      The existing code here implements handleShare manually. I will update it to send image/title too if possible, 
-                      but navigator.share only accepts text/title/url. OG tags handled by server component is the key. 
-                  */}
+                                    {/* ShareButton handles navigator share properly now */}
                                     <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={handleShare}>
                                         <Share2 className="h-3.5 w-3.5" />
                                     </Button>
+
+                                    {/* Save Button (Only for Released movies as per request) */}
+                                    {!isUpcoming && (
+                                        <Button
+                                            variant={isInterested ? "default" : "outline"}
+                                            size="sm"
+                                            className={`h-8 w-8 p-0 ${isInterested ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}`}
+                                            onClick={toggleInterest}
+                                            title={isInterested ? "Remove from Saved" : "Save Movie"}
+                                        >
+                                            <Bookmark className={`h-3.5 w-3.5 ${isInterested ? "fill-current" : ""}`} />
+                                        </Button>
+                                    )}
                                 </div>
 
                                 {/* Rate & Review Button */}
