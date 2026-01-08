@@ -425,7 +425,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                 />
             </div>
 
-            <main className="container mx-auto px-4 -mt-[20vh] md:-mt-[350px] relative z-20">
+            <main className="container mx-auto px-4 -mt-[24vh] md:-mt-[350px] relative z-20">
                 {/* Header Information (Title, Badges, Rating) - Placed Above Image */}
                 {/* Header Info removed from here */}
 
@@ -668,7 +668,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                         <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
                                     </div>
                                 ) : (
-                                    <div className="grid gap-4">
+                                    <div className="grid gap-2">
                                         {reviews.slice(0, 10).map((review) => (
                                             <Card
                                                 key={review.id}
@@ -706,7 +706,7 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                                         </button>
                                                     </div>
                                                 )}
-                                                <CardContent className="p-4">
+                                                <CardContent className="p-3">
                                                     <div className="flex items-start justify-between mb-2">
                                                         <div className="flex items-center gap-2">
                                                             <Avatar className="h-8 w-8">
