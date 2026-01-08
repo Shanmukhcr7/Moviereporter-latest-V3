@@ -314,6 +314,12 @@ export default function VoteEnrollPage() {
         const { setDoc } = await import("firebase/firestore")
         await setDoc(userVoteRef, voteData)
 
+        // Increment Category Total if new
+        if (!existingVote) {
+          const categoryRef = doc(db, "artifacts/default-app-id/categories", categoryId)
+          await updateDoc(categoryRef, { totalVotes: increment(1) })
+        }
+
         // 2. Add to otherChoices
         await addDoc(collection(db, "artifacts/default-app-id/otherChoices"), {
           categoryId,
@@ -347,6 +353,12 @@ export default function VoteEnrollPage() {
             votedAt: new Date(),
             isOther: false
           })
+
+          // 4. Increment Category Total (Only if new vote)
+          if (!existingVote) {
+            const categoryRef = doc(db, "artifacts/default-app-id/categories", categoryId)
+            transaction.update(categoryRef, { totalVotes: increment(1) })
+          }
         })
         toast.success("Vote submitted!")
       }

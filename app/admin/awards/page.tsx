@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, Edit, Trash2, Loader2, Calendar, Trophy, Search } from "lucide-react"
+import { Plus, Edit, Trash2, Loader2, Calendar, Trophy, Search, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
@@ -121,6 +121,25 @@ export default function AwardsPage() {
                                 onEdit={() => { setSelectedCategory(cat); setIsCategoryOpen(true); }}
                                 onManage={() => { setSelectedCategory(cat); setIsNomineesOpen(true); }}
                                 onDelete={() => deleteCategory(cat.id)}
+                                onRecalculate={async () => {
+                                    setLoading(true)
+                                    try {
+                                        // Fetch all nominees
+                                        const nomQ = query(collection(db, "artifacts/default-app-id/nominees"), where("categoryId", "==", cat.id))
+                                        const nomSnap = await getDocs(nomQ)
+                                        const total = nomSnap.docs.reduce((acc, curr) => acc + (curr.data().votes || 0), 0)
+
+                                        await updateDoc(doc(db, "artifacts/default-app-id/categories", cat.id), {
+                                            totalVotes: total
+                                        })
+                                        toast.success(`Recalculated: ${total} votes`)
+                                    } catch (e) {
+                                        console.error(e)
+                                        toast.error("Failed to recalculate")
+                                    } finally {
+                                        setLoading(false)
+                                    }
+                                }}
                             />
                         ))
                     )}
@@ -156,7 +175,7 @@ export default function AwardsPage() {
     )
 }
 
-function CategoryCard({ category, onEdit, onManage, onDelete }: any) {
+function CategoryCard({ category, onEdit, onManage, onDelete, onRecalculate }: any) {
     return (
         <Card>
             <CardHeader className="pb-2">
@@ -171,7 +190,12 @@ function CategoryCard({ category, onEdit, onManage, onDelete }: any) {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="text-sm font-medium">Votes: {category.totalVotes || 0}</div>
+                <div className="text-sm font-medium flex items-center justify-between">
+                    <span>Votes: {category.totalVotes || 0}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRecalculate} title="Recalculate Votes">
+                        <RefreshCw className="h-3 w-3" />
+                    </Button>
+                </div>
             </CardContent>
             <CardFooter className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={onEdit}>Edit</Button>

@@ -32,7 +32,12 @@ service cloud.firestore {
   // --- Categories (Awards) ---
   match /databases/{database}/documents/artifacts/{appId}/categories/{categoryId} {
     allow read: if true;
-    allow create, update, delete: if isAdmin();
+    allow create, delete: if isAdmin();
+    allow update: if isAdmin() || (
+      isAuthenticated() &&
+      request.resource.data.diff(resource.data).changedKeys().hasOnly(['totalVotes']) &&
+      isValidCountChange(request.resource.data.totalVotes, 'totalVotes', resource.data)
+    );
   }
 
   // --- Nominees (Awards) ---
