@@ -115,50 +115,17 @@ export function PollForm({ initialData, onSuccess }: PollFormProps) {
                         render={({ field }) => (
                             <FormItem className="flex flex-col">
                                 <FormLabel>Start Date</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button
-                                                variant={"outline"}
-                                                className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                                                disabled={loading}
-                                            >
-                                                {field.value ? format(field.value, "PPP p") : <span>Pick a date</span>}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-100" />
-                                            </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={field.value}
-                                            onSelect={(date) => {
-                                                if (date) {
-                                                    const newDate = new Date(date);
-                                                    if (field.value) {
-                                                        newDate.setHours(field.value.getHours(), field.value.getMinutes());
-                                                    }
-                                                    field.onChange(newDate);
-                                                } else {
-                                                    field.onChange(date);
-                                                }
-                                            }}
-                                        />
-                                        <div className="p-3 border-t border-border">
-                                            <Input
-                                                type="time"
-                                                value={field.value ? format(field.value, "HH:mm") : "00:00"}
-                                                onChange={(e) => {
-                                                    const [hours, minutes] = e.target.value.split(":").map(Number);
-                                                    const newDate = new Date(field.value || new Date());
-                                                    newDate.setHours(hours);
-                                                    newDate.setMinutes(minutes);
-                                                    field.onChange(newDate);
-                                                }}
-                                            />
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
+                                <FormControl>
+                                    <Input
+                                        type="datetime-local"
+                                        value={field.value ? format(field.value, "yyyy-MM-dd'T'HH:mm") : ""}
+                                        onChange={(e) => {
+                                            const date = e.target.value ? new Date(e.target.value) : undefined;
+                                            field.onChange(date);
+                                        }}
+                                        disabled={loading}
+                                    />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -169,51 +136,17 @@ export function PollForm({ initialData, onSuccess }: PollFormProps) {
                         render={({ field }) => (
                             <FormItem className="flex flex-col">
                                 <FormLabel>End Date</FormLabel>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button
-                                                variant={"outline"}
-                                                className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                                                disabled={loading}
-                                            >
-                                                {field.value ? format(field.value, "PPP p") : <span>Pick a date</span>}
-                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-100" />
-                                            </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={field.value}
-                                            onSelect={(date) => {
-                                                if (date) {
-                                                    const newDate = new Date(date);
-                                                    if (field.value) {
-                                                        newDate.setHours(field.value.getHours(), field.value.getMinutes());
-                                                    }
-                                                    field.onChange(newDate);
-                                                } else {
-                                                    field.onChange(date);
-                                                }
-                                            }}
-                                            disabled={(date) => date < new Date()}
-                                        />
-                                        <div className="p-3 border-t border-border">
-                                            <Input
-                                                type="time"
-                                                value={field.value ? format(field.value, "HH:mm") : "00:00"}
-                                                onChange={(e) => {
-                                                    const [hours, minutes] = e.target.value.split(":").map(Number);
-                                                    const newDate = new Date(field.value || new Date());
-                                                    newDate.setHours(hours);
-                                                    newDate.setMinutes(minutes);
-                                                    field.onChange(newDate);
-                                                }}
-                                            />
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
+                                <FormControl>
+                                    <Input
+                                        type="datetime-local"
+                                        value={field.value ? format(field.value, "yyyy-MM-dd'T'HH:mm") : ""}
+                                        onChange={(e) => {
+                                            const date = e.target.value ? new Date(e.target.value) : undefined;
+                                            field.onChange(date);
+                                        }}
+                                        disabled={loading}
+                                    />
+                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
