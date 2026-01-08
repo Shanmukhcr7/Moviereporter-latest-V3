@@ -192,7 +192,14 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                 )
                 const recSnap = await getDocs(recQuery)
                 const recDocs = recSnap.docs
-                    .map(d => ({ id: d.id, ...d.data() }))
+                    .map(d => {
+                        const data = d.data()
+                        return {
+                            id: d.id,
+                            ...data,
+                            poster: data.poster || data.posterUrl || data.image || ""
+                        }
+                    })
                     .filter((m: any) => m.id !== movieId)
                     .slice(0, 5) // Limit to 5
                 setRecommendedMovies(recDocs)
