@@ -2,8 +2,9 @@
 
 import { usePWAInstall } from "@/hooks/use-pwa-install"
 import { Button } from "@/components/ui/button"
-import { Download } from "lucide-react"
+import { Download, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { useState } from "react"
 
 interface PWAInstallButtonProps {
     className?: string
@@ -11,10 +12,6 @@ interface PWAInstallButtonProps {
     size?: "default" | "sm" | "lg" | "icon"
     showLabel?: boolean
 }
-
-import { useState } from "react"
-import { Loader2 } from "lucide-react"
-import { toast } from "sonner"
 
 export function PWAInstallButton({ className, variant = "outline", size = "default", showLabel = true }: PWAInstallButtonProps) {
     const { isInstallable, installPWA } = usePWAInstall()
