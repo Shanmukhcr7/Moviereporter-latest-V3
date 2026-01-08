@@ -18,10 +18,6 @@ export function PWAInstallButton({ className, variant = "outline", size = "defau
     const handleClick = () => {
         if (isInstallable) {
             installPWA()
-        } else {
-            toast.info("To install the app:", {
-                description: "Tap your browser's Share/Menu button and select 'Add to Home Screen' or 'Install App'."
-            })
         }
     }
 
