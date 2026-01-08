@@ -458,6 +458,12 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                         <span className="text-sm font-bold text-yellow-500">{movie.avgRating.toFixed(1)}</span>
                                     </div>
                                 )}
+                                {movie.releaseDate && (
+                                    <Badge variant="outline" className="gap-1 text-xs px-2 py-0.5">
+                                        <Calendar className="h-3 w-3" />
+                                        {movie.releaseDate.toDate ? new Date(movie.releaseDate.toDate()).toLocaleDateString() : new Date(movie.releaseDate).toLocaleDateString()}
+                                    </Badge>
+                                )}
                             </div>
                         </div>
 
