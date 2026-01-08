@@ -94,7 +94,7 @@ export function ArticleCard({ id, title, image, author, publishedAt, category, e
             />
             {category && <Badge className="absolute top-3 left-3 bg-primary/90 backdrop-blur">{category}</Badge>}
           </div>
-          <CardContent className="p-4 pt-4 space-y-2">
+          <CardContent className="p-3 pt-3 space-y-1.5">
             <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors leading-snug">
               {title}
             </h3>

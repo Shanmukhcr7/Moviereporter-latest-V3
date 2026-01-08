@@ -176,7 +176,7 @@ export function MovieCard({ id, title, poster, releaseDate, rating, industry, is
             </div>
             {industry && <Badge className="absolute top-2 left-2 bg-primary/90 backdrop-blur z-10">{industry}</Badge>}
           </div>
-          <CardContent className="p-4 pt-4 space-y-2 flex flex-col flex-1">
+          <CardContent className="p-3 pt-3 space-y-1.5 flex flex-col flex-1">
             <div className="flex justify-between items-start gap-2">
               <h3 className="font-bold text-lg line-clamp-2 group-hover:text-primary transition-colors leading-snug flex-1">{title}</h3>
               {enableInterest && (
