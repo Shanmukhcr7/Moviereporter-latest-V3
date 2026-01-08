@@ -271,7 +271,7 @@ export default function NewsAndBlogsPage() {
                         <DialogTitle>{selectedItem ? "Edit" : "Create"} {activeTab === "news" ? "News Article" : "Blog Post"}</DialogTitle>
                     </DialogHeader>
                     <NewsForm
-                        key={activeTab} // Reset form when tab changes
+                        key={`${activeTab}-${selectedItem?.id || 'new'}`} // Force re-mount on item change
                         initialData={selectedItem}
                         type={activeTab}
                         onSuccess={handleFormSuccess}
