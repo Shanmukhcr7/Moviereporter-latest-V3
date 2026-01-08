@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { EditProfileDialog } from "./edit-profile-dialog"
 import { ChangePasswordDialog } from "./change-password-dialog"
-import { User, Mail, Phone, Calendar, Shield, Trophy } from "lucide-react"
+import { User, Mail, Phone, Calendar, Shield, Trophy, Pencil } from "lucide-react"
 import { collection, query, where, getCountFromServer } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Progress } from "@/components/ui/progress"
@@ -116,14 +116,25 @@ export function ProfileHeader() {
             </CardHeader>
             <CardContent className="flex flex-col md:flex-row gap-6 mt-6">
                 {/* Avatar Section */}
-                <div className="flex flex-col items-center gap-3">
-                    <Avatar className="h-20 w-20 md:h-28 md:w-28 border-4 border-background shadow-sm">
-                        {/* If we had a photoURL, we'd use it. Currently relying on fallback or google photo */}
-                        <AvatarImage src={user?.photoURL || ""} className="object-cover" />
-                        <AvatarFallback className="text-3xl">{initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col items-center">
-                        <span className="font-medium text-lg">{userData?.displayName || "User"}</span>
+                <div className="flex flex-col items-center gap-3 relative">
+                    <div className="relative group">
+                        <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background shadow-md">
+                            <AvatarImage src={user?.photoURL || ""} className="object-cover" />
+                            <AvatarFallback className="text-4xl">{initials}</AvatarFallback>
+                        </Avatar>
+                        <Button
+                            size="icon"
+                            variant="secondary"
+                            className="absolute bottom-0 right-0 h-8 w-8 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => setEditOpen(true)}
+                        >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit Profile</span>
+                        </Button>
+                    </div>
+
+                    <div className="flex flex-col items-center text-center">
+                        <span className="font-bold text-xl">{userData?.displayName || userData?.username || "Guest Member"}</span>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase font-bold tracking-wider mb-2">
                             {userData?.role || "Member"}
                         </span>
