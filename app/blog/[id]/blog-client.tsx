@@ -539,8 +539,8 @@ export function BlogClient({ initialId }: { initialId?: string }) {
                                 ) : (
                                     comments.map((comment) => (
                                         <Card key={comment.id}>
-                                            <CardContent className="p-4">
-                                                <div className="flex items-start justify-between mb-2">
+                                            <CardContent className="p-3">
+                                                <div className="flex items-start justify-between mb-1.5">
                                                     <div>
                                                         <p className="font-semibold text-sm">
                                                             {comment.userName || comment.username || comment.name || "Anonymous"}
@@ -583,10 +583,10 @@ export function BlogClient({ initialId }: { initialId?: string }) {
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <p className="text-sm mb-2 whitespace-pre-wrap">{comment.comment || comment.commentText}</p>
+                                                        <p className="text-sm mb-1.5 whitespace-pre-wrap leading-tight">{comment.comment || comment.commentText}</p>
 
                                                         {/* Reactions */}
-                                                        <div className="flex gap-1.5 flex-wrap">
+                                                        <div className="flex gap-1 flex-wrap">
                                                             {REACTIONS.map((reaction) => {
                                                                 const reactionCount = Object.values(comment.reactions || {}).filter((r: any) =>
                                                                     r.includes(reaction),
@@ -600,10 +600,10 @@ export function BlogClient({ initialId }: { initialId?: string }) {
                                                                         size="sm"
                                                                         onClick={() => handleReaction(comment.id, reaction)}
                                                                         disabled={!user}
-                                                                        className="h-7 px-2 text-sm gap-1.5"
+                                                                        className="h-6 px-1.5 text-xs gap-1"
                                                                     >
                                                                         <span>{reaction}</span>
-                                                                        {reactionCount > 0 && <span className="text-xs opacity-70">{reactionCount}</span>}
+                                                                        {reactionCount > 0 && <span className="opacity-70">{reactionCount}</span>}
                                                                     </Button>
                                                                 )
                                                             })}
