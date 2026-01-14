@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { collection, query, orderBy, limit, getDocs, where } from "firebase/firestore"
+import { collection, query, orderBy, limit, getDocs, where, Timestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Header } from "@/components/header"
 import { ArticleCard } from "@/components/article-card"
@@ -28,7 +28,7 @@ export default function WeeklyMagazinePage() {
       let newsQuery = query(
         collection(db, "artifacts/default-app-id/news"),
         where("isWeeklyMagazine", "==", true),
-        where("publishedAt", ">=", oneWeekAgo.toISOString()),
+        where("publishedAt", ">=", Timestamp.fromDate(oneWeekAgo)),
         orderBy("publishedAt", "desc"),
         limit(12),
       )
@@ -38,7 +38,7 @@ export default function WeeklyMagazinePage() {
           collection(db, "artifacts/default-app-id/news"),
           where("isWeeklyMagazine", "==", true),
           where("category", "==", categoryFilter),
-          where("publishedAt", ">=", oneWeekAgo.toISOString()),
+          where("publishedAt", ">=", Timestamp.fromDate(oneWeekAgo)),
           orderBy("publishedAt", "desc"),
           limit(12),
         )
@@ -46,11 +46,22 @@ export default function WeeklyMagazinePage() {
 
       const snapshot = await getDocs(newsQuery)
       setArticles(
-        snapshot.docs.map((doc) => ({
-          id: doc.id,
-          type: "news" as const,
-          ...doc.data(),
-        })),
+        snapshot.docs.map((doc) => {
+          const d = doc.data()
+          const dateVal = d.publishedAt || d.scheduledAt || d.createdAt
+          let millis = 0
+          if (dateVal?.toMillis) millis = dateVal.toMillis()
+          else if (dateVal?.seconds) millis = dateVal.seconds * 1000
+          else millis = new Date(dateVal || 0).getTime()
+
+          return {
+            id: doc.id,
+            type: "news" as const,
+            ...d,
+            image: d.image || d.imageUrl || d.bannerImage || d.bannerImageUrl || "",
+            publishedAt: new Date(millis).toISOString(),
+          }
+        }),
       )
     } catch (error) {
       console.error("[v0] Error fetching magazine articles:", error)

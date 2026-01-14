@@ -191,11 +191,22 @@ export default function HomePage() {
           limit(20),
         )
         const magazineSnapshot = await getDocs(magazineQuery)
-        const allMagazine = magazineSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          type: "news",
-          ...doc.data(),
-        }))
+        const allMagazine = magazineSnapshot.docs.map((doc) => {
+          const d = doc.data()
+          const dateVal = d.publishedAt || d.scheduledAt || d.createdAt
+          let millis = 0
+          if (dateVal?.toMillis) millis = dateVal.toMillis()
+          else if (dateVal?.seconds) millis = dateVal.seconds * 1000
+          else millis = new Date(dateVal || 0).getTime()
+
+          return {
+            id: doc.id,
+            type: "news",
+            ...d,
+            image: d.image || d.imageUrl || d.bannerImage || d.bannerImageUrl || "",
+            publishedAt: new Date(millis).toISOString(),
+          }
+        })
         const initialMagazine = allMagazine.slice(0, 6)
         const remainingMag = allMagazine.slice(6)
 
