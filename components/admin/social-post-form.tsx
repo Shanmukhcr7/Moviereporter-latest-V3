@@ -42,6 +42,7 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
     const [suggestions, setSuggestions] = useState<any[]>([])
     const [showSuggestions, setShowSuggestions] = useState(false)
     const wrapperRef = useRef<HTMLDivElement>(null)
+    const [allCelebs, setAllCelebs] = useState<any[]>([]) // Store all celebs
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -58,6 +59,19 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
         },
     })
 
+    // Fetch all celebs on mount (Awards style)
+    useEffect(() => {
+        const fetchCelebs = async () => {
+            try {
+                const q = query(collection(db, "artifacts/default-app-id/celebrities"), limit(500))
+                const snap = await getDocs(q)
+                const celebs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                setAllCelebs(celebs)
+            } catch (e) { console.error("Failed to fetch celebs", e) }
+        }
+        fetchCelebs()
+    }, [])
+
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
@@ -68,23 +82,13 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [wrapperRef])
 
-    const handleNameInput = async (value: string) => {
-        if (value.length >= 2) {
-            try {
-                // Assuming 'celebrities' collection has a 'name' field
-                const q = query(
-                    collection(db, "artifacts/default-app-id/celebrities"),
-                    where("name", ">=", value),
-                    where("name", "<=", value + "\uf8ff"),
-                    limit(5)
-                )
-                const snapshot = await getDocs(q)
-                const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-                setSuggestions(results)
-                setShowSuggestions(true)
-            } catch (err) {
-                console.error("Error searching celebrities:", err)
-            }
+    const handleNameChange = (term: string) => {
+        form.setValue("celebrityName", term)
+        if (term.length > 0) {
+            const lower = term.toLowerCase()
+            const filtered = allCelebs.filter((c: any) => (c.name || "").toLowerCase().includes(lower)).slice(0, 5)
+            setSuggestions(filtered)
+            setShowSuggestions(true)
         } else {
             setSuggestions([])
             setShowSuggestions(false)
@@ -92,6 +96,7 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
     }
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
+        // ... (existing submit logic)
         setLoading(true)
         try {
             const docData = {
@@ -106,6 +111,7 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
                 await addDoc(collection(db, "artifacts/default-app-id/social_posts"), {
                     ...docData,
                     createdAt: Timestamp.now(),
+                    // comments: [] // Initialize empty if needed, but undefined is fine too as we use arrayUnion
                 })
                 toast.success("Post created")
             }
@@ -134,8 +140,10 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
                                         {...field}
                                         disabled={loading}
                                         onChange={(e) => {
-                                            field.onChange(e)
-                                            handleNameInput(e.target.value)
+                                            handleNameChange(e.target.value)
+                                        }}
+                                        onFocus={() => {
+                                            if (field.value) setShowSuggestions(true)
                                         }}
                                         autoComplete="off"
                                     />
@@ -144,7 +152,7 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
                             </FormControl>
 
                             {showSuggestions && suggestions.length > 0 && (
-                                <div className="absolute z-10 w-full bg-popover border rounded-md shadow-md mt-1 overflow-hidden">
+                                <div className="absolute z-50 w-full bg-popover border rounded-md shadow-md mt-1 overflow-hidden">
                                     {suggestions.map((celebrity) => (
                                         <div
                                             key={celebrity.id}
@@ -164,6 +172,8 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
                         </FormItem>
                     )}
                 />
+
+                {/* ... rest of form ... */}
 
                 <div className="grid grid-cols-2 gap-4">
                     <FormField
