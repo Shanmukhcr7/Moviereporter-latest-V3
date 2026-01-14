@@ -21,16 +21,11 @@ export default function WeeklyMagazinePage() {
   const fetchMagazineArticles = async () => {
     setLoading(true)
     try {
-      // Get articles from last week
-      const oneWeekAgo = new Date()
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
       let newsQuery = query(
         collection(db, "artifacts/default-app-id/news"),
         where("isWeeklyMagazine", "==", true),
-        where("publishedAt", ">=", Timestamp.fromDate(oneWeekAgo)),
         orderBy("publishedAt", "desc"),
-        limit(12),
+        limit(20),
       )
 
       if (categoryFilter !== "all") {
@@ -38,9 +33,8 @@ export default function WeeklyMagazinePage() {
           collection(db, "artifacts/default-app-id/news"),
           where("isWeeklyMagazine", "==", true),
           where("category", "==", categoryFilter),
-          where("publishedAt", ">=", Timestamp.fromDate(oneWeekAgo)),
           orderBy("publishedAt", "desc"),
-          limit(12),
+          limit(20),
         )
       }
 
