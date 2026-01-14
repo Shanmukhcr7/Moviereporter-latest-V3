@@ -24,7 +24,6 @@ export default function WeeklyMagazinePage() {
       let newsQuery = query(
         collection(db, "artifacts/default-app-id/news"),
         where("isWeeklyMagazine", "==", true),
-        orderBy("publishedAt", "desc"),
         limit(20),
       )
 
@@ -33,7 +32,6 @@ export default function WeeklyMagazinePage() {
           collection(db, "artifacts/default-app-id/news"),
           where("isWeeklyMagazine", "==", true),
           where("category", "==", categoryFilter),
-          orderBy("publishedAt", "desc"),
           limit(20),
         )
       }
