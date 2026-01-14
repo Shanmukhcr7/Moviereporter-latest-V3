@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react"
 import { formatDistanceToNow } from "date-fns"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Instagram, Facebook, Twitter, MessageCircle, Heart, Share2, ExternalLink, LinkIcon, CheckCircle2, Send, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -33,13 +34,15 @@ interface SocialPostCardProps {
         likedBy?: string[]
         comments?: Comment[]
     }
+    isDetailView?: boolean
 }
 
-export function SocialPostCard({ post }: SocialPostCardProps) {
+export function SocialPostCard({ post, isDetailView = false }: SocialPostCardProps) {
     const { user, userData } = useAuth()
+    const router = useRouter()
     const [isLiked, setIsLiked] = useState(post.likedBy?.includes(user?.uid || "") || false)
     const [likesCount, setLikesCount] = useState(post.likes || 0)
-    const [showComments, setShowComments] = useState(false)
+    const [showComments, setShowComments] = useState(isDetailView)
     const [commentText, setCommentText] = useState("")
     const [isSubmittingComment, setIsSubmittingComment] = useState(false)
     const [localComments, setLocalComments] = useState<Comment[]>(post.comments || [])
@@ -61,7 +64,14 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
         }
     }
 
-    const handleLike = async () => {
+    const handleCardClick = (e: React.MouseEvent) => {
+        if (!isDetailView) {
+            router.push(`/celebrity-social/${post.id}`)
+        }
+    }
+
+    const handleLike = async (e: React.MouseEvent) => {
+        e.stopPropagation()
         if (!user) {
             toast.error("Please login to like posts")
             return
@@ -94,11 +104,12 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
         }
     }
 
-    const handleShare = async () => {
+    const handleShare = async (e: React.MouseEvent) => {
+        e.stopPropagation()
         const shareData = {
             title: `Check out this post by ${post.celebrityName}`,
             text: post.content,
-            url: window.location.href // Or maybe a specific link to the post if we had individual pages
+            url: window.location.href // Should ideally be dynamic
         }
 
         if (navigator.share) {
@@ -112,6 +123,11 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
             navigator.clipboard.writeText(shareData.url)
             toast.success("Link copied to clipboard!")
         }
+    }
+
+    const handleCommentToggle = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        setShowComments(!showComments)
     }
 
     const handleComment = async (e: FormEvent) => {
@@ -144,7 +160,13 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
     }
 
     return (
-        <div className="bg-card border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+        <div
+            className={cn(
+                "bg-card border rounded-xl overflow-hidden shadow-sm transition-shadow relative",
+                !isDetailView && "hover:shadow-md cursor-pointer"
+            )}
+            onClick={handleCardClick}
+        >
             {/* Header */}
             <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -174,12 +196,14 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
 
             {/* Image */}
             {post.imageUrl && (
-                <div className="relative w-full aspect-square md:aspect-[4/3] bg-muted mt-2 border-y">
+                <div className={cn("relative w-full bg-muted mt-2 border-y", isDetailView ? "aspect-auto min-h-[300px]" : "aspect-square md:aspect-[4/3]")}>
                     <Image
                         src={post.imageUrl}
                         alt={post.celebrityName}
-                        fill
-                        className="object-cover"
+                        fill={!isDetailView}
+                        width={isDetailView ? 800 : undefined}
+                        height={isDetailView ? 600 : undefined}
+                        className={cn("object-cover", isDetailView ? "w-full h-auto max-h-[600px] object-contain bg-black/5" : "")}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                 </div>
@@ -207,7 +231,7 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
                         variant="ghost"
                         size="sm"
                         className="gap-2"
-                        onClick={() => setShowComments(!showComments)}
+                        onClick={handleCommentToggle}
                     >
                         <MessageCircle className="w-5 h-5" />
                         <span className="sr-only">Comment</span>
@@ -223,7 +247,7 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
                     </Button>
                 </div>
                 {post.postUrl && (
-                    <Button variant="outline" size="sm" asChild className="text-xs h-8">
+                    <Button variant="outline" size="sm" asChild className="text-xs h-8" onClick={(e) => e.stopPropagation()}>
                         <a href={post.postUrl} target="_blank" rel="noopener noreferrer">
                             Visit Source <ExternalLink className="w-3 h-3 ml-1" />
                         </a>
@@ -232,21 +256,26 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
             </div>
 
             {/* Comments Section */}
-            {showComments && (
-                <div className="bg-muted/30 p-4 border-t animate-in slide-in-from-top-2">
+            {(showComments || isDetailView) && (
+                <div className="bg-muted/30 p-4 border-t animate-in slide-in-from-top-2" onClick={(e) => e.stopPropagation()}>
                     {/* Comment List */}
-                    <div className="space-y-4 mb-4 max-h-60 overflow-y-auto pr-2">
+                    <div className={cn("space-y-4 mb-4 pr-2", !isDetailView && "max-h-60 overflow-y-auto")}>
                         {localComments.length === 0 && (
                             <p className="text-xs text-muted-foreground text-center py-2">No comments yet. Be the first!</p>
                         )}
                         {localComments.map((comment, idx) => (
                             <div key={idx} className="flex gap-2 items-start text-sm">
-                                <Avatar className="w-6 h-6">
-                                    <AvatarFallback className="text-[10px]">{comment.userName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                <Avatar className="w-8 h-8">
+                                    <AvatarFallback className="text-xs">{comment.userName.substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
-                                <div className="flex-1 bg-background p-2 rounded-lg border">
-                                    <span className="font-semibold text-xs block">{comment.userName}</span>
-                                    <p className="text-xs mt-0.5">{comment.text}</p>
+                                <div className="flex-1 bg-background p-3 rounded-lg border shadow-sm">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="font-semibold text-xs opacity-90">{comment.userName}</span>
+                                        <span className="text-[10px] text-muted-foreground">
+                                            {comment.createdAt?.toDate ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : "Just now"}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm leading-relaxed">{comment.text}</p>
                                 </div>
                             </div>
                         ))}
@@ -254,15 +283,15 @@ export function SocialPostCard({ post }: SocialPostCardProps) {
 
                     {/* Input */}
                     {user ? (
-                        <form onSubmit={handleComment} className="flex gap-2">
+                        <form onSubmit={handleComment} className="flex gap-2 sticky bottom-0 bg-background/50 backdrop-blur-sm p-2 rounded-md border">
                             <Input
                                 placeholder="Add a comment..."
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
-                                className="h-9 text-sm"
+                                className="h-10 text-sm"
                                 disabled={isSubmittingComment}
                             />
-                            <Button size="icon" className="h-9 w-9" type="submit" disabled={isSubmittingComment || !commentText.trim()}>
+                            <Button size="icon" className="h-10 w-10 shrink-0" type="submit" disabled={isSubmittingComment || !commentText.trim()}>
                                 {isSubmittingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                             </Button>
                         </form>
