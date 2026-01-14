@@ -40,9 +40,6 @@ export default function CelebritySocialPage() {
                     <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl flex items-center gap-3">
                         Celebrity Social <TrendingUp className="w-8 h-8 text-primary" />
                     </h1>
-                    <p className="max-w-[700px] text-muted-foreground mt-4 text-lg">
-                        Stay updated with the latest posts, tweets, and stories from your favorite stars across all platforms.
-                    </p>
                 </div>
 
                 {loading ? (
