@@ -35,6 +35,7 @@ interface SocialPostCardProps {
     post: {
         id: string
         celebrityName: string
+        celebrityImage?: string
         platform: string
         content: string
         imageUrl?: string
@@ -71,15 +72,12 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
     // Ensure we don't have broken comments (legacy data compatibility)
     useEffect(() => {
         if (post.comments) {
-            // Assign random ID if missing (only locally for rendering keys, but won't help with delete, 
-            // so we rely on finding them by content/timestamp if needed, but for now assuming new comments work best)
             setLocalComments(post.comments.map(c => ({
                 ...c,
-                id: c.id || Math.random().toString(36).substr(2, 9) // temporary ID for legacy
+                id: c.id || Math.random().toString(36).substr(2, 9)
             })))
         }
     }, [post.comments])
-
 
     const getPlatformIcon = () => {
         switch (post.platform) {
@@ -182,8 +180,6 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
 
         try {
             const postRef = doc(db, "artifacts/default-app-id/social_posts", post.id)
-            // We use getDoc to fetch latest array and append, to be consistent with how we edit/delete (manipulating the array)
-            // Actually for adding, arrayUnion is safe and cleaner.
             await updateDoc(postRef, {
                 comments: arrayUnion(newComment)
             })
@@ -201,28 +197,21 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
 
     const handleDeleteComment = async (commentId: string) => {
         try {
-            // Optimistic update
             const updatedLocal = localComments.filter(c => c.id !== commentId)
             setLocalComments(updatedLocal)
 
-            // Firestore update (Fetch -> Filter -> Write)
-            // Note: arrayRemove requires the EXACT object matching fields. Since we might have different timestamps or missing IDs in DB vs local,
-            // safest way is to read the doc, filter the array, and write it back.
             const postRef = doc(db, "artifacts/default-app-id/social_posts", post.id)
             const docSnap = await getDoc(postRef)
 
             if (docSnap.exists()) {
                 const currentComments = docSnap.data().comments || []
-                const newComments = currentComments.filter((c: any) => c.id !== commentId) // Assuming ID is present
-                // Fallback for legacy comments without ID: check userId and createdAt and text
-                // But for now, we assume we rely on ID.
+                const newComments = currentComments.filter((c: any) => c.id !== commentId)
                 await updateDoc(postRef, { comments: newComments })
                 toast.success("Comment deleted")
             }
         } catch (error) {
             console.error(error)
             toast.error("Failed to delete comment")
-            // refresh data?
         }
     }
 
@@ -235,7 +224,6 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
         if (!editCommentText.trim()) return
 
         try {
-            // Optimistic
             setLocalComments(prev => prev.map(c => c.id === commentId ? { ...c, text: editCommentText, updatedAt: new Date() } : c))
             setEditingCommentId(null)
 
@@ -271,9 +259,12 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
             <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className={cn("rounded-full", getPlatformColor())}>
-                        <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center overflow-hidden border-2 border-background">
-                            <span className="font-bold text-sm">{post.celebrityName.substring(0, 2).toUpperCase()}</span>
-                        </div>
+                        <Avatar className="w-10 h-10 border-2 border-background">
+                            <AvatarImage src={post.celebrityImage} className="object-cover" />
+                            <AvatarFallback className="bg-background font-bold text-sm">
+                                {post.celebrityName.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
                     </div>
 
                     <div>
@@ -304,7 +295,7 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
                 </p>
             </div>
 
-            {/* Image */}
+            {/* Content Image */}
             {post.imageUrl && (
                 <div className={cn("relative w-full bg-muted mt-2 border-y", isDetailView ? "aspect-auto min-h-[300px]" : "aspect-square md:aspect-[4/3]")}>
                     <Image

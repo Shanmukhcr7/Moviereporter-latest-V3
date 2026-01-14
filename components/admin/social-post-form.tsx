@@ -25,6 +25,8 @@ import { Loader2, Search } from "lucide-react"
 
 const formSchema = z.object({
     celebrityName: z.string().min(2, "Name is required"),
+    celebrityId: z.string().optional(),
+    celebrityImage: z.string().optional(),
     platform: z.enum(["instagram", "twitter", "facebook", "other"]),
     content: z.string().min(1, "Post content is required"),
     imageUrl: z.string().optional(),
@@ -51,6 +53,8 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
             postedAt: initialData.postedAt?.toDate(),
         } : {
             celebrityName: "",
+            celebrityId: "",
+            celebrityImage: "",
             platform: "instagram",
             content: "",
             imageUrl: "",
@@ -159,6 +163,8 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
                                             className="px-4 py-2 hover:bg-accent hover:text-accent-foreground cursor-pointer text-sm flex items-center gap-2"
                                             onClick={() => {
                                                 form.setValue("celebrityName", celebrity.name)
+                                                form.setValue("celebrityId", celebrity.id)
+                                                form.setValue("celebrityImage", celebrity.image || celebrity.imageUrl || celebrity.profileImage)
                                                 setShowSuggestions(false)
                                             }}
                                         >
