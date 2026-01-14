@@ -30,6 +30,7 @@ const sidebarItems = [
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Moderation", href: "/admin/moderation", icon: ShieldAlert },
     { name: "Notifications", href: "/admin/notifications", icon: Bell },
+    { name: "Celebrity Social", href: "/admin/social-media", icon: MessageSquare }, // Re-using MessageSquare or maybe Share2 would be better, but existing import
     { name: "Activity Logs", href: "/admin/logs", icon: BarChart2, protected: true },
     { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
 ]

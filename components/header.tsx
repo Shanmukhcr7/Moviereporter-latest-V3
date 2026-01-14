@@ -59,6 +59,9 @@ export function Header() {
                   <Link href="/upcoming-releases" className="block px-4 py-2 text-sm hover:bg-accent">
                     Upcoming Releases
                   </Link>
+                  <Link href="/celebrity-social" className="block px-4 py-2 text-sm hover:bg-accent">
+                    Celebrity Social
+                  </Link>
                   <Link href="/ott-releases" className="block px-4 py-2 text-sm hover:bg-accent rounded-b-lg">
                     OTT Releases
                   </Link>
