@@ -193,83 +193,101 @@ export function PollCard({ poll, user, currentUserData }: { poll: Poll, user: an
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-6">
 
-                {isVotingMode ? (
-                    <div className="space-y-4">
-                        {poll.options.map((opt, idx) => {
-                            const text = typeof opt === 'string' ? opt : opt.text
-                            const isOther = typeof opt !== 'string' && opt.isOther
-                            const imageUrl = typeof opt !== 'string' ? opt.imageUrl : undefined
-                            const isSelected = selectedOption === text
+                <div className="space-y-4">
+                    {poll.options.map((opt, idx) => {
+                        const text = typeof opt === 'string' ? opt : opt.text
+                        const isOther = typeof opt !== 'string' && opt.isOther
+                        const imageUrl = typeof opt !== 'string' ? opt.imageUrl : undefined
 
-                            return (
-                                <div key={idx} className={`relative rounded-lg border-2 transition-all ${isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-border/80'}`}>
-                                    <label className="flex items-center p-4 cursor-pointer gap-3 w-full h-full">
+                        // Result calculation
+                        const count = voteCounts[text] || 0
+                        const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0
+
+                        // User selection state
+                        const isSelected = selectedOption === text
+                        const isMyChoice = currentUserVote?.selectedOption === text
+
+                        return (
+                            <div key={idx} className={`relative rounded-lg border-2 transition-all overflow-hidden ${isVotingMode
+                                    ? (isSelected ? 'border-primary' : 'border-border hover:border-border/80')
+                                    : (isMyChoice ? 'border-primary ring-1 ring-primary' : 'border-border')
+                                }`}>
+                                {/* Result Background Bar Animation */}
+                                {!isVotingMode && (
+                                    <div
+                                        className="absolute top-0 left-0 bottom-0 bg-primary/10 transition-all duration-1000 ease-out z-0"
+                                        style={{ width: `${percent}%` }}
+                                    />
+                                )}
+
+                                <label className={`flex items-center p-4 gap-3 w-full h-full relative z-10 ${isVotingMode ? 'cursor-pointer' : ''}`}>
+                                    {isVotingMode ? (
                                         <input
                                             type="radio"
                                             name={`poll-${poll.id}`}
                                             value={text}
                                             checked={isSelected}
                                             onChange={() => setSelectedOption(text)}
-                                            className="w-4 h-4 text-primary"
+                                            className="w-4 h-4 text-primary shrink-0"
                                         />
-                                        {imageUrl && (
-                                            <div className="w-12 h-12 relative rounded overflow-hidden shrink-0">
-                                                <Image src={imageUrl} alt={text} fill sizes="48px" className="object-cover" />
-                                            </div>
-                                        )}
-                                        <span className="font-medium">{text}</span>
-                                    </label>
-                                    {isSelected && isOther && (
-                                        <div className="p-4 pt-0 animate-in slide-in-from-top-2">
-                                            <Input
-                                                placeholder="Type your answer..."
-                                                value={customText}
-                                                onChange={(e) => setCustomText(e.target.value)}
-                                                autoFocus
-                                            />
+                                    ) : (
+                                        <div className="w-4 h-4 shrink-0 flex items-center justify-center">
+                                            {isMyChoice && <CheckCircle2 className="w-4 h-4 text-primary" />}
                                         </div>
                                     )}
-                                </div>
-                            )
-                        })}
+
+                                    {imageUrl && (
+                                        <div className="w-12 h-12 relative rounded overflow-hidden shrink-0 bg-muted">
+                                            <Image src={imageUrl} alt={text} fill sizes="48px" className="object-cover" />
+                                        </div>
+                                    )}
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-center gap-2">
+                                            <span className="font-medium truncate">{text}</span>
+                                            {!isVotingMode && (
+                                                <span className="font-bold text-sm bg-background/50 px-2 py-0.5 rounded backdrop-blur-sm shadow-sm">
+                                                    {percent}% <span className="text-muted-foreground font-normal text-xs">({count})</span>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </label>
+
+                                {isVotingMode && isSelected && isOther && (
+                                    <div className="p-4 pt-0 animate-in slide-in-from-top-2 relative z-20">
+                                        <Input
+                                            placeholder="Type your answer..."
+                                            value={customText}
+                                            onChange={(e) => setCustomText(e.target.value)}
+                                            autoFocus
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    })}
+
+                    {isVotingMode ? (
                         <Button className="w-full mt-4" onClick={handleVoteSubmit} disabled={isSubmitting}>
                             {isSubmitting ? "Submitting..." : "Submit Vote"}
                         </Button>
-                    </div>
-                ) : (
-                    <div className="space-y-4 animate-in fade-in">
-                        {poll.options.map((opt, idx) => {
-                            const text = typeof opt === 'string' ? opt : opt.text
-                            const isOther = typeof opt !== 'string' && opt.isOther
-                            const count = voteCounts[text] || 0
-                            const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0
-                            const isMyChoice = currentUserVote?.selectedOption === text
-
-                            return (
-                                <div key={idx} className="space-y-1">
-                                    <div className="flex justify-between text-sm">
-                                        <div className="flex items-center gap-2 font-medium">
-                                            {text}
-                                            {isMyChoice && <CheckCircle2 className="w-4 h-4 text-primary" />}
-                                        </div>
-                                        <span className="text-muted-foreground">{percent}% ({count})</span>
-                                    </div>
-                                    <Progress value={percent} className="h-3" />
-                                </div>
-                            )
-                        })}
-
-                        <div className="pt-4 flex flex-col gap-2">
-                            <p className="text-center text-sm text-muted-foreground">{totalVotes} total votes</p>
-                            <Button variant="outline" onClick={handleChangeVote}>Change Vote</Button>
+                    ) : (
+                        <div className="flex flex-col gap-2 mt-4">
+                            <div className="flex justify-between items-center text-sm text-muted-foreground px-1">
+                                <span>{totalVotes} total votes</span>
+                                <Button variant="link" size="sm" onClick={handleChangeVote} className="h-auto p-0">
+                                    Change Vote
+                                </Button>
+                            </div>
                             {hasOther && (
-                                <Button variant="ghost" className="text-sm" onClick={loadCustomAnswers}>
+                                <Button variant="outline" className="w-full" onClick={loadCustomAnswers}>
                                     Show Custom Answers
                                 </Button>
                             )}
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
             </CardContent>
 
