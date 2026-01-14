@@ -38,7 +38,7 @@ export default function CelebritySocialPage() {
             <main className="container mx-auto px-4 py-8">
                 <div className="flex flex-col items-center mb-10 text-center">
                     <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl flex items-center gap-3">
-                        Celebrity Social <TrendingUp className="w-8 h-8 text-primary" />
+                        Celebrity Social Media <TrendingUp className="w-8 h-8 text-primary" />
                     </h1>
                 </div>
 

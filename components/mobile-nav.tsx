@@ -86,7 +86,7 @@ export function MobileNav() {
                                             OTT Releases
                                         </Link>
                                         <Link href="/celebrity-social" className="px-8 py-2 text-sm hover:text-primary transition-colors">
-                                            Celebrity Social
+                                            Celebrity Social Media
                                         </Link>
                                     </div>
                                 </AccordionContent>

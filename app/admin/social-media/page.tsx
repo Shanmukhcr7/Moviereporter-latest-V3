@@ -78,7 +78,7 @@ export default function SocialMediaPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">Celebrity Social</h1>
+                    <h1 className="text-3xl font-bold">Celebrity Social Media</h1>
                     <p className="text-muted-foreground">Manage social media updates and posts.</p>
                 </div>
                 <Button onClick={handleAddNew}>

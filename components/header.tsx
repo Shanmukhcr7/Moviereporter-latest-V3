@@ -60,7 +60,7 @@ export function Header() {
                     Upcoming Releases
                   </Link>
                   <Link href="/celebrity-social" className="block px-4 py-2 text-sm hover:bg-accent">
-                    Celebrity Social
+                    Celebrity Social Media
                   </Link>
                   <Link href="/ott-releases" className="block px-4 py-2 text-sm hover:bg-accent rounded-b-lg">
                     OTT Releases
