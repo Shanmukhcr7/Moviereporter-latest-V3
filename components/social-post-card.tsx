@@ -1,24 +1,34 @@
 "use client"
 
-import { useState, FormEvent } from "react"
+import { useState, FormEvent, useEffect } from "react"
 import { formatDistanceToNow } from "date-fns"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { Instagram, Facebook, Twitter, MessageCircle, Heart, Share2, ExternalLink, LinkIcon, CheckCircle2, Send, Loader2 } from "lucide-react"
+import { Instagram, Facebook, Twitter, MessageCircle, Heart, Share2, ExternalLink, LinkIcon, CheckCircle2, Send, Loader2, MoreVertical, Trash2, Edit2, X, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
-import { doc, updateDoc, arrayUnion, arrayRemove, increment, Timestamp } from "firebase/firestore"
+import { doc, updateDoc, arrayUnion, arrayRemove, increment, Timestamp, getDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Comment {
+    id: string
     userId: string
     userName: string
+    userPhoto?: string
     text: string
     createdAt: any
+    updatedAt?: any
 }
 
 interface SocialPostCardProps {
@@ -37,15 +47,39 @@ interface SocialPostCardProps {
     isDetailView?: boolean
 }
 
+const MAX_COMMENT_LENGTH = 500
+const READ_MORE_LENGTH = 250
+
 export function SocialPostCard({ post, isDetailView = false }: SocialPostCardProps) {
     const { user, userData } = useAuth()
     const router = useRouter()
     const [isLiked, setIsLiked] = useState(post.likedBy?.includes(user?.uid || "") || false)
     const [likesCount, setLikesCount] = useState(post.likes || 0)
     const [showComments, setShowComments] = useState(isDetailView)
+
+    // Comment State
     const [commentText, setCommentText] = useState("")
     const [isSubmittingComment, setIsSubmittingComment] = useState(false)
     const [localComments, setLocalComments] = useState<Comment[]>(post.comments || [])
+    const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+    const [editCommentText, setEditCommentText] = useState("")
+
+    // Content State
+    const [isExpanded, setIsExpanded] = useState(false)
+    const isLongContent = post.content.length > READ_MORE_LENGTH
+
+    // Ensure we don't have broken comments (legacy data compatibility)
+    useEffect(() => {
+        if (post.comments) {
+            // Assign random ID if missing (only locally for rendering keys, but won't help with delete, 
+            // so we rely on finding them by content/timestamp if needed, but for now assuming new comments work best)
+            setLocalComments(post.comments.map(c => ({
+                ...c,
+                id: c.id || Math.random().toString(36).substr(2, 9) // temporary ID for legacy
+            })))
+        }
+    }, [post.comments])
+
 
     const getPlatformIcon = () => {
         switch (post.platform) {
@@ -77,7 +111,6 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
             return
         }
 
-        // Optimistic update
         const newIsLiked = !isLiked
         setIsLiked(newIsLiked)
         setLikesCount(prev => newIsLiked ? prev + 1 : prev - 1)
@@ -97,7 +130,6 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
             }
         } catch (error) {
             console.error("Error updating like:", error)
-            // Revert on error
             setIsLiked(!newIsLiked)
             setLikesCount(prev => newIsLiked ? prev - 1 : prev + 1)
             toast.error("Failed to update like")
@@ -109,7 +141,7 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
         const shareData = {
             title: `Check out this post by ${post.celebrityName}`,
             text: post.content,
-            url: window.location.href // Should ideally be dynamic
+            url: window.location.href
         }
 
         if (navigator.share) {
@@ -119,7 +151,6 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
                 console.log("Share canceled")
             }
         } else {
-            // Fallback
             navigator.clipboard.writeText(shareData.url)
             toast.success("Link copied to clipboard!")
         }
@@ -134,16 +165,25 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
         e.preventDefault()
         if (!user || !commentText.trim()) return
 
+        if (commentText.length > MAX_COMMENT_LENGTH) {
+            toast.error(`Comment must be under ${MAX_COMMENT_LENGTH} characters`)
+            return
+        }
+
         setIsSubmittingComment(true)
         const newComment: Comment = {
+            id: crypto.randomUUID(),
             userId: user.uid,
             userName: userData?.displayName || "User",
+            userPhoto: user.photoURL || undefined,
             text: commentText,
             createdAt: Timestamp.now()
         }
 
         try {
             const postRef = doc(db, "artifacts/default-app-id/social_posts", post.id)
+            // We use getDoc to fetch latest array and append, to be consistent with how we edit/delete (manipulating the array)
+            // Actually for adding, arrayUnion is safe and cleaner.
             await updateDoc(postRef, {
                 comments: arrayUnion(newComment)
             })
@@ -156,6 +196,66 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
             toast.error("Failed to post comment")
         } finally {
             setIsSubmittingComment(false)
+        }
+    }
+
+    const handleDeleteComment = async (commentId: string) => {
+        try {
+            // Optimistic update
+            const updatedLocal = localComments.filter(c => c.id !== commentId)
+            setLocalComments(updatedLocal)
+
+            // Firestore update (Fetch -> Filter -> Write)
+            // Note: arrayRemove requires the EXACT object matching fields. Since we might have different timestamps or missing IDs in DB vs local,
+            // safest way is to read the doc, filter the array, and write it back.
+            const postRef = doc(db, "artifacts/default-app-id/social_posts", post.id)
+            const docSnap = await getDoc(postRef)
+
+            if (docSnap.exists()) {
+                const currentComments = docSnap.data().comments || []
+                const newComments = currentComments.filter((c: any) => c.id !== commentId) // Assuming ID is present
+                // Fallback for legacy comments without ID: check userId and createdAt and text
+                // But for now, we assume we rely on ID.
+                await updateDoc(postRef, { comments: newComments })
+                toast.success("Comment deleted")
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error("Failed to delete comment")
+            // refresh data?
+        }
+    }
+
+    const startEdit = (comment: Comment) => {
+        setEditingCommentId(comment.id)
+        setEditCommentText(comment.text)
+    }
+
+    const saveEdit = async (commentId: string) => {
+        if (!editCommentText.trim()) return
+
+        try {
+            // Optimistic
+            setLocalComments(prev => prev.map(c => c.id === commentId ? { ...c, text: editCommentText, updatedAt: new Date() } : c))
+            setEditingCommentId(null)
+
+            const postRef = doc(db, "artifacts/default-app-id/social_posts", post.id)
+            const docSnap = await getDoc(postRef)
+
+            if (docSnap.exists()) {
+                const currentComments = docSnap.data().comments || []
+                const newComments = currentComments.map((c: any) => {
+                    if (c.id === commentId) {
+                        return { ...c, text: editCommentText, updatedAt: Timestamp.now() }
+                    }
+                    return c
+                })
+                await updateDoc(postRef, { comments: newComments })
+                toast.success("Comment updated")
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error("Failed to update comment")
         }
     }
 
@@ -191,7 +291,17 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
 
             {/* Content */}
             <div className="px-4 pb-2">
-                <p className="text-sm whitespace-pre-wrap linkify">{post.content}</p>
+                <p className="text-sm whitespace-pre-wrap linkify">
+                    {isExpanded || !isLongContent ? post.content : `${post.content.substring(0, READ_MORE_LENGTH)}...`}
+                    {isLongContent && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                            className="text-primary hover:underline ml-1 text-xs font-semibold"
+                        >
+                            {isExpanded ? "Show less" : "Read more"}
+                        </button>
+                    )}
+                </p>
             </div>
 
             {/* Image */}
@@ -264,18 +374,56 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
                             <p className="text-xs text-muted-foreground text-center py-2">No comments yet. Be the first!</p>
                         )}
                         {localComments.map((comment, idx) => (
-                            <div key={idx} className="flex gap-2 items-start text-sm">
+                            <div key={comment.id || idx} className="flex gap-2 items-start text-sm group">
                                 <Avatar className="w-8 h-8">
-                                    <AvatarFallback className="text-xs">{comment.userName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                    <AvatarImage src={comment.userPhoto} />
+                                    <AvatarFallback className="text-xs">{comment.userName ? comment.userName.substring(0, 2).toUpperCase() : "U"}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1 bg-background p-3 rounded-lg border shadow-sm">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="font-semibold text-xs opacity-90">{comment.userName}</span>
-                                        <span className="text-[10px] text-muted-foreground">
-                                            {comment.createdAt?.toDate ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : "Just now"}
-                                        </span>
+                                    <div className="flex justify-between items-start mb-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-xs opacity-90">{comment.userName}</span>
+                                            <span className="text-[10px] text-muted-foreground">
+                                                {comment.createdAt?.toDate ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : "Just now"}
+                                                {comment.updatedAt && " (edited)"}
+                                            </span>
+                                        </div>
+
+                                        {user?.uid === comment.userId && editingCommentId !== comment.id && (
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6 -mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <MoreVertical className="h-3 w-3" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => startEdit(comment)}>
+                                                        <Edit2 className="h-3 w-3 mr-2" /> Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-red-500" onClick={() => handleDeleteComment(comment.id)}>
+                                                        <Trash2 className="h-3 w-3 mr-2" /> Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        )}
                                     </div>
-                                    <p className="text-sm leading-relaxed">{comment.text}</p>
+
+                                    {editingCommentId === comment.id ? (
+                                        <div className="space-y-2">
+                                            <Textarea
+                                                value={editCommentText}
+                                                onChange={(e) => setEditCommentText(e.target.value)}
+                                                className="min-h-[60px] text-sm"
+                                                maxLength={MAX_COMMENT_LENGTH}
+                                            />
+                                            <div className="flex justify-end gap-2">
+                                                <Button size="sm" variant="ghost" onClick={() => setEditingCommentId(null)}>Cancel</Button>
+                                                <Button size="sm" onClick={() => saveEdit(comment.id)}>Save</Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{comment.text}</p>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -283,18 +431,24 @@ export function SocialPostCard({ post, isDetailView = false }: SocialPostCardPro
 
                     {/* Input */}
                     {user ? (
-                        <form onSubmit={handleComment} className="flex gap-2 sticky bottom-0 bg-background/50 backdrop-blur-sm p-2 rounded-md border">
-                            <Input
-                                placeholder="Add a comment..."
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                                className="h-10 text-sm"
-                                disabled={isSubmittingComment}
-                            />
-                            <Button size="icon" className="h-10 w-10 shrink-0" type="submit" disabled={isSubmittingComment || !commentText.trim()}>
-                                {isSubmittingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                            </Button>
-                        </form>
+                        <div className="sticky bottom-0 bg-background/50 backdrop-blur-sm p-2 rounded-md border space-y-2">
+                            <form onSubmit={handleComment} className="flex gap-2">
+                                <Input
+                                    placeholder="Add a comment..."
+                                    value={commentText}
+                                    onChange={(e) => setCommentText(e.target.value)}
+                                    className="h-10 text-sm"
+                                    disabled={isSubmittingComment}
+                                    maxLength={MAX_COMMENT_LENGTH}
+                                />
+                                <Button size="icon" className="h-10 w-10 shrink-0" type="submit" disabled={isSubmittingComment || !commentText.trim()}>
+                                    {isSubmittingComment ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                </Button>
+                            </form>
+                            <div className="text-[10px] text-muted-foreground text-right px-1">
+                                {commentText.length} / {MAX_COMMENT_LENGTH}
+                            </div>
+                        </div>
                     ) : (
                         <div className="text-center p-2 bg-muted/50 rounded text-xs text-muted-foreground">
                             Please login to comment.
