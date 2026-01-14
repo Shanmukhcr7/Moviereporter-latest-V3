@@ -32,7 +32,8 @@ const formSchema = z.object({
     options: z.array(z.object({
         text: z.string().min(1, "Option text is required"),
         imageUrl: z.string().optional(),
-        votes: z.number().default(0) // Keep existing votes if editing, or 0
+        votes: z.number().default(0), // Keep existing votes if editing, or 0
+        isOther: z.boolean().optional()
     })).min(2, "At least 2 options are required"),
 })
 
@@ -54,7 +55,7 @@ export function PollForm({ initialData, onSuccess }: PollFormProps) {
             question: "",
             startDate: new Date(),
             endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // +7 days
-            options: [{ text: "", imageUrl: "", votes: 0 }, { text: "", imageUrl: "", votes: 0 }],
+            options: [{ text: "", imageUrl: "", votes: 0, isOther: false }, { text: "", imageUrl: "", votes: 0, isOther: false }],
         },
     })
 
@@ -149,14 +150,26 @@ export function PollForm({ initialData, onSuccess }: PollFormProps) {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <FormLabel>Poll Options</FormLabel>
-                        <Button type="button" variant="outline" size="sm" onClick={() => append({ text: "", imageUrl: "", votes: 0 })}>
-                            <Plus className="h-4 w-4 mr-2" /> Add Option
-                        </Button>
+                        <div className="space-x-2">
+                            <Button type="button" variant="outline" size="sm" onClick={() => append({ text: "", imageUrl: "", votes: 0, isOther: false })}>
+                                <Plus className="h-4 w-4 mr-2" /> Add Option
+                            </Button>
+                            {!fields.some(f => f.isOther) && (
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => append({ text: "Other", imageUrl: "", votes: 0, isOther: true })}
+                                >
+                                    <Plus className="h-4 w-4 mr-2" /> Add "Other"
+                                </Button>
+                            )}
+                        </div>
                     </div>
 
                     <div className="space-y-4">
                         {fields.map((field, index) => (
-                            <div key={field.id} className="flex gap-4 items-start p-4 border rounded-md bg-muted/20">
+                            <div key={field.id} className={cn("flex gap-4 items-start p-4 border rounded-md", field.isOther ? "bg-amber-500/10 border-amber-500/20" : "bg-muted/20")}>
                                 <div className="flex-1 space-y-4">
                                     <FormField
                                         control={form.control}
@@ -164,29 +177,35 @@ export function PollForm({ initialData, onSuccess }: PollFormProps) {
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormControl>
-                                                    <Input placeholder={`Option ${index + 1}`} {...field} disabled={loading} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name={`options.${index}.imageUrl`}
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormControl>
-                                                    <ImageUpload
-                                                        value={field.value || ""}
-                                                        onChange={field.onChange}
-                                                        disabled={loading}
-                                                        folder="poll-options"
+                                                    <Input
+                                                        placeholder={`Option ${index + 1}`}
+                                                        {...field}
+                                                        disabled={loading || fields[index].isOther} // Disable editing text for 'Other' to ensure consistency
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
+                                    {!fields[index].isOther && (
+                                        <FormField
+                                            control={form.control}
+                                            name={`options.${index}.imageUrl`}
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <ImageUpload
+                                                            value={field.value || ""}
+                                                            onChange={field.onChange}
+                                                            onRemove={() => field.onChange("")}
+                                                            disabled={loading}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )}
                                 </div>
                                 <Button
                                     type="button"
