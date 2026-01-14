@@ -24,7 +24,7 @@ export default function WeeklyMagazinePage() {
       let newsQuery = query(
         collection(db, "artifacts/default-app-id/news"),
         where("isWeeklyMagazine", "==", true),
-        limit(20),
+        limit(50),
       )
 
       if (categoryFilter !== "all") {
@@ -32,29 +32,44 @@ export default function WeeklyMagazinePage() {
           collection(db, "artifacts/default-app-id/news"),
           where("isWeeklyMagazine", "==", true),
           where("category", "==", categoryFilter),
-          limit(20),
+          limit(50),
         )
       }
 
       const snapshot = await getDocs(newsQuery)
-      setArticles(
-        snapshot.docs.map((doc) => {
-          const d = doc.data()
-          const dateVal = d.publishedAt || d.scheduledAt || d.createdAt
-          let millis = 0
-          if (dateVal?.toMillis) millis = dateVal.toMillis()
-          else if (dateVal?.seconds) millis = dateVal.seconds * 1000
-          else millis = new Date(dateVal || 0).getTime()
 
-          return {
-            id: doc.id,
-            type: "news" as const,
-            ...d,
-            image: d.image || d.imageUrl || d.bannerImage || d.bannerImageUrl || "",
-            publishedAt: new Date(millis).toISOString(),
-          }
-        }),
-      )
+
+      const curr = new Date()
+      const day = curr.getDay()
+      const diff = curr.getDate() - day
+
+      const sundayStart = new Date(curr.setDate(diff))
+      sundayStart.setHours(0, 0, 0, 0)
+      const sundayStartMillis = sundayStart.getTime()
+
+      const processDocs = snapshot.docs.map((doc) => {
+        const d = doc.data()
+        const dateVal = d.publishedAt || d.scheduledAt || d.createdAt
+        let millis = 0
+        if (dateVal?.toMillis) millis = dateVal.toMillis()
+        else if (dateVal?.seconds) millis = dateVal.seconds * 1000
+        else millis = new Date(dateVal || 0).getTime()
+
+        return {
+          id: doc.id,
+          type: "news" as const,
+          ...d,
+          image: d.image || d.imageUrl || d.bannerImage || d.bannerImageUrl || "",
+          publishedAt: new Date(millis).toISOString(),
+          _millis: millis // temp for sorting/filtering
+        }
+      })
+
+      const filtered = processDocs
+        .filter(doc => doc._millis >= sundayStartMillis)
+        .sort((a, b) => b._millis - a._millis)
+
+      setArticles(filtered)
     } catch (error) {
       console.error("[v0] Error fetching magazine articles:", error)
     } finally {
