@@ -191,9 +191,10 @@ export function PollCard({ poll, user, currentUserData }: { poll: Poll, user: an
                     Ends {poll.endTime?.toDate ? formatDistanceToNow(poll.endTime.toDate(), { addSuffix: true }) : 'soon'}
                 </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-6">
+            <CardContent className="flex-1 flex flex-col gap-4 min-h-[350px]">
 
-                <div className="space-y-4">
+                {/* Scrollable Options Area */}
+                <div className="flex-1 overflow-y-auto max-h-[220px] space-y-3 pr-1">
                     {poll.options.map((opt, idx) => {
                         const text = typeof opt === 'string' ? opt : opt.text
                         const isOther = typeof opt !== 'string' && opt.isOther
@@ -209,8 +210,8 @@ export function PollCard({ poll, user, currentUserData }: { poll: Poll, user: an
 
                         return (
                             <div key={idx} className={`relative rounded-lg border-2 transition-all overflow-hidden ${isVotingMode
-                                    ? (isSelected ? 'border-primary' : 'border-border hover:border-border/80')
-                                    : (isMyChoice ? 'border-primary ring-1 ring-primary' : 'border-border')
+                                ? (isSelected ? 'border-primary' : 'border-border hover:border-border/80')
+                                : (isMyChoice ? 'border-primary ring-1 ring-primary' : 'border-border')
                                 }`}>
                                 {/* Result Background Bar Animation */}
                                 {!isVotingMode && (
@@ -220,7 +221,7 @@ export function PollCard({ poll, user, currentUserData }: { poll: Poll, user: an
                                     />
                                 )}
 
-                                <label className={`flex items-center p-4 gap-3 w-full h-full relative z-10 ${isVotingMode ? 'cursor-pointer' : ''}`}>
+                                <label className={`flex items-center p-3 gap-3 w-full h-full relative z-10 ${isVotingMode ? 'cursor-pointer' : ''}`}>
                                     {isVotingMode ? (
                                         <input
                                             type="radio"
@@ -237,16 +238,16 @@ export function PollCard({ poll, user, currentUserData }: { poll: Poll, user: an
                                     )}
 
                                     {imageUrl && (
-                                        <div className="w-12 h-12 relative rounded overflow-hidden shrink-0 bg-muted">
-                                            <Image src={imageUrl} alt={text} fill sizes="48px" className="object-cover" />
+                                        <div className="w-10 h-10 relative rounded overflow-hidden shrink-0 bg-muted">
+                                            <Image src={imageUrl} alt={text} fill sizes="40px" className="object-cover" />
                                         </div>
                                     )}
 
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-center gap-2">
-                                            <span className="font-medium truncate">{text}</span>
+                                            <span className="font-medium truncate text-sm">{text}</span>
                                             {!isVotingMode && (
-                                                <span className="font-bold text-sm bg-background/50 px-2 py-0.5 rounded backdrop-blur-sm shadow-sm">
+                                                <span className="font-bold text-xs bg-background/50 px-2 py-0.5 rounded backdrop-blur-sm shadow-sm whitespace-nowrap">
                                                     {percent}% <span className="text-muted-foreground font-normal text-xs">({count})</span>
                                                 </span>
                                             )}
@@ -255,7 +256,7 @@ export function PollCard({ poll, user, currentUserData }: { poll: Poll, user: an
                                 </label>
 
                                 {isVotingMode && isSelected && isOther && (
-                                    <div className="p-4 pt-0 animate-in slide-in-from-top-2 relative z-20">
+                                    <div className="p-3 pt-0 animate-in slide-in-from-top-2 relative z-20">
                                         <Input
                                             placeholder="Type your answer..."
                                             value={customText}
@@ -267,14 +268,17 @@ export function PollCard({ poll, user, currentUserData }: { poll: Poll, user: an
                             </div>
                         )
                     })}
+                </div>
 
+                {/* Action Buttons - Always at bottom */}
+                <div className="mt-auto pt-4 border-t">
                     {isVotingMode ? (
-                        <Button className="w-full mt-4" onClick={handleVoteSubmit} disabled={isSubmitting}>
+                        <Button className="w-full" onClick={handleVoteSubmit} disabled={isSubmitting}>
                             {isSubmitting ? "Submitting..." : "Submit Vote"}
                         </Button>
                     ) : (
-                        <div className="flex flex-col gap-2 mt-4">
-                            <div className="flex justify-between items-center text-sm text-muted-foreground px-1">
+                        <div className="flex flex-col gap-2">
+                            <div className="flex justify-between items-center text-sm text-muted-foreground">
                                 <span>{totalVotes} total votes</span>
                                 <Button variant="link" size="sm" onClick={handleChangeVote} className="h-auto p-0">
                                     Change Vote

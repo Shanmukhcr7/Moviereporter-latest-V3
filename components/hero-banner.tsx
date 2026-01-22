@@ -133,13 +133,13 @@ export function HeroBanner() {
       onTouchEnd={handleTouchEnd}
     >
       {/* Banner Image */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20">
         <Image
           src={currentBanner.image || "/placeholder.svg?height=600&width=1200"}
           alt={currentBanner.title}
           fill
           sizes="100vw"
-          className="object-cover transition-transform duration-700"
+          className="object-cover object-[center_20%] transition-transform duration-700"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
