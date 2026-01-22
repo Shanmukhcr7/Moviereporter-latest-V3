@@ -35,4 +35,4 @@ jobs:
             git pull origin main
             npm install
             npm run build
-            pm2 restart all || pm2 start npm --name "movie-reporter" -- start
+            pm2 restart movie-reporter || pm2 start npm --name "movie-reporter" -- start
