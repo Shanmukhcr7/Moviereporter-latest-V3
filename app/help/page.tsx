@@ -57,6 +57,24 @@ export default function HelpPage() {
                 reactions.
               </p>
 
+              <h3>Weekly Magazine</h3>
+              <p>
+                Check out our "Weekly Magazine" for curated articles, deep dives, and special features about the film
+                industry, updated every Monday.
+              </p>
+
+              <h3>Profile Management</h3>
+              <p>
+                Go to your profile page to view your activity, manage your "Interested" list, and update your account
+                settings including your avatar and bio.
+              </p>
+
+              <h3>Safety & Privacy</h3>
+              <p>
+                We take your privacy seriously. Your personal data is encrypted and never shared with third parties
+                without your consent. Check our Privacy Policy for more details.
+              </p>
+
               <h2>Need More Help?</h2>
               <p>
                 If you need additional assistance, please use the feedback form on our About page or contact us at

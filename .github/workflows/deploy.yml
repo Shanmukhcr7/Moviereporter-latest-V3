@@ -22,6 +22,7 @@ jobs:
           command_timeout: 30m
           script: |
             # Check if directory exists
+            export PATH=$HOME/.bun/bin:$PATH
             if [ ! -d "/var/www/movie-reporter" ]; then
               echo "Directory missing. Cloning repo..."
               mkdir -p /var/www
@@ -33,6 +34,18 @@ jobs:
             # Go to directory and deploy
             cd /var/www/movie-reporter
             git pull origin main
-            npm install
-            npm run build
-            pm2 restart movie-reporter || pm2 start npm --name "movie-reporter" -- start
+            bun install
+            bun run build
+            # Restart or Start with PM2
+            echo "Starting/Restarting application..."
+            if pm2 describe movie-reporter > /dev/null; then
+              echo "Process exists. Restarting..."
+              pm2 restart movie-reporter --update-env
+            else
+              echo "Process not found. Starting fresh..."
+              # Using absolute path for bun to be safe, though PATH is exported
+              pm2 start bun --name "movie-reporter" -- start
+            fi
+            
+            pm2 save
+            pm2 list
