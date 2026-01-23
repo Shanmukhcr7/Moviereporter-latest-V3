@@ -267,10 +267,33 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
                             <FormControl>
                                 <ImageUpload
                                     value={field.value || ""}
-                                    onChange={field.onChange}
-                                    onRemove={() => field.onChange("")}
+                                    onChange={async (url) => {
+                                        if (field.value && field.value !== url) {
+                                            try {
+                                                await fetch("/api/delete-file", {
+                                                    method: "POST",
+                                                    body: JSON.stringify({ url: field.value })
+                                                });
+                                            } catch (e) { console.error(e) }
+                                        }
+                                        field.onChange(url)
+                                    }}
+                                    onRemove={async () => {
+                                        if (field.value) {
+                                            try {
+                                                await fetch("/api/delete-file", {
+                                                    method: "POST",
+                                                    body: JSON.stringify({ url: field.value })
+                                                });
+                                            } catch (e) { console.error(e) }
+                                        }
+                                        field.onChange("")
+                                    }}
                                     disabled={loading}
+                                    folder="news-images"
                                 />
+
+
                             </FormControl>
                             <FormMessage />
                         </FormItem>

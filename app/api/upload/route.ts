@@ -1,54 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import { existsSync } from "fs";
+import { uploadFile } from "@/lib/r2";
 
 export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
         const file = formData.get("file") as File | null;
+        let folder = formData.get("folder") as string | null;
 
         if (!file) {
             return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
         }
 
+        // Validate/Sanitize folder
+        const allowedFolders = ["blog-images", "celebrity-images", "movie-images", "news-images", "user-profiles"];
+        if (!folder || !allowedFolders.includes(folder)) {
+            folder = "uploads";
+        }
+
         const buffer = Buffer.from(await file.arrayBuffer());
-        const filename = file.name.replace(/\s+/g, "-");
+        let finalBuffer = buffer;
+        let finalContentType = file.type;
+
+        // Compression Logic
+        // If image is > 1MB or simply large, compress it.
+        // We'll trust sharp to optimize.
+        if (file.size > 1024 * 1024 || file.type.startsWith("image/")) {
+            try {
+                // Resize to max 1920x1080, convert to jpeg (or webp) with 80% quality
+                // This ensures < 1MB for almost all web images
+                const sharp = require('sharp');
+                finalBuffer = await sharp(buffer)
+                    .resize(1920, 1080, { fit: 'inside', withoutEnlargement: true })
+                    .jpeg({ quality: 80, mozjpeg: true }) // mozjpeg for better compression
+                    .toBuffer();
+
+                finalContentType = 'image/jpeg';
+                // Update filename extension if needed, but R2 doesn't care much. 
+                // Best practice: change to .jpg if we force jpeg
+            } catch (e) {
+                console.error("Compression failed, uploading original:", e);
+                // Fallback to original
+            }
+        }
+
+        const filename = file.name.replace(/\s+/g, "-").replace(/\.[^/.]+$/, "") + ".jpg"; // Force .jpg extension
         const uniqueFilename = `${Date.now()}-${filename}`;
 
-        // Determing upload directory
-        // In Prod (VPS), we want /var/www/uploads
-        // In Local, we might want ./public/uploads
-        const uploadDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "public/uploads");
+        // Upload to R2
+        const fileUrl = await uploadFile(finalBuffer, `${folder}/${uniqueFilename}`, finalContentType);
 
-        // Ensure directory exists
-        if (!existsSync(uploadDir)) {
-            await mkdir(uploadDir, { recursive: true });
-        }
 
-        const filePath = path.join(uploadDir, uniqueFilename);
-        await writeFile(filePath, buffer);
-
-        // Construct Public URL
-        // If UPLOAD_URL_PREFIX is set (e.g., https://movielovers.in/uploads), use it.
-        // Otherwise default to local serving path.
-        let urlPrefix = process.env.UPLOAD_URL_PREFIX || "/uploads";
-
-        // Logic handled by Next.js Public Folder serving:
-        // Files in ./public/uploads are accessible at /uploads/filename
-        // No need to prepend origin unless we specifically want absolute URLs for SEO/Social/External.
-        // For Admin UI, relative URLs are fine and preferred for portability.
-
-        // However, if we are in PRODUCTION and using NGINX alias, we might want absolute.
-        // For now, simplify to relative path if no prefix is set, which works for both Localhost and default Next.js
-        if (!process.env.UPLOAD_URL_PREFIX) {
-            urlPrefix = "/uploads";
-        } else if (urlPrefix.startsWith("/")) {
-            const origin = req.headers.get("origin") || "https://movielovers.in";
-            urlPrefix = `${origin}${urlPrefix}`;
-        }
-
-        const fileUrl = `${urlPrefix}/${uniqueFilename}`;
 
         return NextResponse.json({
             success: true,
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
 
 // Handle OPTIONS for CORS (if needed for cross-origin uploads)
 export async function OPTIONS() {

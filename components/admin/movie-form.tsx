@@ -248,9 +248,37 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                             <FormControl>
                                 <ImageUpload
                                     value={field.value}
-                                    onChange={field.onChange}
-                                    onRemove={() => field.onChange("")}
+                                    onChange={async (url) => {
+                                        // If replacing an existing image, delete the old one
+                                        if (field.value && field.value !== url) {
+                                            try {
+                                                await fetch("/api/delete-file", {
+                                                    method: "POST",
+                                                    body: JSON.stringify({ url: field.value })
+                                                });
+                                            } catch (e) {
+                                                console.error("Failed to delete old image", e);
+                                            }
+                                        }
+                                        field.onChange(url);
+                                    }}
+                                    onRemove={async () => {
+                                        if (field.value) {
+                                            try {
+                                                await fetch("/api/delete-file", {
+                                                    method: "POST",
+                                                    body: JSON.stringify({ url: field.value })
+                                                });
+                                            } catch (e) {
+                                                console.error("Failed to delete image", e);
+                                            }
+                                        }
+                                        field.onChange("")
+                                    }}
+                                    folder="movie-images"
                                 />
+
+
                             </FormControl>
                             <FormDescription>Upload vertical poster image.</FormDescription>
                             <FormMessage />

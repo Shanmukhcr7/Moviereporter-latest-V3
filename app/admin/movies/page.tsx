@@ -150,10 +150,28 @@ export default function MoviesPage() {
   const handleDelete = async (id: string, title: string) => {
     if (confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
       try {
-        await deleteDoc(doc(db, "artifacts/default-app-id/movies", id))
+        // Fetch doc first to get image URL
+        const { getDoc } = await import("firebase/firestore")
+        const docRef = doc(db, "artifacts/default-app-id/movies", id)
+        const snap = await getDoc(docRef)
+        const posterUrl = snap.data()?.posterUrl
+
+        if (posterUrl) {
+          try {
+            await fetch("/api/delete-file", {
+              method: "POST",
+              body: JSON.stringify({ url: posterUrl })
+            })
+          } catch (e) {
+            console.error("Failed to delete image", e)
+          }
+        }
+
+        await deleteDoc(docRef)
         toast.success("Movie deleted")
         setMovies(prev => prev.filter(m => m.id !== id))
         setFilteredMovies(prev => prev.filter(m => m.id !== id))
+
 
         await logAdminAction({
           action: "DELETE",

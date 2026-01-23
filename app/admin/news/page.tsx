@@ -168,7 +168,22 @@ export default function NewsAndBlogsPage() {
                 const collectionName = activeTab === "news"
                     ? "artifacts/default-app-id/news"
                     : "artifacts/default-app-id/blogs"
-                await deleteDoc(doc(db, collectionName, id))
+
+                const { getDoc } = await import("firebase/firestore")
+                const docRef = doc(db, collectionName, id)
+                const snap = await getDoc(docRef)
+                const imageUrl = snap.data()?.imageUrl
+
+                if (imageUrl) {
+                    try {
+                        await fetch("/api/delete-file", {
+                            method: "POST",
+                            body: JSON.stringify({ url: imageUrl })
+                        })
+                    } catch (e) { console.error(e) }
+                }
+
+                await deleteDoc(docRef)
                 toast.success("Deleted successfully")
                 setItems(prev => prev.filter(item => item.id !== id))
                 setFilteredItems(prev => prev.filter(item => item.id !== id))
@@ -184,6 +199,7 @@ export default function NewsAndBlogsPage() {
                 console.error("Error deleting:", error)
                 toast.error("Failed to delete")
             }
+
         }
     }
 

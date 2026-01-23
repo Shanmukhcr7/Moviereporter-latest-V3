@@ -13,6 +13,7 @@ interface ImageUploadProps {
     onRemove: () => void
     disabled?: boolean
     className?: string
+    folder?: "blog-images" | "celebrity-images" | "movie-images" | "news-images" | "user-profiles"
 }
 
 export function ImageUpload({
@@ -20,7 +21,8 @@ export function ImageUpload({
     onChange,
     onRemove,
     disabled,
-    className
+    className,
+    folder
 }: ImageUploadProps) {
     const [isUploading, setIsUploading] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -44,6 +46,9 @@ export function ImageUpload({
             setIsUploading(true)
             const formData = new FormData()
             formData.append("file", file)
+            if (folder) {
+                formData.append("folder", folder)
+            }
 
             // Determine API Enpoint: Use ENV var or default to relative path
             const apiUrl = process.env.NEXT_PUBLIC_UPLOAD_API_URL || "/api/upload"
@@ -52,6 +57,7 @@ export function ImageUpload({
                 method: "POST",
                 body: formData,
             })
+
 
             const data = await response.json()
 
