@@ -16,10 +16,10 @@ import {
     ShieldAlert,
     MessageSquare,
     LogOut,
-    LogOut,
     Bell,
     PlayCircle
 } from "lucide-react"
+
 
 import { useAuth } from "@/lib/auth-context"
 
