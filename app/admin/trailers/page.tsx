@@ -46,24 +46,7 @@ export default function TrailersPage() {
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this trailer?")) {
             try {
-                // Fetch doc first to get image URL for deletion
-                const { getDoc } = await import("firebase/firestore")
-                const docRef = doc(db, "artifacts/default-app-id/trailers", id)
-                const snap = await getDoc(docRef)
-                const thumbnailUrl = snap.data()?.thumbnailUrl
-
-                if (thumbnailUrl) {
-                    try {
-                        await fetch("/api/delete-file", {
-                            method: "POST",
-                            body: JSON.stringify({ url: thumbnailUrl })
-                        })
-                    } catch (e) {
-                        console.error("Failed to delete thumbnail:", e)
-                    }
-                }
-
-                await deleteDoc(docRef)
+                await deleteDoc(doc(db, "artifacts/default-app-id/trailers", id))
                 toast.success("Trailer deleted")
             } catch (error) {
                 console.error("Error deleting:", error)
@@ -101,7 +84,7 @@ export default function TrailersPage() {
                             <TableHead>Thumbnail</TableHead>
                             <TableHead>Title</TableHead>
                             <TableHead>Duration / Link</TableHead>
-                            <TableHead>Featured</TableHead>
+                            <TableHead>Type</TableHead>
                             <TableHead>Added Date</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -143,11 +126,7 @@ export default function TrailersPage() {
                                         </a>
                                     </TableCell>
                                     <TableCell>
-                                        {trailer.isFeatured ? (
-                                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">Yes</span>
-                                        ) : (
-                                            <span className="text-muted-foreground text-sm">-</span>
-                                        )}
+                                        <span className="capitalize">{trailer.type || "trailer"}</span>
                                     </TableCell>
                                     <TableCell>
                                         {trailer.createdAt ? format(trailer.createdAt.toDate(), "PP") : "-"}
@@ -168,6 +147,7 @@ export default function TrailersPage() {
                     </TableBody>
                 </Table>
             </div>
+
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">

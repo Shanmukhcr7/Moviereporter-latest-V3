@@ -25,8 +25,7 @@ import { Loader2 } from "lucide-react"
 const formSchema = z.object({
     title: z.string().min(3, "Title is required"),
     youtubeUrl: z.string().url("Must be a valid URL"),
-    thumbnailUrl: z.string().min(1, "Thumbnail is required"),
-    isFeatured: z.boolean().default(false),
+    type: z.enum(["trailer", "teaser"]),
 })
 
 interface TrailerFormProps {
@@ -42,16 +41,26 @@ export function TrailerForm({ initialData, onSuccess }: TrailerFormProps) {
         defaultValues: initialData || {
             title: "",
             youtubeUrl: "",
-            thumbnailUrl: "",
-            isFeatured: false,
+            type: "trailer",
         },
     })
+
+    const getYouTubeId = (url: string) => {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setLoading(true)
         try {
+            const videoId = getYouTubeId(values.youtubeUrl);
+            const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : "";
+
             const docData = {
                 ...values,
+                thumbnailUrl,
                 updatedAt: Timestamp.now(),
             }
 
@@ -77,40 +86,15 @@ export function TrailerForm({ initialData, onSuccess }: TrailerFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
                 <FormField
                     control={form.control}
-                    name="thumbnailUrl"
+                    name="title"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Thumbnail Image</FormLabel>
+                            <FormLabel>Title</FormLabel>
                             <FormControl>
-                                <ImageUpload
-                                    value={field.value}
-                                    onChange={async (url) => {
-                                        if (field.value && field.value !== url) {
-                                            try {
-                                                await fetch("/api/delete-file", {
-                                                    method: "POST",
-                                                    body: JSON.stringify({ url: field.value })
-                                                });
-                                            } catch (e) { console.error(e) }
-                                        }
-                                        field.onChange(url)
-                                    }}
-                                    onRemove={async (url) => {
-                                        const urlToDelete = url || field.value;
-                                        if (urlToDelete) {
-                                            try {
-                                                await fetch("/api/delete-file", {
-                                                    method: "POST",
-                                                    body: JSON.stringify({ url: urlToDelete })
-                                                });
-                                            } catch (e) { console.error(e) }
-                                        }
-                                        field.onChange("")
-                                    }}
-                                    folder="trailer-thumbnails"
-                                />
+                                <Input placeholder="e.g. Inception Official Trailer" {...field} disabled={loading} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -119,13 +103,32 @@ export function TrailerForm({ initialData, onSuccess }: TrailerFormProps) {
 
                 <FormField
                     control={form.control}
-                    name="title"
+                    name="type"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Trailer Title</FormLabel>
-                            <FormControl>
-                                <Input placeholder="e.g. Inception Official Trailer" {...field} disabled={loading} />
-                            </FormControl>
+                            <FormLabel>Type</FormLabel>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-md has-[:checked]:bg-accent hover:bg-accent/50 transition-colors">
+                                    <input
+                                        type="radio"
+                                        value="trailer"
+                                        checked={field.value === "trailer"}
+                                        onChange={field.onChange}
+                                        className="h-4 w-4"
+                                    />
+                                    <span>Trailer</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-md has-[:checked]:bg-accent hover:bg-accent/50 transition-colors">
+                                    <input
+                                        type="radio"
+                                        value="teaser"
+                                        checked={field.value === "teaser"}
+                                        onChange={field.onChange}
+                                        className="h-4 w-4"
+                                    />
+                                    <span>Teaser</span>
+                                </label>
+                            </div>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -140,29 +143,8 @@ export function TrailerForm({ initialData, onSuccess }: TrailerFormProps) {
                             <FormControl>
                                 <Input placeholder="https://www.youtube.com/watch?v=..." {...field} disabled={loading} />
                             </FormControl>
+                            <FormDescription>The thumbnail will be automatically fetched from YouTube.</FormDescription>
                             <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                <FormField
-                    control={form.control}
-                    name="isFeatured"
-                    render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4 border rounded-md">
-                            <FormControl>
-                                <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                    disabled={loading}
-                                />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                                <FormLabel>Featured Trailer</FormLabel>
-                                <FormDescription>
-                                    Show this at the top of the trailers page.
-                                </FormDescription>
-                            </div>
                         </FormItem>
                     )}
                 />
@@ -177,3 +159,4 @@ export function TrailerForm({ initialData, onSuccess }: TrailerFormProps) {
         </Form>
     )
 }
+
