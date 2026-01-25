@@ -73,9 +73,10 @@ export default function TrailersPage() {
                                 className="object-cover transition-transform duration-500 group-hover:scale-110"
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             />
-                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                <PlayCircle className="w-12 h-12 text-white drop-shadow-lg" />
+                            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                <PlayCircle className="w-12 h-12 text-white/80 group-hover:text-white drop-shadow-lg transition-colors" />
                             </div>
+
                         </div>
                         <div>
                             <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
