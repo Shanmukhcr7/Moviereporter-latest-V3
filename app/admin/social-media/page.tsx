@@ -46,7 +46,22 @@ export default function SocialMediaPage() {
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this post?")) {
             try {
-                await deleteDoc(doc(db, "artifacts/default-app-id/social_posts", id))
+                // Fetch doc first to get image URL
+                const { getDoc } = await import("firebase/firestore")
+                const docRef = doc(db, "artifacts/default-app-id/social_posts", id)
+                const snap = await getDoc(docRef)
+                const imageUrl = snap.data()?.imageUrl
+
+                if (imageUrl) {
+                    try {
+                        await fetch("/api/delete-file", {
+                            method: "POST",
+                            body: JSON.stringify({ url: imageUrl })
+                        })
+                    } catch (e) { console.error(e) }
+                }
+
+                await deleteDoc(docRef)
                 toast.success("Post deleted")
             } catch (error) {
                 console.error("Error deleting:", error)

@@ -12,10 +12,11 @@ export async function POST(req: NextRequest) {
         }
 
         // Validate/Sanitize folder
-        const allowedFolders = ["blog-images", "celebrity-images", "movie-images", "news-images", "user-profiles"];
+        const allowedFolders = ["blog-images", "celebrity-images", "movie-images", "news-images", "user-profiles", "polls", "celebrity-social-media"];
         if (!folder || !allowedFolders.includes(folder)) {
             folder = "uploads";
         }
+
 
         const buffer = Buffer.from(await file.arrayBuffer());
         let finalBuffer = buffer;

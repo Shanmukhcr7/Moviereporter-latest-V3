@@ -46,7 +46,28 @@ export default function PollsPage() {
     const handleDelete = async (id: string) => {
         if (confirm("Are you sure you want to delete this poll?")) {
             try {
-                await deleteDoc(doc(db, "artifacts/default-app-id/polls", id))
+                // Fetch poll first to cleanup images
+                const { getDoc } = await import("firebase/firestore")
+                const docRef = doc(db, "artifacts/default-app-id/polls", id)
+                const snap = await getDoc(docRef)
+
+                if (snap.exists()) {
+                    const data = snap.data();
+                    if (data.options && Array.isArray(data.options)) {
+                        for (const option of data.options) {
+                            if (option.imageUrl) {
+                                try {
+                                    await fetch("/api/delete-file", {
+                                        method: "POST",
+                                        body: JSON.stringify({ url: option.imageUrl })
+                                    });
+                                } catch (e) { console.error("Failed to delete option image", e) }
+                            }
+                        }
+                    }
+                }
+
+                await deleteDoc(docRef)
                 toast.success("Poll deleted")
             } catch (error) {
                 console.error("Error deleting:", error)

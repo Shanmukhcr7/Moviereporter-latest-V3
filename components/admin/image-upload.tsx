@@ -10,10 +10,10 @@ import { cn, getImageUrl } from "@/lib/utils"
 interface ImageUploadProps {
     value?: string
     onChange: (url: string) => void
-    onRemove: () => void
+    onRemove: (url: string) => void
     disabled?: boolean
     className?: string
-    folder?: "blog-images" | "celebrity-images" | "movie-images" | "news-images" | "user-profiles"
+    folder?: "blog-images" | "celebrity-images" | "movie-images" | "news-images" | "user-profiles" | "polls" | "celebrity-social-media"
 }
 
 export function ImageUpload({

@@ -290,7 +290,7 @@ export function SocialPostForm({ initialData, onSuccess }: SocialPostFormProps) 
                                         field.onChange("")
                                     }}
                                     disabled={loading}
-                                    folder="news-images"
+                                    folder="celebrity-social-media"
                                 />
 
 
