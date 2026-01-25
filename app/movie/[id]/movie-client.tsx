@@ -602,11 +602,32 @@ export function MovieClient({ initialId }: { initialId?: string }) {
                                         const key = platform.toLowerCase()
                                         const iconSrc = ottPlatformImages[key]
 
+                                        // Find link
+                                        const linkObj = movie.ottLinks?.find((l: any) => l.name === platform)
+                                        const url = linkObj?.url
+
                                         if (iconSrc) {
+                                            if (url) {
+                                                return (
+                                                    <a key={platform} href={url} target="_blank" rel="noopener noreferrer" className="block relative w-10 h-10 rounded-full overflow-hidden border border-border/50 bg-background shadow-sm hover:scale-110 transition-transform" title={`Watch on ${platform}`}>
+                                                        <Image src={iconSrc} alt={platform} fill className="object-cover" />
+                                                    </a>
+                                                )
+                                            }
                                             return (
                                                 <div key={platform} className="relative w-10 h-10 rounded-full overflow-hidden border border-border/50 bg-background shadow-sm hover:scale-110 transition-transform" title={platform}>
                                                     <Image src={iconSrc} alt={platform} fill className="object-cover" />
                                                 </div>
+                                            )
+                                        }
+
+                                        if (url) {
+                                            return (
+                                                <a key={platform} href={url} target="_blank" rel="noopener noreferrer">
+                                                    <Badge variant="secondary" className="px-3 py-1 text-sm bg-secondary/80 hover:bg-secondary cursor-pointer">
+                                                        {platform}
+                                                    </Badge>
+                                                </a>
                                             )
                                         }
 

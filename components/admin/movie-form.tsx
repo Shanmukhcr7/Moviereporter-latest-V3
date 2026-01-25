@@ -50,6 +50,10 @@ const formSchema = z.object({
     isTopBoxOffice: z.boolean().default(false),
     isPopular: z.boolean().default(false),
     ottPublished: z.boolean().default(false),
+    ottLinks: z.array(z.object({
+        name: z.string(),
+        url: z.string().optional()
+    })).default([]),
 })
 
 interface MovieFormProps {
@@ -66,6 +70,7 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
             ...initialData,
             releaseDate: initialData.releaseDate?.toDate(),
             scheduledPublish: initialData.scheduledPublish?.toDate(),
+            ottLinks: initialData.ottLinks || [],
         } : {
             title: "",
             genre: "",
@@ -76,6 +81,7 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
             boxOffice: "",
             ottPlatforms: [],
             cast: [],
+            ottLinks: [],
         },
     })
 
@@ -86,10 +92,20 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
             const isTopBoxOffice = values.isTopBoxOffice || (values.boxOffice && values.boxOffice.length > 0)
             const isOttPublished = values.ottPublished || (values.ottPlatforms && values.ottPlatforms.length > 0)
 
+            // Ensure ottLinks only contains checked platforms
+            const validLinks = values.ottLinks.filter(link => values.ottPlatforms.includes(link.name));
+            // Add entries for platforms checked but missing in links (legacy/newly checked)
+            values.ottPlatforms.forEach(p => {
+                if (!validLinks.find(l => l.name === p)) {
+                    validLinks.push({ name: p, url: "" })
+                }
+            })
+
             const movieData = {
                 ...values,
                 isTopBoxOffice,
                 ottPublished: isOttPublished,
+                ottLinks: validLinks,
                 // Sanitize undefined values
                 scheduledPublish: values.scheduledPublish || null,
                 boxOffice: values.boxOffice || "",
@@ -345,51 +361,83 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
                         )}
                     />
                     {/* OTT Selection */}
-                    <FormField
-                        control={form.control}
-                        name="ottPlatforms"
-                        render={() => (
-                            <FormItem>
-                                <FormLabel>OTT Platforms</FormLabel>
-                                <div className="grid grid-cols-2 gap-2 border rounded-lg p-3 max-h-[150px] overflow-y-auto">
-                                    {ottPlatforms.map((item) => (
-                                        <FormField
-                                            key={item}
-                                            control={form.control}
-                                            name="ottPlatforms"
-                                            render={({ field }) => {
-                                                return (
-                                                    <FormItem
-                                                        key={item}
-                                                        className="flex flex-row items-start space-x-2 space-y-0"
-                                                    >
-                                                        <FormControl>
-                                                            <Checkbox
-                                                                checked={field.value?.includes(item)}
-                                                                onCheckedChange={(checked) => {
-                                                                    return checked
-                                                                        ? field.onChange([...field.value, item])
-                                                                        : field.onChange(
-                                                                            field.value?.filter(
-                                                                                (value) => value !== item
-                                                                            )
-                                                                        )
-                                                                }}
-                                                            />
-                                                        </FormControl>
-                                                        <FormLabel className="font-normal text-xs cursor-pointer">
-                                                            {item}
-                                                        </FormLabel>
-                                                    </FormItem>
-                                                )
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <FormLabel>OTT Platforms & Links</FormLabel>
+                        <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2">
+                            {ottPlatforms.map((item) => (
+                                <FormField
+                                    key={item}
+                                    control={form.control}
+                                    name="ottPlatforms"
+                                    render={({ field }) => {
+                                        const isChecked = field.value?.includes(item);
+                                        return (
+                                            <FormItem
+                                                key={item}
+                                                className="flex flex-col space-y-2 p-2 border rounded-md"
+                                            >
+                                                <div className="flex items-center space-x-2">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={isChecked}
+                                                            onCheckedChange={(checked) => {
+                                                                if (checked) {
+                                                                    field.onChange([...field.value, item]);
+                                                                    // Add empty link entry
+                                                                    const currentLinks = form.getValues("ottLinks") || [];
+                                                                    if (!currentLinks.find(l => l.name === item)) {
+                                                                        form.setValue("ottLinks", [...currentLinks, { name: item, url: "" }]);
+                                                                    }
+                                                                } else {
+                                                                    field.onChange(field.value?.filter((value) => value !== item));
+                                                                    // Remove link entry (optional, but cleaner)
+                                                                    const currentLinks = form.getValues("ottLinks") || [];
+                                                                    form.setValue("ottLinks", currentLinks.filter(l => l.name !== item));
+                                                                }
+                                                            }}
+                                                        />
+                                                    </FormControl>
+                                                    <FormLabel className="font-normal cursor-pointer flex-1">
+                                                        {item}
+                                                    </FormLabel>
+                                                </div>
+
+                                                {isChecked && (
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="ottLinks"
+                                                        render={({ field: linksField }) => {
+                                                            const currentLink = linksField.value?.find(l => l.name === item)?.url || "";
+                                                            return (
+                                                                <FormControl>
+                                                                    <Input
+                                                                        placeholder={`${item} Link (e.g. https://...)`}
+                                                                        value={currentLink}
+                                                                        onChange={(e) => {
+                                                                            const newValue = e.target.value;
+                                                                            const newLinks = linksField.value.map(l =>
+                                                                                l.name === item ? { ...l, url: newValue } : l
+                                                                            );
+                                                                            if (!newLinks.find(l => l.name === item)) {
+                                                                                newLinks.push({ name: item, url: newValue });
+                                                                            }
+                                                                            linksField.onChange(newLinks);
+                                                                        }}
+                                                                        className="h-8 text-xs"
+                                                                    />
+                                                                </FormControl>
+                                                            )
+                                                        }}
+                                                    />
+                                                )}
+                                            </FormItem>
+                                        )
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        <FormMessage />
+                    </div>
                 </div>
 
 
@@ -497,3 +545,4 @@ export function MovieForm({ initialData, onSuccess }: MovieFormProps) {
         </Form >
     )
 }
+
