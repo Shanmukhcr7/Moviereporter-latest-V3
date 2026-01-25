@@ -117,7 +117,8 @@ export function ImageUpload({
                                 type="button"
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    onRemove()
+                                    onRemove(value || "")
+
                                 }}
                                 variant="destructive"
                                 size="icon"
