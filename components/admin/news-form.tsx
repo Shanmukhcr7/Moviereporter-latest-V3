@@ -39,6 +39,7 @@ const formSchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
     author: z.string().min(2, "Author name is required"),
     imageUrl: z.string().min(1, "Cover image is required"),
+    videoUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
     category: z.string().optional(), // Optional for Blogs
     summary: z.string().optional(),
     content: z.string().min(10, "Content is required"),
@@ -65,6 +66,7 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
             title: "",
             author: "",
             imageUrl: "",
+            videoUrl: "",
             category: "",
             summary: "",
             content: "",
@@ -80,6 +82,7 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
                 title: initialData.title || "",
                 author: initialData.author || "",
                 imageUrl: initialData.imageUrl || "",
+                videoUrl: initialData.videoUrl || "",
                 category: initialData.category || "",
                 summary: initialData.summary || "",
                 content: initialData.content || "",
@@ -92,6 +95,7 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
                 title: "",
                 author: "",
                 imageUrl: "",
+                videoUrl: "",
                 category: "",
                 summary: "",
                 content: "",
@@ -112,6 +116,7 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
 
             const docData = {
                 ...values,
+                videoUrl: values.videoUrl || null,
                 scheduledPublish: values.scheduledPublish || null,
                 category: values.category || null,
                 summary: values.summary || null,
@@ -184,12 +189,14 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
                                         }
                                         field.onChange(url)
                                     }}
-                                    onRemove={async () => {
-                                        if (field.value) {
+                                    onRemove={async (url) => {
+                                        // Use url arg or field.value
+                                        const urlToDelete = url || field.value;
+                                        if (urlToDelete) {
                                             try {
                                                 await fetch("/api/delete-file", {
                                                     method: "POST",
-                                                    body: JSON.stringify({ url: field.value })
+                                                    body: JSON.stringify({ url: urlToDelete })
                                                 });
                                             } catch (e) { console.error(e) }
                                         }
@@ -233,6 +240,22 @@ export function NewsForm({ initialData, type, onSuccess }: NewsFormProps) {
                         )}
                     />
                 </div>
+
+                <FormField
+                    control={form.control}
+                    name="videoUrl"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Video Link (Optional)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="https://www.youtube.com/watch?v=..." {...field} disabled={loading} />
+                            </FormControl>
+                            <FormDescription>Link to a YouTube video related to this article.</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
 
                 <FormField
                     control={form.control}

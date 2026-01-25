@@ -298,7 +298,34 @@ export function NewsClient({ initialId }: { initialId?: string }) {
                             </Button>
                         </div>
 
+                        {/* Video Player */}
+                        {article.videoUrl && (() => {
+                            const getYouTubeId = (url: string) => {
+                                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                                const match = url.match(regExp);
+                                return (match && match[2].length === 11) ? match[2] : null;
+                            };
+                            const videoId = getYouTubeId(article.videoUrl);
+                            if (videoId) {
+                                return (
+                                    <div className="mb-8 rounded-lg overflow-hidden aspect-video">
+                                        <iframe
+                                            width="100%"
+                                            height="100%"
+                                            src={`https://www.youtube.com/embed/${videoId}`}
+                                            title="YouTube video player"
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                        ></iframe>
+                                    </div>
+                                )
+                            }
+                            return null;
+                        })()}
+
                         {/* Summary */}
+
                         {article.summary && (
                             <div className="mb-8 p-4 bg-muted/50 rounded-lg border-l-4 border-primary italic">
                                 {article.summary}
