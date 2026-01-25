@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase"
 import { Header } from "@/components/header"
 import { FadeIn } from "@/components/animations/fade-in"
 import { PlayCircle, Clapperboard } from "lucide-react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -120,26 +120,31 @@ export default function TrailersPage() {
                     {/* Video Player Modal */}
                     <Dialog open={!!selectedVideo} onOpenChange={(open) => !open && setSelectedVideo(null)}>
                         <DialogContent className="max-w-5xl bg-black border-none p-0 overflow-hidden aspect-video">
-                            {selectedVideo && (() => {
-                                const videoId = getYouTubeId(selectedVideo.youtubeUrl);
-                                return (
-                                    <div className="relative w-full h-full">
-                                        {videoId ? (
-                                            <iframe
-                                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
-                                                title={selectedVideo.title}
-                                                className="absolute inset-0 w-full h-full"
-                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                allowFullScreen
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-white">
-                                                Invalid Video URL
+                            {selectedVideo && (
+                                <>
+                                    <DialogTitle className="sr-only">{selectedVideo?.title}</DialogTitle>
+                                    {(() => {
+                                        const videoId = getYouTubeId(selectedVideo.youtubeUrl);
+                                        return (
+                                            <div className="relative w-full h-full">
+                                                {videoId ? (
+                                                    <iframe
+                                                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+                                                        title={selectedVideo.title}
+                                                        className="absolute inset-0 w-full h-full"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-white">
+                                                        Invalid Video URL
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                )
-                            })()}
+                                        )
+                                    })()}
+                                </>
+                            )}
                         </DialogContent>
                     </Dialog>
 
