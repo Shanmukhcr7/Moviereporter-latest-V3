@@ -13,7 +13,7 @@ interface ImageUploadProps {
     onRemove: (url: string) => void
     disabled?: boolean
     className?: string
-    folder?: "blog-images" | "celebrity-images" | "movie-images" | "news-images" | "user-profiles" | "polls" | "celebrity-social-media"
+    folder?: "blog-images" | "celebrity-images" | "movie-images" | "news-images" | "user-profiles" | "polls" | "celebrity-social-media" | "trailer-thumbnails"
 }
 
 export function ImageUpload({

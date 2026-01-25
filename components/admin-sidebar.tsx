@@ -16,8 +16,11 @@ import {
     ShieldAlert,
     MessageSquare,
     LogOut,
-    Bell
+    LogOut,
+    Bell,
+    PlayCircle
 } from "lucide-react"
+
 import { useAuth } from "@/lib/auth-context"
 
 const sidebarItems = [
@@ -32,8 +35,10 @@ const sidebarItems = [
     { name: "Notifications", href: "/admin/notifications", icon: Bell },
     { name: "Celebrity Social Media", href: "/admin/social-media", icon: MessageSquare }, // Re-using MessageSquare or maybe Share2 would be better, but existing import
     { name: "Activity Logs", href: "/admin/logs", icon: BarChart2, protected: true },
+    { name: "Trailers", href: "/admin/trailers", icon: PlayCircle }, // Added Trailers
     { name: "Inquiries", href: "/admin/inquiries", icon: MessageSquare },
 ]
+
 
 export function AdminSidebar() {
     const pathname = usePathname()
