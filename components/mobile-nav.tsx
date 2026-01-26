@@ -82,6 +82,12 @@ export function MobileNav() {
                                         <Link href="/upcoming-releases" className="px-8 py-2 text-sm hover:text-primary transition-colors">
                                             Upcoming Releases
                                         </Link>
+                                        <Link href="/trailers" className="px-8 py-2 text-sm hover:text-primary transition-colors">
+                                            Latest Trailers
+                                        </Link>
+                                        <Link href="/trailers?tab=teasers" className="px-8 py-2 text-sm hover:text-primary transition-colors">
+                                            Teasers
+                                        </Link>
                                         <Link href="/ott-releases" className="px-8 py-2 text-sm hover:text-primary transition-colors">
                                             OTT Releases
                                         </Link>

@@ -10,11 +10,14 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import Image from "next/image"
 import { formatDistanceToNow } from "date-fns"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useSearchParams, useRouter } from "next/navigation"
 
 export default function TrailersPage() {
     const [allVideos, setAllVideos] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedVideo, setSelectedVideo] = useState<any | null>(null)
+    const searchParams = useSearchParams()
+    const router = useRouter()
 
     useEffect(() => {
         const fetchTrailers = async () => {
@@ -103,7 +106,7 @@ export default function TrailersPage() {
                         <h1 className="text-3xl font-bold">Latest Trailers & Teasers</h1>
                     </div>
 
-                    <Tabs defaultValue="trailers" className="w-full">
+                    <Tabs defaultValue={searchParams.get("tab") || "trailers"} className="w-full" onValueChange={(val) => router.push(`/trailers?tab=${val}`)}>
                         <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2">
                             <TabsTrigger value="trailers">Trailers</TabsTrigger>
                             <TabsTrigger value="teasers">Teasers</TabsTrigger>

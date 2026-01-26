@@ -62,6 +62,9 @@ export function Header() {
                   <Link href="/trailers" className="block px-4 py-2 text-sm hover:bg-accent">
                     Latest Trailers
                   </Link>
+                  <Link href="/trailers?tab=teasers" className="block px-4 py-2 text-sm hover:bg-accent">
+                    Teasers
+                  </Link>
                   <Link href="/celebrity-social" className="block px-4 py-2 text-sm hover:bg-accent">
                     Celebrity Social Media
                   </Link>
