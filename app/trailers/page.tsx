@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { collection, query, orderBy, getDocs } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { Header } from "@/components/header"
@@ -12,7 +12,7 @@ import { formatDistanceToNow } from "date-fns"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSearchParams, useRouter } from "next/navigation"
 
-export default function TrailersPage() {
+function TrailersContent() {
     const [allVideos, setAllVideos] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedVideo, setSelectedVideo] = useState<any | null>(null)
@@ -96,62 +96,75 @@ export default function TrailersPage() {
     )
 
     return (
+        <>
+            <div className="flex items-center gap-3 mb-8">
+                <Clapperboard className="w-8 h-8 text-primary" />
+                <h1 className="text-3xl font-bold">Latest Trailers & Teasers</h1>
+            </div>
+
+            <Tabs defaultValue={searchParams.get("tab") || "trailers"} className="w-full" onValueChange={(val) => router.push(`/trailers?tab=${val}`)}>
+                <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2">
+                    <TabsTrigger value="trailers">Trailers</TabsTrigger>
+                    <TabsTrigger value="teasers">Teasers</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="trailers">
+                    <VideoGrid videos={trailers} />
+                </TabsContent>
+
+                <TabsContent value="teasers">
+                    <VideoGrid videos={teasers} />
+                </TabsContent>
+            </Tabs>
+
+            {/* Video Player Modal */}
+            <Dialog open={!!selectedVideo} onOpenChange={(open) => !open && setSelectedVideo(null)}>
+                <DialogContent className="max-w-5xl bg-black border-none p-0 overflow-hidden aspect-video">
+                    {selectedVideo && (
+                        <>
+                            <DialogTitle className="sr-only">{selectedVideo?.title}</DialogTitle>
+                            {(() => {
+                                const videoId = getYouTubeId(selectedVideo.youtubeUrl);
+                                return (
+                                    <div className="relative w-full h-full">
+                                        {videoId ? (
+                                            <iframe
+                                                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+                                                title={selectedVideo.title}
+                                                className="absolute inset-0 w-full h-full"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-white">
+                                                Invalid Video URL
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })()}
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
+        </>
+    )
+}
+
+export default function TrailersPage() {
+    return (
         <div className="min-h-screen bg-background text-foreground">
             <Header />
 
             <main className="container mx-auto px-4 py-8">
                 <FadeIn>
-                    <div className="flex items-center gap-3 mb-8">
-                        <Clapperboard className="w-8 h-8 text-primary" />
-                        <h1 className="text-3xl font-bold">Latest Trailers & Teasers</h1>
-                    </div>
-
-                    <Tabs defaultValue={searchParams.get("tab") || "trailers"} className="w-full" onValueChange={(val) => router.push(`/trailers?tab=${val}`)}>
-                        <TabsList className="mb-8 grid w-full max-w-[400px] grid-cols-2">
-                            <TabsTrigger value="trailers">Trailers</TabsTrigger>
-                            <TabsTrigger value="teasers">Teasers</TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="trailers">
-                            <VideoGrid videos={trailers} />
-                        </TabsContent>
-
-                        <TabsContent value="teasers">
-                            <VideoGrid videos={teasers} />
-                        </TabsContent>
-                    </Tabs>
-
-                    {/* Video Player Modal */}
-                    <Dialog open={!!selectedVideo} onOpenChange={(open) => !open && setSelectedVideo(null)}>
-                        <DialogContent className="max-w-5xl bg-black border-none p-0 overflow-hidden aspect-video">
-                            {selectedVideo && (
-                                <>
-                                    <DialogTitle className="sr-only">{selectedVideo?.title}</DialogTitle>
-                                    {(() => {
-                                        const videoId = getYouTubeId(selectedVideo.youtubeUrl);
-                                        return (
-                                            <div className="relative w-full h-full">
-                                                {videoId ? (
-                                                    <iframe
-                                                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
-                                                        title={selectedVideo.title}
-                                                        className="absolute inset-0 w-full h-full"
-                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                        allowFullScreen
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-white">
-                                                        Invalid Video URL
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )
-                                    })()}
-                                </>
-                            )}
-                        </DialogContent>
-                    </Dialog>
-
+                    <Suspense fallback={
+                        <div className="flex items-center justify-center h-[50vh]">
+                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                        </div>
+                    }>
+                        <TrailersContent />
+                    </Suspense>
                 </FadeIn>
             </main>
         </div>
