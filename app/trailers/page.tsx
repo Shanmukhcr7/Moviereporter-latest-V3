@@ -99,7 +99,7 @@ function TrailersContent() {
         <>
             <div className="flex items-center gap-3 mb-8">
                 <Clapperboard className="w-8 h-8 text-primary" />
-                <h1 className="text-3xl font-bold">Latest Trailers & Teasers</h1>
+                <h1 className="text-3xl font-bold">Trailers & Teasers</h1>
             </div>
 
             <Tabs defaultValue={searchParams.get("tab") || "trailers"} className="w-full" onValueChange={(val) => router.push(`/trailers?tab=${val}`)}>

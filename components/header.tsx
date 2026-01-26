@@ -60,7 +60,7 @@ export function Header() {
                     Upcoming Releases
                   </Link>
                   <Link href="/trailers" className="block px-4 py-2 text-sm hover:bg-accent">
-                    Latest Trailers
+                    Trailers
                   </Link>
                   <Link href="/trailers?tab=teasers" className="block px-4 py-2 text-sm hover:bg-accent">
                     Teasers
